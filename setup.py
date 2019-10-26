@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='svg_writer',
-    version='0.4',
+    version='0.5',
     author="Shay Hill",
     author_email="shay_public@hotmail.com",
     description="Write SVG files with Python.",

@@ -7,7 +7,7 @@ created: 10/7/2019
 """
 
 from pathlib import Path
-from subprocess import Popen
+from subprocess import call
 from typing import Optional, Union
 
 from lxml import etree
@@ -88,5 +88,5 @@ def write_png_from_svg(inkscape_exe: PathType, svg: PathType) -> Path:
     :side effect: creates a new png from svg filename
     """
     png = Path(svg).with_suffix(".png")
-    Popen(f'"{inkscape_exe}" -f "{svg}" -e "{png}"')
+    call(f'"{inkscape_exe}" -f "{svg}" -e "{png}"')
     return png
