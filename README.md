@@ -6,7 +6,7 @@ The most straightforward way to create SVG files with Python.
 
     from svg_ultralight import new_svg_root, write_svg, write_png_from_svg, write_png
     
-##One convenience:
+## One convenience:
 
     from svg_ultralight import NSMAP
 
