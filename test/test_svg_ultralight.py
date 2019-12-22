@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
-from svg_ultralight import NSMAP, new_svg_root, write_svg
+from svg_ultralight.svg_ultralight import NSMAP, new_svg_root, write_svg
 
 
 @pytest.fixture(scope="function")

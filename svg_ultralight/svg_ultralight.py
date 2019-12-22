@@ -10,11 +10,9 @@ import os
 import tempfile
 from pathlib import Path
 from subprocess import call
-from typing import Optional, Union
+from typing import Optional
 
-from lxml import etree
-
-PathType = Union[Path, str]
+from lxml import etree  # type: ignore
 
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 NSMAP = {
@@ -50,11 +48,11 @@ def new_svg_root(
 
 
 def write_svg(
-    svg: PathType,
+    svg: str,
     xml: etree.Element,
-    stylesheet: Optional[PathType] = None,
+    stylesheet: Optional[str] = None,
     do_link_css: bool = False,
-) -> None:
+) -> str:
     """
     Write an xml element as an svg file.
 
@@ -93,9 +91,7 @@ def write_svg(
     return svg
 
 
-def write_png_from_svg(
-    inkscape_exe: PathType, svg: PathType, png: Optional[PathType] = None
-) -> Path:
+def write_png_from_svg(inkscape_exe: str, svg: str, png: Optional[str] = None) -> str:
     """
     Convert an svg file to a png
 
@@ -109,17 +105,14 @@ def write_png_from_svg(
     filename.
     """
     if png is None:
-        png = Path(svg).with_suffix(".png")
+        png = str(Path(svg).with_suffix(".png"))
     call(f'"{inkscape_exe}" -f "{svg}" -e "{png}"')
     return png
 
 
 def write_png(
-    inkscape_exe: PathType,
-    png: PathType,
-    xml: etree.Element,
-    stylesheet: Optional[PathType] = None,
-) -> None:
+    inkscape_exe: str, png: str, xml: etree.Element, stylesheet: Optional[str] = None,
+) -> str:
     """
     Create a png file without writing an intermediate svg file.
 
