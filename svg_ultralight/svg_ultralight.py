@@ -8,9 +8,10 @@ created: 10/7/2019
 
 import os
 import tempfile
+from enum import Enum
 from pathlib import Path
 from subprocess import call
-from typing import Optional
+from typing import Optional, Dict
 
 from lxml import etree  # type: ignore
 
@@ -28,7 +29,12 @@ NSMAP = {
 
 
 def new_svg_root(
-    x: float, y: float, width: float, height: float, pad: float = 0
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    pad: float = 0,
+    nsmap: Optional[Dict[str, str]] = None,
 ) -> etree.Element:
     """
     Create an svg root element from viewBox style params.
@@ -38,13 +44,45 @@ def new_svg_root(
     :param width: width of viewBox
     :param height: height of viewBox
     :param pad: optionally increase viewBox by pad in all directions
+    :param nsmap: optionally pass a namespace map of your choosing
     :return: root svg element
     """
+    if nsmap is None:
+        nsmap = NSMAP
     return etree.Element(
         "svg",
         viewBox=f"{x - pad} {y - pad} {width + pad * 2} {height + pad * 2}",
-        nsmap=NSMAP,
+        nsmap=nsmap,
     )
+
+
+class _TostringDefaults(Enum):
+    """Default values for an svg xml_header"""
+
+    doctype: str = (
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
+        '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+    )
+    encoding: str = "UTF-8"
+
+
+def _svg_tostring(xml: etree.Element, **tostring_kwargs) -> bytearray:
+    """
+    Contents of svg file with optional xml declaration.
+
+    :param xml: root node of your svg geometry
+    :param tostring_kwargs: keyword arguments to etree.tostring. xml_header=True for
+        sensible default values. See below.
+
+    Further documentation in write_svg docstring.
+    """
+    tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
+    if tostring_kwargs.get("xml_declaration"):
+        for default in _TostringDefaults:
+            value = tostring_kwargs.get(default.name, default.value)
+            tostring_kwargs[default.name] = value
+    svg_contents = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
+    return svg_contents
 
 
 def write_svg(
@@ -52,6 +90,7 @@ def write_svg(
     xml: etree.Element,
     stylesheet: Optional[str] = None,
     do_link_css: bool = False,
+    **tostring_kwargs,
 ) -> str:
     """
     Write an xml element as an svg file.
@@ -61,8 +100,33 @@ def write_svg(
     :param stylesheet: optional path to css stylesheet
     :param do_link_css: link to stylesheet, else (default) write contents of stylesheet
         into svg (ignored if stylesheet is None)
+    :param tostring_kwargs: keyword arguments to etree.tostring. xml_header=True for
+        sensible default values. See below.
     :return: svg filename
     :effects: creates svg file at ``svg``
+
+    You may never need an xml_header. Inkscape doesn't need it, your browser doesn't
+    need it, and it's forbidden if you'd like to "inline" your svg in an html file.
+    The most pressing need might be to set an encoding. If you pass
+    ``xml_declaration=True`` as a tostring_kwarg, this function will attempt to pass
+    the following defaults to ``lxml.etree.tostring``:
+
+    * doctype: str = (
+        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
+        '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+    )
+    * encoding = "UTF-8"
+
+    Always, this function will default to ``pretty_print=True``
+
+    These can be overridden by tostring_kwargs.
+
+    e.g., ``write_svg(..., xml_declaration=True, doctype=None``)
+    e.g., ``write_svg(..., xml_declaration=True, encoding='ascii')``
+
+    ``lxml.etree.tostring`` is documented here: https://lxml.de/api/index.html,
+    but I know that to be incomplete as of 2020 Feb 01, as it does not document the
+    (perhaps important to you) 'encoding' kwarg.
     """
     if stylesheet is not None:
         if do_link_css is True:
@@ -73,19 +137,12 @@ def write_svg(
             xml.addprevious(link)
         else:
             style = etree.Element("style", type="text/css")
-            with open(stylesheet, "r") as css_file:
+            with open(stylesheet) as css_file:
                 style.text = etree.CDATA("\n" + "".join(css_file.readlines()) + "\n")
             xml.insert(0, style)
 
-    svg_contents = etree.tostring(
-        etree.ElementTree(xml),
-        pretty_print=True,
-        xml_declaration=True,
-        doctype=(
-            '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
-            '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
-        ),
-    )
+    svg_contents = _svg_tostring(xml, **tostring_kwargs)
+
     with open(svg, "wb") as svg_file:
         svg_file.write(svg_contents)
     return svg
@@ -129,7 +186,7 @@ def write_png(
     """
     svg_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
     svg_file.close()
-    write_svg(svg_file.name, xml, stylesheet, do_link_css=False)
+    write_svg(svg_file.name, xml, stylesheet)
     write_png_from_svg(inkscape_exe, svg_file.name, png)
     os.unlink(svg_file.name)
     return png
