@@ -11,9 +11,11 @@ import tempfile
 from enum import Enum
 from pathlib import Path
 from subprocess import call
-from typing import Optional, Dict
+from typing import Dict, Optional, Union
 
 from lxml import etree  # type: ignore
+
+from new_element import update_element
 
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 NSMAP = {
@@ -29,31 +31,37 @@ NSMAP = {
 
 
 def new_svg_root(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    pad: float = 0,
+    x_: Optional[float] = None,
+    y_: Optional[float] = None,
+    width_: Optional[float] = None,
+    height_: Optional[float] = None,
+    pad_: float = 0,
     nsmap: Optional[Dict[str, str]] = None,
+    **attributes: Union[float, str],
 ) -> etree.Element:
     """
-    Create an svg root element from viewBox style params.
+    Create an svg root element from viewBox style parameters.
 
-    :param x: x value in upper-left corner
-    :param y: y value in upper-left corner
-    :param width: width of viewBox
-    :param height: height of viewBox
-    :param pad: optionally increase viewBox by pad in all directions
+    :param x_: x value in upper-left corner
+    :param y_: y value in upper-left corner
+    :param width_: width of viewBox
+    :param height_: height of viewBox
+    :param pad_: optionally increase viewBox by pad in all directions
+    :param attributes: element attribute names and values
     :param nsmap: optionally pass a namespace map of your choosing
     :return: root svg element
+
+    All viewBox-style parameters are optional. Any kwargs will be passed to
+    etree.Element as element parameters.
     """
     if nsmap is None:
         nsmap = NSMAP
-    return etree.Element(
-        "svg",
-        viewBox=f"{x - pad} {y - pad} {width + pad * 2} {height + pad * 2}",
-        nsmap=nsmap,
-    )
+    if None not in (x_, y_, width_, height_):
+        view_box = f"{x_ - pad_} {y_ - pad_} {width_ + pad_ * 2} {height_ + pad_ * 2}"
+        attributes["viewBox"] = attributes.get("viewBox", view_box)
+    # can only pass nsmap on instance creation
+    svg_root = etree.Element("svg", nsmap=nsmap)
+    return update_element(svg_root, **attributes)
 
 
 class _TostringDefaults(Enum):

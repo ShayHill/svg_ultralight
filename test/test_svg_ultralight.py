@@ -101,6 +101,14 @@ class TestNewSvgRoot:
         svg = f'<svg {" ".join(xmlns)} viewBox="0 1 2 3"/>'.encode()
         assert etree.tostring(new_svg_root(0, 1, 2, 3)) == svg
 
+    def test_additional_params(self) -> None:
+        """Pass additional params"""
+        namespace = tuple(NSMAP.items())
+        xmlns = [f'xmlns="{namespace[0][1]}"']
+        xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
+        svg = f'<svg {" ".join(xmlns)} viewBox="0 1 2 3"/>'.encode()
+        assert etree.tostring(new_svg_root(viewBox="0 1 2 3")) == svg
+
 
 class TestTostringKwargs:
     """Pass write_svg **kwargs to lxml.etree.tostring"""
