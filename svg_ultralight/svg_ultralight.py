@@ -17,10 +17,6 @@ from lxml import etree  # type: ignore
 
 from .constructors import update_element
 
-def ttt():
-    print('pass')
-
-
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 NSMAP = {
     None: _SVG_NAMESPACE,
@@ -34,7 +30,7 @@ NSMAP = {
 }
 
 
-def new_svg_rootr(
+def new_svg_root(
     x_: Optional[float] = None,
     y_: Optional[float] = None,
     width_: Optional[float] = None,
