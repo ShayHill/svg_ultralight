@@ -34,7 +34,7 @@ NSMAP = {
 }
 
 
-def new_svg_root(
+def new_svg_rootr(
     x_: Optional[float] = None,
     y_: Optional[float] = None,
     width_: Optional[float] = None,
