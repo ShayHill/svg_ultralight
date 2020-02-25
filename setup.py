@@ -5,7 +5,7 @@ with open("README.md") as fh:
 
 setuptools.setup(
     name="svg_ultralight",
-    version="0.3.6",
+    version="0.3.16",
     author="Shay Hill",
     author_email="shay_public@hotmail.com",
     description="Write SVG files with Python.",
@@ -13,11 +13,13 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ShayHill/svg_ultralight",
     package_data={"svg_ultralight": ["py.typed"]},
-    packages=["svg_ultralight", "svg_ultralight.constructors"],
-    package_dir={
-        "svg_ultralight": "svg_ultralight",
-        "svg_ultralight.constructors": "constructors",
-    },
+
+    packages=setuptools.find_packages(),
+# package_dir={
+    #     "svg_ultralight": "svg_ultralight",
+    #     "svg_ultralight.constructors": "constructors",
+    # },
+
     install_requires=["lxml"],
     tests_require=["pytest"],
     python_requires=">=3.6",

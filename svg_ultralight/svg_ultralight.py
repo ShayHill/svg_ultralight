@@ -15,7 +15,11 @@ from typing import Dict, Optional, Union
 
 from lxml import etree  # type: ignore
 
-from constructors.new_element import update_element
+from .constructors import update_element
+
+def ttt():
+    print('pass')
+
 
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 NSMAP = {
