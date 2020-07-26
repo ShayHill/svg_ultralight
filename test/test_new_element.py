@@ -6,8 +6,14 @@
 :created: 1/31/2020
 """
 
-from new_element import new_element, new_sub_element, update_element, deepcopy_element
 from lxml import etree  # type: ignore
+
+from svg_ultralight.constructors.new_element import (
+    deepcopy_element,
+    new_element,
+    new_sub_element,
+    update_element,
+)
 
 
 class TestNewElement:

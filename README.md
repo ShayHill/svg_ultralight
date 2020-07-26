@@ -11,24 +11,34 @@ The most straightforward way to create SVG files with Python.
     from svg_ultralight import NSMAP
     
 ### new_svg_root
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    pad: float = 0
+    x_: Optional[float],
+    y_: Optional[float],
+    width_: Optional[float],
+    height_: Optional[float],
+    pad_: float = 0
+    dpu_: float = 1
     nsmap: Optional[Dict[str, str]] = None (svg_ultralight.NSMAP if None)
+    **attributes: Union[float, str],
     -> etree.Element
 
-Create an svg root element from viewBox style arguments and provide the necessary svg-specific attributes and namespaces. This is your window onto the scene. The arguments are the same you'd use to create a `rect` element (plus `pad`):
+Create an svg root element from viewBox style arguments and provide the necessary svg-specific attributes and
+namespaces. This is your window onto the scene. The arguments are the same you'd use to create a `rect` element (plus `pad_` and `dpu_`):
+
+These trailing-underscore arguments are an optional shortcut for creating a scene.  The entire interface 
 
 See `namespaces` below.
 
-* `x`: x value in upper-left corner
-* `y`: y value in upper-left corner
-* `width`: width of viewBox
-* `height`: height of viewBox
-* `pad`: The one small convenience I've provided. Optionally increase viewBox by `pad` in all directions.
-* `nsmap`: namespaces. (defaults to svg_ultralight.NSMAP). Available as an argument should you wish to add additional namespaces. To do this, add items to NSMAP then call with `nsmap=NSMAP`.
+* `x_`: x value in upper-left corner
+* `y_`: y value in upper-left corner
+* `width_`: width of viewBox
+* `height_`: height of viewBox
+* `pad_`: The one small convenience I've provided. Optionally increase viewBox by `pad` in all directions.
+* `dpu_`: Pixels per viewBox unit for output images.
+* `nsmap`: namespaces. (defaults to svg_ultralight.NSMAP). Available as an argument should you wish to add additional
+namespaces. To do this, add items to NSMAP then call with `nsmap=NSMAP`.
+* `**attributes`: the trailing-underscore arguments are an *optional* shortcut for creating a scene. The entire svg
+interface is available to you through kwargs. See `A few helpers` below for details on attribute-name translation
+between Python and xml (the short version: `this_name` becomes `this-name` and `this_` becomes `this`)
 
 ### namespaces (svg_ultralight.NSMAP)
 
@@ -94,7 +104,7 @@ Create a png without writing an initial svg to your filesystem. This is not fast
 * `returns`: for convenience, returns png filename (`png`)
 * `effects`: creates png file at `png`
 
-## Two helpers:
+## A few helpers:
 
     from svg_ultralight.constructors import new_element, new_sub_element
 
@@ -123,6 +133,13 @@ Translates underscores to hyphens
     >>> elem = new_element('line', stroke_width=1)
     >>> etree.tostring(elem)
     b'<line stroke-width="1"/>'
+    
+Removes trailing underscores. You'll almost certainly want to use reserved names like ``class`` as svg parameters. This
+can be done by passing the name with a trailing underscore.
+
+    >>> elem = new_element('line', class_='thick_line')
+    >>> etree.tostring(elem)
+    b'<line class="thick_line"/>'
 
 Special handling for a 'text' argument. Places value between element tags.
 
@@ -143,6 +160,28 @@ As above, but creates a subelement.
     >>> _ = new_sub_element('rect')
     >>> etree.tostring(parent)
     b'<g><rect/></g>'
+    
+### update_element and deepcopy_element
+
+These are two more ways to add params with the above-described name and type conversion. Again unnecessary, but
+potentially helpful. Easily understood from the code or docstrings.
+    
+## One query
+
+Python cannot parse an svg file. Python can *create* an svg file, and Inkscape can parse (and inspect) it. Inkscape has
+a command-line interface capable of reading an svg file and returning some limited information. This is the only way I
+know for a Python program to:
+
+1. create an SVG file (optionally without writing to filesystem)
+2. query the SVG file for bounding-box information
+3. create an adjusted SVG file.
+
+This would be necessary for, e.g., algorithmically fitting text in a box.
+
+    from svg_ultralight.queries.map_ids_to_bounding_boxes
+
+You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty
+much all you can get out of it.
 
 [Full Documentation and Tutorial](https://shayallenhill.com/svg-with-css-in-python/)
 

@@ -30,6 +30,9 @@ def _set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> Non
     string. Will also replace `_` with `-` to translate valid Python variable names
     for xml parameter names.
 
+    Invalid names (a popular one will be 'class') can be passed with a trailing
+    underscore (e.g., class_='body_text').
+
     That's almost all. The function will also handle the 'text' keyword, placing the
     value between element tags.
     """
