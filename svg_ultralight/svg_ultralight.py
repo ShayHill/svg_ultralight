@@ -12,15 +12,15 @@ Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 
 import math
 import os
-import tempfile
-from enum import Enum
 from pathlib import Path
 from subprocess import call
+from tempfile import NamedTemporaryFile
 from typing import Dict, IO, Optional, Union
 
 from lxml import etree  # type: ignore
 
 from .constructors import update_element
+from .string_conversion import get_viewBox_str, svg_tostring
 
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
 NSMAP = {
@@ -33,26 +33,6 @@ NSMAP = {
     "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
     "inkscape": "http://www.inkscape.org/namespaces/inkscape",
 }
-
-
-def _get_viewBox_str(
-    x: float, y: float, width: float, height: float, pad: float = 0
-) -> str:
-    """
-    Round arguments to ints and create a space-delimited string.
-
-    :param x: x value in upper-left corner
-    :param y: y value in upper-left corner
-    :param width: width of viewBox
-    :param height: height of viewBox
-    :param pad: optionally increase viewBox by pad in all directions
-    :return: space-delimited string "x y width height"
-    """
-    dims = [
-        str(round(a + b))
-        for a, b in zip((x, y, width, height), (-pad, -pad, pad * 2, pad * 2))
-    ]
-    return " ".join(dims)
 
 
 def new_svg_root(
@@ -87,44 +67,15 @@ def new_svg_root(
     if nsmap is None:
         nsmap = NSMAP
     if None not in (x_, y_, width_, height_):
-        view_box = _get_viewBox_str(x_, y_, width_, height_, pad_)
+        view_box = get_viewBox_str(x_, y_, width_, height_, pad_)
         pixel_width = str(math.floor((width_ + pad_ * 2) * dpu_ + 0.5))
         pixel_height = str(math.floor((height_ + pad_ * 2) * dpu_ + 0.5))
         attributes["viewBox"] = attributes.get("viewBox", view_box)
         attributes["width"] = attributes.get("width", pixel_width)
         attributes["height"] = attributes.get("height", pixel_height)
     # can only pass nsmap on instance creation
-    svg_root = etree.Element("svg", nsmap=nsmap)
+    svg_root = etree.Element(f"{{{nsmap[None]}}}svg", nsmap=nsmap)
     return update_element(svg_root, **attributes)
-
-
-class _TostringDefaults(Enum):
-    """Default values for an svg xml_header"""
-
-    doctype: str = (
-        '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
-        '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
-    )
-    encoding: str = "UTF-8"
-
-
-def _svg_tostring(xml: etree.Element, **tostring_kwargs) -> bytearray:
-    """
-    Contents of svg file with optional xml declaration.
-
-    :param xml: root node of your svg geometry
-    :param tostring_kwargs: keyword arguments to etree.tostring. xml_header=True for
-        sensible default values. See below.
-
-    Further documentation in write_svg docstring.
-    """
-    tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
-    if tostring_kwargs.get("xml_declaration"):
-        for default in _TostringDefaults:
-            value = tostring_kwargs.get(default.name, default.value)
-            tostring_kwargs[default.name] = value
-    svg_contents = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
-    return svg_contents
 
 
 def write_svg(
@@ -186,7 +137,7 @@ def write_svg(
                 style.text = etree.CDATA("\n" + "".join(css_file.readlines()) + "\n")
             xml.insert(0, style)
 
-    svg_contents = _svg_tostring(xml, **tostring_kwargs)
+    svg_contents = svg_tostring(xml, **tostring_kwargs)
 
     try:
         svg.write(svg_contents)
@@ -233,9 +184,8 @@ def write_png(
     ``write_png_from_svg`` with the tempfile. This isn't faster (it might be slightly
     slower), but it keeps the filesystem clean when you only want the png.
     """
-    svg_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    svg_file.close()
-    write_svg(svg_file.name, xml, stylesheet)
-    write_png_from_svg(inkscape, svg_file.name, png)
-    os.unlink(svg_file.name)
+    with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
+        svg = write_svg(svg_file, xml, stylesheet)
+    write_png_from_svg(inkscape, svg, png)
+    os.unlink(svg)
     return png

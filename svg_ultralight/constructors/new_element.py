@@ -16,32 +16,7 @@ from typing import Union
 
 from lxml import etree  # type: ignore
 
-
-def _set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None:
-    """
-    Set name: value items as element attributes. Make every value a string.
-
-    :param elem: element to receive element.set(keyword, str(value)) calls
-    :param attributes: element attribute names and values. Knows what to do with 'text'
-        keyword.V :effects: updates ``elem``
-
-    This is just to save a lot of typing. etree.Elements will only accept string
-    values. Takes each in params.values(), and passes it to etree.Element as a
-    string. Will also replace `_` with `-` to translate valid Python variable names
-    for xml parameter names.
-
-    Invalid names (a popular one will be 'class') can be passed with a trailing
-    underscore (e.g., class_='body_text').
-
-    That's almost all. The function will also handle the 'text' keyword, placing the
-    value between element tags.
-    """
-    dots = {"text"}
-    for dot in dots & set(attributes):
-        setattr(elem, dot, attributes.pop(dot))
-
-    for k, v in attributes.items():
-        elem.set(k.rstrip("_").replace("_", "-"), str(v))
+from svg_ultralight.string_conversion import set_attributes
 
 
 def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
@@ -76,7 +51,7 @@ def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
 
     """
     elem = etree.Element(tag)
-    _set_attributes(elem, **attributes)
+    set_attributes(elem, **attributes)
     return elem
 
 
@@ -97,7 +72,7 @@ def new_sub_element(
         b'<g><rect/></g>'
     """
     elem = etree.SubElement(parent, tag)
-    _set_attributes(elem, **attributes)
+    set_attributes(elem, **attributes)
     return elem
 
 
@@ -110,7 +85,7 @@ def update_element(
     :param elem: at etree element
     :param attributes: element attribute names and values
     """
-    _set_attributes(elem, **attributes)
+    set_attributes(elem, **attributes)
     return elem
 
 

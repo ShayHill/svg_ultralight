@@ -17,7 +17,8 @@ import pytest
 from lxml import etree
 
 # noinspection PyProtectedMember
-from svg_ultralight.svg_ultralight import NSMAP, _svg_tostring, new_svg_root, write_svg
+from svg_ultralight.svg_ultralight import NSMAP, new_svg_root, write_svg
+from svg_ultralight.string_conversion import svg_tostring
 
 
 @pytest.fixture
@@ -90,24 +91,56 @@ class TestWriteSvg:
         assert svg_lines_false == svg_lines
 
 
+def svg_root(**kwargs) -> etree.Element:
+    """
+    Create an svg root from attribute kwargs
+
+    :param kwargs: exact svg attribute names
+    :return: a valid root to test against
+
+    The process is this:
+    * create a root here with explicit attributes
+    * create a root with a function that infers explicit attributes
+    * compare results
+    """
+    namespace = tuple(NSMAP.items())
+    xmlns = [f'xmlns="{namespace[0][1]}"']
+    xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
+    attributes = ' '.join([f'{k}="{v}"' for k, v in kwargs.items()])
+    return etree.fromstring(f'<svg {" ".join(xmlns)} {attributes}/>'.encode())
+
+
 class TestNewSvgRoot:
+    def test_nsmap(self) -> None:
+        """ NSMAP passed by default and parseable by lxml """
+        result = new_svg_root()
+        assert result.nsmap == NSMAP
+
     def test_args_pass(self) -> None:
         """Arguments and xmlns appear in element.
 
         Build the svg element namespace from NSMAP and compare to output"""
-        namespace = tuple(NSMAP.items())
-        xmlns = [f'xmlns="{namespace[0][1]}"']
-        xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
-        svg = f'<svg {" ".join(xmlns)} viewBox="0 1 2 3"/>'.encode()
-        assert etree.tostring(new_svg_root(0, 1, 2, 3)) == svg
+        expect = svg_root(
+            **{"viewBox": "0 1 2 3", "width": "2", "height": "3"}
+        )
+        result = new_svg_root(0, 1, 2, 3)
+        assert result.attrib == expect.attrib
 
     def test_additional_params(self) -> None:
         """Pass additional params"""
-        namespace = tuple(NSMAP.items())
-        xmlns = [f'xmlns="{namespace[0][1]}"']
-        xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
-        svg = f'<svg {" ".join(xmlns)} viewBox="0 1 2 3"/>'.encode()
-        assert etree.tostring(new_svg_root(viewBox="0 1 2 3")) == svg
+        expect = svg_root(
+            **{"attr": "value", "viewBox": "0 1 2 3", "width": "2", "height": "3"}
+        )
+        result = new_svg_root(0, 1, 2, 3, attr="value")
+        assert result.attrib == expect.attrib
+
+    def test_conflicting_params(self) -> None:
+        """ Explicit params overwrite trailing-underscore-inferred params """
+        expect = svg_root(
+            **{"viewBox": "0 1 2 3", "width": "2", "height": "30"}
+        )
+        result = new_svg_root(0, 1, 2, 3, height=30)
+        assert result.attrib == expect.attrib
 
 
 class TestTostringKwargs:
@@ -116,12 +149,12 @@ class TestTostringKwargs:
     def test_no_args(self) -> None:
         """Svg content only when no tostring kwargs"""
         blank = etree.Element("blank")
-        assert _svg_tostring(blank) == b"<blank/>\n"
+        assert svg_tostring(blank) == b"<blank/>\n"
 
     def test_default(self) -> None:
         """Default params when xml_declaration is True"""
         blank = etree.Element("blank")
-        assert _svg_tostring(blank, xml_declaration=True).split(b"\n") == [
+        assert svg_tostring(blank, xml_declaration=True).split(b"\n") == [
             b"<?xml version='1.0' encoding='UTF-8'?>",
             b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"',
             b'"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
@@ -132,7 +165,7 @@ class TestTostringKwargs:
     def test_override_doctype(self) -> None:
         """Override default params"""
         blank = etree.Element("blank")
-        result = _svg_tostring(blank, xml_declaration=True, doctype=None)
+        result = svg_tostring(blank, xml_declaration=True, doctype=None)
         assert result.split(b"\n") == [
             b"<?xml version='1.0' encoding='UTF-8'?>",
             b"<blank/>",
@@ -142,7 +175,7 @@ class TestTostringKwargs:
     def test_override_encoding(self) -> None:
         """Default params when xml_declaration is True"""
         blank = etree.Element("blank")
-        result = _svg_tostring(blank, xml_declaration=True, encoding="ascii")
+        result = svg_tostring(blank, xml_declaration=True, encoding="ascii")
         assert result.split(b"\n") == [
             b"<?xml version='1.0' encoding='ascii'?>",
             b'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"',

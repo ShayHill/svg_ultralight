@@ -8,7 +8,7 @@
 None of this is exceptionally fast.
 """
 import os
-import tempfile
+from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen
 from typing import Dict, NamedTuple, Optional
 
@@ -54,9 +54,7 @@ def map_ids_to_bounding_boxes(
     This calls the command and formats the output into a dictionary.
     """
     if svg is None:
-        with tempfile.NamedTemporaryFile(
-            mode="wb", delete=False, suffix=".svg"
-        ) as svg_file:
+        with NamedTemporaryFile(mode="wb", delete=False, suffix=".svg") as svg_file:
             svg = write_svg(svg_file, xml)
         result = map_ids_to_bounding_boxes(inkscape, svg)
         os.unlink(svg)

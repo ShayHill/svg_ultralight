@@ -22,9 +22,14 @@ The most straightforward way to create SVG files with Python.
     -> etree.Element
 
 Create an svg root element from viewBox style arguments and provide the necessary svg-specific attributes and
-namespaces. This is your window onto the scene. The arguments are the same you'd use to create a `rect` element (plus `pad_` and `dpu_`):
+namespaces. This is your window onto the scene.
 
-These trailing-underscore arguments are an optional shortcut for creating a scene.  The entire interface 
+Three ways to call:
+
+1. The trailing-underscore arguments are the same you'd use to create a `rect` element (plus `pad_` and `dpu_`).
+`new_svg_root` will infer `viewBox`, `width`, and `height` svg attributes from these values.
+2. Use the svg attributes you already know: `viewBox`, `width`, `height`, etc. These will be written to the xml file.
+3. Of course, you can combine 1. and 2. if you know what you're doing.
 
 See `namespaces` below.
 
@@ -32,8 +37,8 @@ See `namespaces` below.
 * `y_`: y value in upper-left corner
 * `width_`: width of viewBox
 * `height_`: height of viewBox
-* `pad_`: The one small convenience I've provided. Optionally increase viewBox by `pad` in all directions.
-* `dpu_`: Pixels per viewBox unit for output images.
+* `pad_`: the one small convenience I've provided. Optionally increase viewBox by `pad` in all directions.
+* `dpu_`: pixels per viewBox unit for output png images.
 * `nsmap`: namespaces. (defaults to svg_ultralight.NSMAP). Available as an argument should you wish to add additional
 namespaces. To do this, add items to NSMAP then call with `nsmap=NSMAP`.
 * `**attributes`: the trailing-underscore arguments are an *optional* shortcut for creating a scene. The entire svg
@@ -166,22 +171,49 @@ As above, but creates a subelement.
 These are two more ways to add params with the above-described name and type conversion. Again unnecessary, but
 potentially helpful. Easily understood from the code or docstrings.
     
-## One query
+## Two extras:
+
+### query.map_ids_to_bounding_boxes
 
 Python cannot parse an svg file. Python can *create* an svg file, and Inkscape can parse (and inspect) it. Inkscape has
 a command-line interface capable of reading an svg file and returning some limited information. This is the only way I
 know for a Python program to:
 
-1. create an SVG file (optionally without writing to filesystem)
-2. query the SVG file for bounding-box information
-3. create an adjusted SVG file.
+1. create an svg file (optionally without writing to filesystem)
+2. query the svg file for bounding-box information
+3. create an adjusted svg file.
 
 This would be necessary for, e.g., algorithmically fitting text in a box.
 
-    from svg_ultralight.queries.map_ids_to_bounding_boxes
+    from svg_ultralight.queries import map_ids_to_bounding_boxes
 
 You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty
 much all you can get out of it.
+
+### animate.write_gif
+
+Create an animated gif from a sequence of png filenames. This is a Pillow one-liner, but it's convenient for me to have
+it, so it might be convenient for you.
+
+    from svg_ultralight.animate import write_gif
+    
+## new in version 0.4
+
+* new module `svg_ultralight.query` with one function `map_ids_to_bounding_boxes` uses your Inkscape executable to get
+bounding boxes for every element.
+
+* new module `svg_ultralight.animate` with one function `write_gif` uses Pillow to create a gif file from a sequence of pngs.
+
+* new dependency `Pillow` is needed to write gifs.
+
+* create_svg now creates a root element with `tag='{http://www.w3.org/2000/svg}svg'` (previously `tag='svg'`). This makes
+no difference to the output file, but simplifies some element inspection you may want to do.
+
+* `viewBox`, `width`, and `height` inferred from `write_svg` trailing-underscore arguments are now rounded to integers. Float
+values appeared to work, but caused strangeness with bounding-box queries.
+
+* `write_svg` now accepts a filename or open `IO[binary]` object. This simplifies the internal code when writing temporary
+svg files.
 
 [Full Documentation and Tutorial](https://shayallenhill.com/svg-with-css-in-python/)
 

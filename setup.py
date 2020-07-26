@@ -5,7 +5,7 @@ with open("README.md") as fh:
 
 setuptools.setup(
     name="svg_ultralight",
-    version="0.3.19",
+    version="0.4.0",
     author="Shay Hill",
     author_email="shay_public@hotmail.com",
     description="Write SVG files with Python.",
