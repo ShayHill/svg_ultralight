@@ -5,6 +5,7 @@
 :author: Shay Hill
 :created: 7/26/2020
 """
+import decimal
 from enum import Enum
 from typing import Union
 
@@ -29,13 +30,20 @@ def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None
 
     That's almost all. The function will also handle the 'text' keyword, placing the
     value between element tags.
+
+    Format floats through decimal.Decimal to avoid exponential representation
+    (e.g., 10e-06) which svg parsers won't understand.
     """
     dots = {"text"}
     for dot in dots & set(attributes):
         setattr(elem, dot, attributes.pop(dot))
 
     for k, v in attributes.items():
-        elem.set(k.rstrip("_").replace("_", "-"), str(v))
+        try:
+            val = str(decimal.Decimal(v))
+        except decimal.InvalidOperation:
+            val = str(v)
+        elem.set(k.rstrip("_").replace("_", "-"), val)
 
 
 class _TostringDefaults(Enum):
