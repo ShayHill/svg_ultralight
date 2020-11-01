@@ -41,5 +41,5 @@ def svg_float_tuples(tuples: Iterable[Tuple[float, float]]) -> str:
     :param tuples: [(a, b), (c, d)]
     :return: "a,b c,d"
     """
-    tuples = [",".join(decimal.Decimal(x) for x in y) for y in tuples]
+    tuples = [",".join(str(decimal.Decimal(x)) for x in y) for y in tuples]
     return " ".join(tuples)
