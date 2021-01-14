@@ -1,2 +1,3 @@
-lxml
 Pillow
+Pytest
+lxml

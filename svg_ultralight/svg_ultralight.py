@@ -20,19 +20,8 @@ from typing import Dict, IO, Optional, Union
 from lxml import etree  # type: ignore
 
 from .constructors import update_element
+from .nsmap import NSMAP
 from .string_conversion import get_viewBox_str, svg_tostring
-
-_SVG_NAMESPACE = "http://www.w3.org/2000/svg"
-NSMAP = {
-    None: _SVG_NAMESPACE,
-    "dc": "http://purl.org/dc/elements/1.1/",
-    "cc": "http://creativecommons.org/ns#",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "svg": _SVG_NAMESPACE,
-    "xlink": "http://www.w3.org/1999/xlink",
-    "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
-    "inkscape": "http://www.inkscape.org/namespaces/inkscape",
-}
 
 
 def new_svg_root(

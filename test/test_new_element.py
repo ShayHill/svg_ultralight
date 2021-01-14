@@ -22,6 +22,14 @@ class TestNewElement:
         elem = new_element("line", x=10, y1=80, stroke_width="2")
         assert etree.tostring(elem) == b'<line x="10" y1="80" stroke-width="2"/>'
 
+    def test_qualified_name_string_conversion(self) -> None:
+        """If a keyword argument has :, convert to qname"""
+        elem = new_element("line", **{"xlink:href": 10})
+        assert (
+            etree.tostring(elem)
+            == b'<line xmlns:ns0="http://www.w3.org/1999/xlink" ns0:href="10"/>'
+        )
+
     def test_trailing_underscore(self) -> None:
         """Remove trailing _ from params"""
         elem = new_element("line", x=10, y1=80, in_="SourceAlpha")
@@ -36,6 +44,11 @@ class TestNewElement:
         """Insert text between tags"""
         elem = new_element("text", text="text here")
         assert etree.tostring(elem) == b"<text>text here</text>"
+
+    def test_float(self) -> None:
+        """Floats at 0.6f precision"""
+        elem = new_element("text", x=1/3)
+        assert etree.tostring(elem) == b'<text x="0.333333"/>'
 
 
 class TestNewSubElement:

@@ -4,12 +4,31 @@
 
 :author: Shay Hill
 :created: 7/26/2020
+
+Rounding some numbers to ensure quality svg rendering:
+* Rounding floats to six digits after the decimal
+* Rounding viewBox dimensions to ints
 """
-import decimal
 from enum import Enum
 from typing import Union
 
 from lxml import etree
+from .nsmap import NSMAP
+
+
+def format_number(num: float) -> str:
+    """
+    Format strings at limited precision
+
+    :param num: anything that can print as a float.
+    :return: str
+
+    I've read articles that recommend no more than four digits before and two digits
+    after the decimal point to ensure good svg rendering. I'm being generous and
+    giving six. Mostly to eliminate exponential notation, but I'm "rstripping" the
+    strings to reduce filesize and increase readability
+    """
+    return f"{num:0.6f}".rstrip("0").rstrip(".")
 
 
 def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None:
@@ -31,7 +50,7 @@ def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None
     That's almost all. The function will also handle the 'text' keyword, placing the
     value between element tags.
 
-    Format floats through decimal.Decimal to avoid exponential representation
+    Format floats through f'{value:f} to avoid exponential representation
     (e.g., 10e-06) which svg parsers won't understand.
     """
     dots = {"text"}
@@ -39,11 +58,16 @@ def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None
         setattr(elem, dot, attributes.pop(dot))
 
     for k, v in attributes.items():
+        if ":" in k:
+            namespace, tag = k.split(":")
+            k = etree.QName(NSMAP[namespace], tag)
+        else:
+            k = k.rstrip("_").replace("_", "-")
         try:
-            val = str(decimal.Decimal(v))
-        except decimal.InvalidOperation:
+            val = format_number(v)
+        except ValueError:
             val = str(v)
-        elem.set(k.rstrip("_").replace("_", "-"), val)
+        elem.set(k, val)
 
 
 class _TostringDefaults(Enum):
