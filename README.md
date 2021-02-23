@@ -171,7 +171,7 @@ As above, but creates a subelement.
 These are two more ways to add params with the above-described name and type conversion. Again unnecessary, but
 potentially helpful. Easily understood from the code or docstrings.
     
-## Two extras:
+## Extras:
 
 ### query.map_ids_to_bounding_boxes
 
@@ -190,6 +190,14 @@ This would be necessary for, e.g., algorithmically fitting text in a box.
 You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty
 much all you can get out of it.
 
+### query.get_bounding_box
+
+Get the bounding box around an svg element. Works with group elements.
+
+Internally, this just creates an svg file around your element then calls `map_ids_to_bounding_boxes`.
+
+    from svg_ultralight.queries import get_bounding_box
+
 ### animate.write_gif
 
 Create an animated gif from a sequence of png filenames. This is a Pillow one-liner, but it's convenient for me to have
@@ -197,23 +205,5 @@ it, so it might be convenient for you.
 
     from svg_ultralight.animate import write_gif
     
-## new in version 0.4
-
-* new module `svg_ultralight.query` with one function `map_ids_to_bounding_boxes` uses your Inkscape executable to get
-bounding boxes for every element.
-
-* new module `svg_ultralight.animate` with one function `write_gif` uses Pillow to create a gif file from a sequence of pngs.
-
-* new dependency `Pillow` is needed to write gifs.
-
-* create_svg now creates a root element with `tag='{http://www.w3.org/2000/svg}svg'` (previously `tag='svg'`). This makes
-no difference to the output file, but simplifies some element inspection you may want to do.
-
-* `viewBox`, `width`, and `height` inferred from `write_svg` trailing-underscore arguments are now rounded to integers. Float
-values appeared to work, but caused strangeness with bounding-box queries.
-
-* `write_svg` now accepts a filename or open `IO[binary]` object. This simplifies the internal code when writing temporary
-svg files.
-
 [Full Documentation and Tutorial](https://shayallenhill.com/svg-with-css-in-python/)
 

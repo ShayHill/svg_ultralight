@@ -16,7 +16,7 @@ from typing import Union
 
 from lxml import etree  # type: ignore
 
-from svg_ultralight.string_conversion import set_attributes
+from ..string_conversion import set_attributes
 
 
 def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:

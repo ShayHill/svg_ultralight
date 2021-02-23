@@ -10,7 +10,8 @@ make things easier.
 """
 
 from typing import Iterable, Tuple
-import decimal
+
+from ..string_conversion import format_number
 
 
 def svg_color_tuple(rgb_floats):
@@ -41,5 +42,5 @@ def svg_float_tuples(tuples: Iterable[Tuple[float, float]]) -> str:
     :param tuples: [(a, b), (c, d)]
     :return: "a,b c,d"
     """
-    tuples = [",".join(str(decimal.Decimal(x)) for x in y) for y in tuples]
+    tuples = [",".join(format_number(x) for x in y) for y in tuples]
     return " ".join(tuples)
