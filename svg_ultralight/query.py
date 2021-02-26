@@ -91,7 +91,7 @@ class BoundingBox:
         self.scale *= height / self.height
 
     def _asdict(self):
-        return {x[1:]: getattr(self, x) for x in ("x", "y", "width", "height")}
+        return {x: getattr(self, x) for x in ("x", "y", "width", "height")}
 
     def add_transform(self, scale: float, translation_x: float, translation_y: float):
         self.translation_x += translation_x / self.scale
