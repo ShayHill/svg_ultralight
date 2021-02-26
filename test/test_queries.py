@@ -26,14 +26,39 @@ class TestMapIdsToBoundingBoxes:
         Run with a temporary file.
         """
         expected = {
-            "svg1": BoundingBox(x=-10.0, y=-20.0, width=16.0, height=32.0),
-            "rect1": BoundingBox(x=-10.0, y=-20.0, width=16.0, height=9.0),
-            "rect2": BoundingBox(x=-10.0, y=-20.0, width=8.0, height=32.0),
+            "svg4": BoundingBox(
+                origin_x=0.0,
+                origin_y=0.0,
+                origin_width=16.0,
+                origin_height=32.0,
+                scale=1,
+                translation_x=0,
+                translation_y=0,
+            ),
+            "rect1": BoundingBox(
+                origin_x=0.0,
+                origin_y=0.0,
+                origin_width=16.0,
+                origin_height=9.0,
+                scale=1,
+                translation_x=0,
+                translation_y=0,
+            ),
+            "rect2": BoundingBox(
+                origin_x=0.0,
+                origin_y=0.0,
+                origin_width=8.0,
+                origin_height=32.0,
+                scale=1,
+                translation_x=0,
+                translation_y=0,
+            ),
         }
+
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
         new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
-        result = map_ids_to_bounding_boxes(INKSCAPE, xml=xml)
+        result = map_ids_to_bounding_boxes(INKSCAPE, xml)
         assert result == expected
 
 
