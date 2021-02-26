@@ -42,7 +42,7 @@ class BoundingBox:
 
     @property
     def x(self) -> float:
-        return (self.translation_x - self.origin_x) * self.scale
+        return (self.translation_x + self.origin_x) * self.scale
 
     @x.setter
     def x(self, x) -> None:
@@ -50,7 +50,7 @@ class BoundingBox:
 
     @property
     def y(self) -> float:
-        return (self.translation_y - self.origin_y) * self.scale
+        return (self.translation_y + self.origin_y) * self.scale
 
     @y.setter
     def y(self, y) -> None:
@@ -80,7 +80,11 @@ class BoundingBox:
 
     @width.setter
     def width(self, width: float) -> None:
+        old_x = self.x
+        old_y = self.y
         self.scale *= width / self.width
+        self.x = old_x
+        self.y = old_y
 
     @property
     def height(self) -> float:
@@ -88,7 +92,7 @@ class BoundingBox:
 
     @height.setter
     def height(self, height: float) -> None:
-        self.scale *= height / self.height
+        self.width = height * self.width / self.height
 
     def _asdict(self):
         return {x: getattr(self, x) for x in ("x", "y", "width", "height")}
