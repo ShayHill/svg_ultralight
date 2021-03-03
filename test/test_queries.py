@@ -23,8 +23,6 @@ INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape"
 aaa = BoundingBox(-2, -4, 10, 20)
 bbb = BoundingBox(3, 4, 10, 20)
 
-breakpoint()
-
 
 class TestMapIdsToBoundingBoxes:
     def test_gets_bboxes(self) -> None:

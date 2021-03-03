@@ -113,7 +113,7 @@ def get_viewBox_str(
     :return: space-delimited string "x y width height"
     """
     dims = [
-        str(round(a + b))
+        format_number(a + b)
         for a, b in zip((x, y, width, height), (-pad, -pad, pad * 2, pad * 2))
     ]
     return " ".join(dims)

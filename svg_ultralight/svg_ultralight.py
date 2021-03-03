@@ -10,7 +10,6 @@ IMPORTANT: path cannot end with ``.exe``.
 Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 """
 
-import math
 import os
 from pathlib import Path
 from subprocess import call
@@ -21,7 +20,7 @@ from lxml import etree  # type: ignore
 
 from .constructors import update_element
 from .nsmap import NSMAP
-from .string_conversion import get_viewBox_str, svg_tostring
+from .string_conversion import format_number, get_viewBox_str, svg_tostring
 
 
 def new_svg_root(
@@ -48,17 +47,14 @@ def new_svg_root(
     :return: root svg element
 
     All viewBox-style (trailing underscore) parameters are optional. Any kwargs will
-    be passed to ``etree.Element`` as element parameters. Float values to
-    trailing-underscore parameters will be rounded to ints. Float arguments cause
-    problems with bounding boxes. If you don't query bounding boxes, you may never
-    notice.
+    be passed to ``etree.Element`` as element parameters.
     """
     if nsmap is None:
         nsmap = NSMAP
     if None not in (x_, y_, width_, height_):
         view_box = get_viewBox_str(x_, y_, width_, height_, pad_)
-        pixel_width = str(math.floor((width_ + pad_ * 2) * dpu_ + 0.5))
-        pixel_height = str(math.floor((height_ + pad_ * 2) * dpu_ + 0.5))
+        pixel_width = format_number(width_ + pad_ * 2)
+        pixel_height = format_number(height_ + pad_ * 2)
         attributes["viewBox"] = attributes.get("viewBox", view_box)
         attributes["width"] = attributes.get("width", pixel_width)
         attributes["height"] = attributes.get("height", pixel_height)
@@ -157,7 +153,10 @@ def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> st
 
 
 def write_png(
-    inkscape: str, png: str, xml: etree.Element, stylesheet: Optional[str] = None,
+    inkscape: str,
+    png: str,
+    xml: etree.Element,
+    stylesheet: Optional[str] = None,
 ) -> str:
     """
     Create a png file without writing an intermediate svg file.
