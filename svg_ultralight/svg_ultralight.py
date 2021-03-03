@@ -53,8 +53,8 @@ def new_svg_root(
         nsmap = NSMAP
     if None not in (x_, y_, width_, height_):
         view_box = get_viewBox_str(x_, y_, width_, height_, pad_)
-        pixel_width = format_number(width_ + pad_ * 2)
-        pixel_height = format_number(height_ + pad_ * 2)
+        pixel_width = format_number((width_ + pad_ * 2) * dpu_)
+        pixel_height = format_number((height_ + pad_ * 2) * dpu_)
         attributes["viewBox"] = attributes.get("viewBox", view_box)
         attributes["width"] = attributes.get("width", pixel_width)
         attributes["height"] = attributes.get("height", pixel_height)
