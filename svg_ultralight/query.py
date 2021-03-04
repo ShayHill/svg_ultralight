@@ -80,11 +80,14 @@ class BoundingBox:
 
     @width.setter
     def width(self, width: float) -> None:
-        old_x = self.x
-        old_y = self.y
+        # old_x = self.x
+        # old_y = self.y
+        self.translation_x *= self.width / width
+        self.translation_y *= self.width / width
         self.scale *= width / self.width
-        self.x = old_x
-        self.y = old_y
+        # self.translation_x = self.translation_x *
+        # self.x = old_x
+        # self.y = old_y
 
     @property
     def height(self) -> float:

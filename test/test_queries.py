@@ -9,13 +9,15 @@ A quick test. Won't be able to run it till you change INKSCAPE to the correct pa
 your system.
 """
 
+import math
 from svg_ultralight import new_svg_root
-from svg_ultralight.constructors import new_sub_element, new_element
+from svg_ultralight.constructors import new_sub_element, new_element, update_element
 from svg_ultralight.query import (
     BoundingBox,
     map_ids_to_bounding_boxes,
     get_bounding_box,
 )
+from copy import deepcopy
 
 INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape"
 
@@ -87,3 +89,16 @@ class TestGetBBox:
         new_sub_element(group, "rect", id="rect2", x=1, y=1, width=8, height=32)
         result = get_bounding_box(INKSCAPE, group)
         assert result == BoundingBox(0, 0, 16, 33)
+
+
+class TestAlterBoundingBox:
+    def test_reverse_width(self) -> None:
+        """ adjust width one way then the other returns to original box """
+        bbox = BoundingBox(10, 20, 30, 40)
+        bbox.x = 100
+        bbox.y = 200
+        bbox.height = 200
+        bbox.height = 40
+        assert math.isclose(bbox.scale, 1)
+        assert math.isclose(bbox.translation_x, 90)
+        assert math.isclose(bbox.translation_y, 180)
