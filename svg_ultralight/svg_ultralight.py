@@ -11,8 +11,8 @@ Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 """
 
 import os
+import subprocess
 from pathlib import Path
-from subprocess import call
 from tempfile import NamedTemporaryFile
 from typing import Dict, IO, Optional, Union
 
@@ -148,8 +148,19 @@ def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> st
     """
     if png is None:
         png = str(Path(svg).with_suffix(".png"))
-    call(f'"{inkscape}" -f "{svg}" -e "{png}"')
-    return png
+
+    # inkscape versions >= 1.0
+    options = [f'"{svg}"', "--export-type=png", f'--export-filename="{png}"']
+    return_code = subprocess.call(f'"{inkscape}" ' + " ".join(options))
+    if return_code == 0:
+        return png
+
+    # inkscape versions < 1.0
+    return_code = subprocess.call(f'"{inkscape}" -f "{svg}" -e "{png}"')
+    if return_code == 0:
+        return png
+
+    raise ValueError(f"failed to write {png}")
 
 
 def write_png(
@@ -177,3 +188,60 @@ def write_png(
     write_png_from_svg(inkscape, svg, png)
     os.unlink(svg)
     return png
+
+
+def write_pdf_from_svg(inkscape: str, svg: str, pdf: Optional[str] = None) -> str:
+    """
+    Convert an svg file to a pdf
+
+    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param svg: path to svg file
+    :param pdf: optional path to png output file
+    :return: pdf filename
+    :effects: creates a new pfd from svg filename
+
+    If no output png path is given, the output path will be inferred from the ``svg``
+    filename.
+    """
+    if pdf is None:
+        pdf = str(Path(svg).with_suffix(".pdf"))
+
+    # inkscape versions >= 1.0
+    options = [f'"{svg}"', "--export-type=pdf", f'--export-filename="{pdf}"']
+    return_code = subprocess.call(f'"{inkscape}" ' + " ".join(options))
+    if return_code == 0:
+        return pdf
+
+    # inkscape versions < 1.0
+    return_code = subprocess.call(f'"{inkscape}" -f "{svg}" -e "{pdf}"')
+    if return_code == 0:
+        return pdf
+
+    raise ValueError(f"failed to write {pdf}")
+
+
+def write_pdf(
+    inkscape: str,
+    pdf: str,
+    xml: etree.Element,
+    stylesheet: Optional[str] = None,
+) -> str:
+    """
+    Create a pdf file without writing an intermediate svg file.
+
+    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param pdf: path to output pdf file
+    :param xml: root node of your svg geometry
+    :param stylesheet: optional path to css stylesheet
+    :return: pdf filename (the same you input as ``pdf``)
+    :effects: creates a new pdf file
+
+    This just creates a tempfile, writes the svg to the tempfile, then calls
+    ``write_pdf_from_svg`` with the tempfile. This isn't faster (it might be slightly
+    slower), but it keeps the filesystem clean when you only want the pdf.
+    """
+    with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
+        svg = write_svg(svg_file, xml, stylesheet)
+    write_pdf_from_svg(inkscape, svg, pdf)
+    os.unlink(svg)
+    return pdf

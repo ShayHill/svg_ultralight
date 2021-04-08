@@ -8,18 +8,20 @@
 None of this is exceptionally fast.
 """
 from __future__ import annotations
+
 import os
+import re
+from dataclasses import dataclass
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
-from typing import Dict, NamedTuple, Optional
-from .constructors import deepcopy_element
+from typing import Dict
 
 from lxml import etree  # type: ignore
 
 from svg_ultralight import write_svg
-from .svg_ultralight import new_svg_root
+from .constructors import deepcopy_element
 from .strings import format_number
-from dataclasses import dataclass
+from .svg_ultralight import new_svg_root
 
 
 @dataclass
@@ -80,14 +82,9 @@ class BoundingBox:
 
     @width.setter
     def width(self, width: float) -> None:
-        # old_x = self.x
-        # old_y = self.y
         self.translation_x *= self.width / width
         self.translation_y *= self.width / width
         self.scale *= width / self.width
-        # self.translation_x = self.translation_x *
-        # self.x = old_x
-        # self.y = old_y
 
     @property
     def height(self) -> float:
@@ -172,7 +169,7 @@ def map_ids_to_bounding_boxes(
 
     bb_process = Popen(f'"{inkscape}" --query-all {svg}', stdout=PIPE)
     bb_data = str(bb_process.communicate()[0])[2:-1]
-    bb_strings = bb_data.split("\\r\\n")[:-1]
+    bb_strings = re.split(r"[\\r]*\\n", bb_data)[:-1]
     os.unlink(svg_file.name)
 
     id2bbox = {}

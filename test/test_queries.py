@@ -10,16 +10,16 @@ your system.
 """
 
 import math
+
 from svg_ultralight import new_svg_root
-from svg_ultralight.constructors import new_sub_element, new_element, update_element
+from svg_ultralight.constructors import new_element, new_sub_element
 from svg_ultralight.query import (
     BoundingBox,
-    map_ids_to_bounding_boxes,
     get_bounding_box,
+    map_ids_to_bounding_boxes,
 )
-from copy import deepcopy
 
-INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape"
+INKSCAPE = r"C:\Program Files\Inkscape\bin\inkscape"
 
 
 aaa = BoundingBox(-2, -4, 10, 20)
