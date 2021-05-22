@@ -92,6 +92,6 @@ class TestAlterBoundingBox:
         bbox.y = 200
         bbox.height = 200
         bbox.height = 40
-        assert math.isclose(bbox._scale, 1)
+        assert math.isclose(bbox.scale, 1)
         assert math.isclose(bbox._translation_x, 90)
         assert math.isclose(bbox._translation_y, 180)

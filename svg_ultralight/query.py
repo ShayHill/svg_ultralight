@@ -94,6 +94,25 @@ class BoundingBox:
         self._translation_y: float = 0
 
     @property
+    def scale(self) -> float:
+        """
+        Read-only scale.
+
+        self.scale is publicly visible, because it's convenient to fit a (usually
+        text) element somewhere then scale other elements to the same size--even
+        though element width and height may be different. This is a read-only
+        attribute, because writing it would cause too many errors of intuition (would
+        the scaled element stay anchored to x and y?).
+
+        To match the scale of two elements:
+            ``elem_b.width = elem_b.width * elem_a.scale / elem_b.scale``
+
+        This is consistent with setting width any other way: the element will still
+        be anchored at self.x and self.y.
+        """
+        return self._scale
+
+    @property
     def x(self) -> float:
         """
         x left value of bounding box
