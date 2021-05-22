@@ -26,39 +26,32 @@ aaa = BoundingBox(-2, -4, 10, 20)
 bbb = BoundingBox(3, 4, 10, 20)
 
 
+class TestTransformBoundingBoxes:
+    def test_transforms_commutative(self):
+        """
+        Scale then transform = transform then scale
+        """
+        bbox_a = BoundingBox(-20000, -4, 10, 30)
+        bbox_b = BoundingBox(-20000, -4, 10, 30)
+
+        bbox_a.width = 100
+        bbox_a.x = 200
+
+        bbox_b.x = 200
+        bbox_b.width = 100
+
+        assert bbox_a.transform_string == bbox_b.transform_string
+
+
 class TestMapIdsToBoundingBoxes:
     def test_gets_bboxes(self) -> None:
         """
         Run with a temporary file.
         """
         expected = {
-            "svg4": BoundingBox(
-                origin_x=0.0,
-                origin_y=0.0,
-                origin_width=16.0,
-                origin_height=32.0,
-                scale=1,
-                translation_x=0,
-                translation_y=0,
-            ),
-            "rect1": BoundingBox(
-                origin_x=0.0,
-                origin_y=0.0,
-                origin_width=16.0,
-                origin_height=9.0,
-                scale=1,
-                translation_x=0,
-                translation_y=0,
-            ),
-            "rect2": BoundingBox(
-                origin_x=0.0,
-                origin_y=0.0,
-                origin_width=8.0,
-                origin_height=32.0,
-                scale=1,
-                translation_x=0,
-                translation_y=0,
-            ),
+            "svg4": BoundingBox(x=0.0, y=0.0, width=16.0, height=32.0),
+            "rect1": BoundingBox(x=0.0, y=0.0, width=16.0, height=9.0),
+            "rect2": BoundingBox(x=0.0, y=0.0, width=8.0, height=32.0),
         }
 
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
@@ -99,6 +92,6 @@ class TestAlterBoundingBox:
         bbox.y = 200
         bbox.height = 200
         bbox.height = 40
-        assert math.isclose(bbox.scale, 1)
-        assert math.isclose(bbox.translation_x, 90)
-        assert math.isclose(bbox.translation_y, 180)
+        assert math.isclose(bbox._scale, 1)
+        assert math.isclose(bbox._translation_x, 90)
+        assert math.isclose(bbox._translation_y, 180)

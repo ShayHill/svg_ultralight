@@ -5,8 +5,12 @@
 :author: Shay Hill
 :created: 7/25/2020
 
-None of this is exceptionally fast.
+Bounding boxes are generated with a command-line call to Inkscape, so an Inkscape
+installation is required for this to work. The bounding boxes are returned as
+BoundingBox instances, which are a big help with aligning objects (e.g., text on a
+business card). Getting bounding boxes from Inkscape is not exceptionally fast.
 """
+
 from __future__ import annotations
 
 import os
@@ -29,91 +33,194 @@ class BoundingBox:
     """
     Mutable bounding box object for svg_ultralight.
 
-    Bounding box can be transformed (uniform scale and translate only).
-    Transformations will be combined and scored to be passes to new_element as a
-    transform value.
+    Functions that return a bounding box will return a BoundingBox instance. This
+    instance can be transformed (uniform scale and translate only). Transformations
+    will be combined and scored to be passed to new_element as a transform value.
+
+    Define the bbox with x=, y=, width=, height=
+
+    Transform the BoundingBox by setting these variables. Each time you set x, x2, y,
+    y2, width, or height, private transformation values (_scale, _transform_x,
+    and _transform_y) will be updated.
+
+    The ultimate transformation can be accessed through ``.transformation_string``.
+    So the workflow will look like :
+
+        1. Get the bounding box of an svg element
+        2. Update the bounding box x, y, width, and height
+        3. Transform the original svg element with
+            update_element(elem, transform=bbox.transform_string)
+        4. The transformed element will lie in the transformed BoundingBox
+
+    In addition to x, y, width, and height, x2 and y2 can be set to establish the
+    right x value or bottom y value.
+
+    The point of all of this is to simplify stacking and aligning elements. To stack:
+
+        ```
+        elem_a = new_element(*args)
+        bbox_a = get_bounding_box(elem_a)
+
+        elem_b = new_element(*args)
+        bbox_b = get_bounding_box(elem_b)
+
+        # align at same x
+        bbox_b.x = bbox_a.x
+
+        # make the same width
+        bbox_b.width = bbox_a.width
+
+        # stack a on top of b
+        bbox_a.y2 = bbox_b.y
+
+        update_element(elem_a, transform=bbox_a.transform_string)
+        update_element(elem_b, transform=bbox_b.transform_string)
     """
 
-    origin_x: float
-    origin_y: float
-    origin_width: float
-    origin_height: float
-    scale: float = 1
-    translation_x: float = 0
-    translation_y: float = 0
+    def __init__(self, x: float, y: float, width: float, height: float) -> None:
+        """
+        Pass input values to private members. Initialize the transformation variables
+
+        These private members will store the untransformed bbox position and size.
+        """
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+
+        # transformation values
+        self._scale: float = 1
+        self._translation_x: float = 0
+        self._translation_y: float = 0
 
     @property
     def x(self) -> float:
-        return (self.translation_x + self.origin_x) * self.scale
+        """
+        x left value of bounding box
+        """
+        return (self._translation_x + self._x) * self._scale
 
     @x.setter
     def x(self, x) -> None:
-        self.add_transform(1, x - self.x, 0)
+        """
+        Update transform values (do not alter self._x)
+        """
+        self._add_transform(1, x - self.x, 0)
 
     @property
     def y(self) -> float:
-        return (self.translation_y + self.origin_y) * self.scale
+        """
+        y top value of bounding box
+        """
+        return (self._translation_y + self._y) * self._scale
 
     @y.setter
     def y(self, y) -> None:
-        self.add_transform(1, 0, y - self.y)
+        """
+        Update transform values (do not alter self._y)
+        """
+        self._add_transform(1, 0, y - self.y)
 
     @property
     def x2(self) -> float:
-        """ Higher x value """
+        """
+        x right value of bounding box
+        """
         return self.x + self.width
 
     @x2.setter
     def x2(self, x2) -> None:
+        """
+        Update transform values (do not alter self._x)
+        """
         self.x = x2 - self.width
 
     @property
     def y2(self) -> float:
-        """ Higher y value """
+        """
+        y bottom value of bounding box
+        """
         return self.y + self.height
 
     @y2.setter
     def y2(self, y2) -> None:
+        """
+        Update transform values (do not alter self._y)
+        """
         self.y = y2 - self.height
 
     @property
     def width(self) -> float:
-        return self.origin_width * self.scale
+        """
+        Width of transformed bounding box
+        """
+        return self._width * self._scale
 
     @width.setter
     def width(self, width: float) -> None:
-        self.translation_x *= self.width / width
-        self.translation_y *= self.width / width
-        self.scale *= width / self.width
+        """
+        Update transform values, Do not alter self._width.
+
+        Here transformed x and y value will be preserved. That is, the bounding box
+        is scaled, but still anchored at (transformed) self.x and self.y
+        """
+        current_x = self.x
+        current_y = self.y
+        self._scale *= width / self.width
+        self.x = current_x
+        self.y = current_y
 
     @property
     def height(self) -> float:
-        return self.origin_height * self.scale
+        """
+        Height of transformed bounding box
+        """
+        return self._height * self._scale
 
     @height.setter
     def height(self, height: float) -> None:
+        """
+        Update transform values, Do not alter self._height.
+
+        Here transformed x and y value will be preserved. That is, the bounding box
+        is scaled, but still anchored at (transformed) self.x and self.y
+        """
         self.width = height * self.width / self.height
 
     def _asdict(self):
+        """
+        For passing transformed bounding box values into a rect element or another bbox
+
+        I would make this a public (no underscore) property (no parenthesis). Keeping
+        it this way to mirror the ``_asdict`` method of namedtuple.
+        """
         return {x: getattr(self, x) for x in ("x", "y", "width", "height")}
 
-    def add_transform(self, scale: float, translation_x: float, translation_y: float):
-        self.translation_x += translation_x / self.scale
-        self.translation_y += translation_y / self.scale
-        self.scale *= scale
+    def _add_transform(self, scale: float, translation_x: float, translation_y: float):
+        """
+        Transform the bounding box by updating the transformation attributes
+
+        Transformation attributes are _translation_x, _translation_y, and _scale
+        """
+        self._translation_x += translation_x / self._scale
+        self._translation_y += translation_y / self._scale
+        self._scale *= scale
 
     @property
-    def transform_string(self):
+    def transform_string(self) -> str:
         """
         Transformation property string value for svg element.
 
         :return: string value for an svg transform attribute.
+
+        Use with
+        ``update_element(elem, transform=bbox.transform_string)``
         """
-        scale, tx, ty = (
-            format_number(getattr(self, x))
-            for x in ("scale", "translation_x", "translation_y")
+        transformation_values = (
+            format_number(x)
+            for x in (self._scale, self._translation_x, self._translation_y)
         )
-        return f"scale({scale}) translate({tx} {ty})"
+        return "scale({}) translate({} {})".format(*transformation_values)
 
     def merge(self, *others) -> BoundingBox:
         """
@@ -134,6 +241,7 @@ def map_ids_to_bounding_boxes(
     inkscape: str,
     xml: etree.Element,
 ) -> Dict[str, BoundingBox]:
+    # noinspection SpellCheckingInspection
     """
     Query an svg file for bounding-box dimensions
 
@@ -142,10 +250,9 @@ def map_ids_to_bounding_boxes(
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 
     PROVIDE ONE OF:
-    :param svg: path to an svg file (temporary files will work).
     :param xml: xml element (written to a temporary file then queried)
 
-    :return: svg element ids (and a bounding box for the entire svg file as ``svg\\d``)
+    :return: svg element ids (and a bounding box for the entire svg file as ``svg``)
         mapped to (x, y, width, height)
 
     Bounding boxes are relative to svg viewbox. If viewbox x == -10,

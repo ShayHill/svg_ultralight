@@ -20,6 +20,7 @@ from ..string_conversion import set_attributes
 
 
 def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
+    # noinspection PyShadowingNames
     """
     Create an etree.Element, make every kwarg value a string.
 
@@ -58,6 +59,7 @@ def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
 def new_sub_element(
     parent: etree.Element, tag: str, **attributes: Union[str, float]
 ) -> etree.Element:
+    # noinspection PyShadowingNames
     """
     Create an etree.SubElement, make every kwarg value a string.
 

@@ -8,6 +8,9 @@ created: 10/7/2019
 Some functions here require a path to an Inkscape executable on your filesystem.
 IMPORTANT: path cannot end with ``.exe``.
 Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
+
+Inkscape changed their command-line interface with version 1.0. These functions
+should work with all Inkscape versions. Please report any issues.
 """
 
 import os
@@ -30,7 +33,7 @@ def new_svg_root(
     height_: Optional[float] = None,
     pad_: float = 0,
     dpu_: float = 1,
-    nsmap: Optional[Dict[str, str]] = None,
+    nsmap: Optional[Dict[Union[str, None], str]] = None,
     **attributes: Union[float, str],
 ) -> etree.Element:
     """
@@ -42,8 +45,8 @@ def new_svg_root(
     :param height_: height of viewBox
     :param pad_: optionally increase viewBox by pad in all directions
     :param dpu_: optionally scale image (pixels per unit of bounding box)
-    :param attributes: element attribute names and values
     :param nsmap: optionally pass a namespace map of your choosing
+    :param attributes: element attribute names and values
     :return: root svg element
 
     All viewBox-style (trailing underscore) parameters are optional. Any kwargs will
