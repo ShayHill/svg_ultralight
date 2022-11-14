@@ -10,6 +10,7 @@ your system.
 """
 
 import math
+import pytest
 
 from svg_ultralight import new_svg_root
 from svg_ultralight.constructors import new_element, new_sub_element
@@ -22,8 +23,21 @@ from svg_ultralight.query import (
 INKSCAPE = r"C:\Program Files\Inkscape\bin\inkscape"
 
 
-aaa = BoundingBox(-2, -4, 10, 20)
-bbb = BoundingBox(3, 4, 10, 20)
+class TestMergeBoundingBoxes:
+    def test_merge_deprecation_warning(self):
+        bbox_a = BoundingBox(-2, -4, 10, 20)
+        bbox_b = BoundingBox(0, 0, 10, 10)
+        with pytest.raises(DeprecationWarning):
+            bbox_a.merge(bbox_b)
+
+    def test_new_merged_bbox(self):
+        bbox_a = BoundingBox(-2, -4, 10, 20)
+        bbox_b = BoundingBox(0, 0, 10, 10)
+        merged = BoundingBox.merged(bbox_a, bbox_b)
+        assert merged.x == -2
+        assert merged.y == -4
+        assert merged.width == 12
+        assert merged.height == 20
 
 
 class TestTransformBoundingBoxes:
@@ -86,7 +100,7 @@ class TestGetBBox:
 
 class TestAlterBoundingBox:
     def test_reverse_width(self) -> None:
-        """ adjust width one way then the other returns to original box """
+        """adjust width one way then the other returns to original box"""
         bbox = BoundingBox(10, 20, 30, 40)
         bbox.x = 100
         bbox.y = 200

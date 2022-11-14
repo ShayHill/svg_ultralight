@@ -248,7 +248,22 @@ class BoundingBox:
         :param others: one or more bounding boxes to merge with self
         :return: a bounding box around self and other bounding boxes
         """
-        bboxes = (self,) + others
+        raise DeprecationWarning(
+            "Method a.merge(b, c) is deprecated. "
+            + "Use classmethod BoundingBox.merged(a, b, c) instead."
+        )
+        return BoundingBox.merged(self, *others)
+
+    @classmethod
+    def merged(cls, *bboxes: BoundingBox) -> BoundingBox:
+        """
+        Create a bounding box around all other bounding boxes.
+
+        :param others: one or more bounding boxes
+        :return: a bounding box around other bounding boxes
+        """
+        if not bboxes:
+            raise ValueError("At least one bounding box is required")
         min_x = min(x.x for x in bboxes)
         max_x = max(x.x + x.width for x in bboxes)
         min_y = min(x.y for x in bboxes)
