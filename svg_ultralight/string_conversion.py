@@ -11,6 +11,7 @@ Rounding some numbers to ensure quality svg rendering:
 """
 from enum import Enum
 from typing import TypeAlias, Union
+import uuid
 
 from lxml import etree
 
@@ -71,6 +72,9 @@ def set_attributes(elem: _Element, **attributes: Union[str, float]) -> None:
         except ValueError:
             val = str(v)
         elem.set(k, val)
+
+    if not elem.get("id"):
+        elem.set("id", str(uuid.uuid4()))
 
 
 class _TostringDefaults(Enum):

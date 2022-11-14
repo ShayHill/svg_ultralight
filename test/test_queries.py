@@ -63,14 +63,14 @@ class TestMapIdsToBoundingBoxes:
         Run with a temporary file.
         """
         expected = {
-            "svg4": BoundingBox(x=0.0, y=0.0, width=16.0, height=32.0),
-            "rect1": BoundingBox(x=0.0, y=0.0, width=16.0, height=9.0),
-            "rect2": BoundingBox(x=0.0, y=0.0, width=8.0, height=32.0),
+            "svg": BoundingBox(0.0, 0.0, 16.0, 32.0),
+            "rect1": BoundingBox(0.0, 0.0, 16.0, 9.0),
+            "rect2": BoundingBox(0.0, 0.0, 8.0, 32.0),
         }
 
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
-        new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
-        new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
+        _ = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
+        _ = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
         result = map_ids_to_bounding_boxes(INKSCAPE, xml)
         assert result == expected
 
@@ -92,8 +92,8 @@ class TestGetBBox:
         """
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         group = new_sub_element(xml, "g", id="grouped elements")
-        new_sub_element(group, "rect", id="rect1", x=0, y=0, width=16, height=9)
-        new_sub_element(group, "rect", id="rect2", x=1, y=1, width=8, height=32)
+        _ = new_sub_element(group, "rect", id="rect1", x=0, y=0, width=16, height=9)
+        _ = new_sub_element(group, "rect", id="rect2", x=1, y=1, width=8, height=32)
         result = get_bounding_box(INKSCAPE, group)
         assert result == BoundingBox(0, 0, 16, 33)
 

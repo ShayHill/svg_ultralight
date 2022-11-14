@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from typing import Dict, TypeAlias
+from attr import attrib
 
 from lxml import etree
 
@@ -28,11 +29,24 @@ from svg_ultralight.strings import format_number
 
 _Element: TypeAlias = etree._Element  # type: ignore
 
-
 @dataclass
 class BoundingBox:
     """
     Mutable bounding box object for svg_ultralight.
+
+    :param x: left x value
+    :param y: top y value
+    :param width: width of the bounding box
+    :param height: height of the bounding box
+    
+    The below optional parameters, in addition to the required parameters, capture
+    the entire state of a BoundingBox instance.  They could be used to make a copy or
+    to initialize a transformed box with the same transform_string as another box.
+    Under most circumstances, they will not be used.
+
+    :param scale: scale of the bounding box
+    :param translation_x: x translation of the bounding box
+    :param translation_y: y translation of the bounding box
 
     Functions that return a bounding box will return a BoundingBox instance. This
     instance can be transformed (uniform scale and translate only). Transformations
@@ -77,22 +91,13 @@ class BoundingBox:
         update_element(elem_a, transform=bbox_a.transform_string)
         update_element(elem_b, transform=bbox_b.transform_string)
     """
-
-    def __init__(self, x: float, y: float, width: float, height: float) -> None:
-        """
-        Pass input values to private members. Initialize the transformation variables
-
-        These private members will store the untransformed bbox position and size.
-        """
-        self._x = x
-        self._y = y
-        self._width = width
-        self._height = height
-
-        # transformation values
-        self._scale: float = 1
-        self._translation_x: float = 0
-        self._translation_y: float = 0
+    _x: float
+    _y: float
+    _width: float
+    _height: float
+    _scale: float = 1.0
+    _translation_x: float = 0.0
+    _translation_y: float = 0.0
 
     @property
     def scale(self) -> float:
@@ -260,8 +265,11 @@ class BoundingBox:
         """
         Create a bounding box around all other bounding boxes.
 
+        This can be used to repace a bounding box after the element it bounds has
+        been transformed with instance.transform_string.
+
         :param others: one or more bounding boxes
-        :return: a bounding box around other bounding boxes
+        :return: a bounding box encompasing all bboxes args
         """
         if not bboxes:
             raise ValueError("At least one bounding box is required")
@@ -304,7 +312,7 @@ def map_ids_to_bounding_boxes(
     This copies all elements except the root element in to a (0, 0, 1, 1) root. This
     will put the boxes where you'd expect them to be, no matter what root you use.
     """
-    xml_prime = new_svg_root(0, 0, 1, 1)
+    xml_prime = new_svg_root(0, 0, 1, 1, id_="svg")
     xml_prime.extend((deepcopy_element(x) for x in xml))
     with NamedTemporaryFile(mode="wb", delete=False, suffix=".svg") as svg_file:
         svg = write_svg(svg_file, xml_prime)
