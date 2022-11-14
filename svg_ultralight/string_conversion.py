@@ -10,10 +10,13 @@ Rounding some numbers to ensure quality svg rendering:
 * Rounding viewBox dimensions to ints
 """
 from enum import Enum
-from typing import Union
+from typing import TypeAlias, Union
 
 from lxml import etree
-from .nsmap import NSMAP
+
+from svg_ultralight.nsmap import NSMAP
+
+_Element: TypeAlias = etree._Element  # type: ignore
 
 
 def format_number(num: float) -> str:
@@ -31,7 +34,7 @@ def format_number(num: float) -> str:
     return f"{num:0.6f}".rstrip("0").rstrip(".")
 
 
-def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None:
+def set_attributes(elem: _Element, **attributes: Union[str, float]) -> None:
     """
     Set name: value items as element attributes. Make every value a string.
 
@@ -64,7 +67,7 @@ def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None
         else:
             k = k.rstrip("_").replace("_", "-")
         try:
-            val = format_number(v)
+            val = format_number(float(v))
         except ValueError:
             val = str(v)
         elem.set(k, val)
@@ -73,14 +76,14 @@ def set_attributes(elem: etree.Element, **attributes: Union[str, float]) -> None
 class _TostringDefaults(Enum):
     """Default values for an svg xml_header"""
 
-    doctype: str = (
+    doctype = (
         '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
-        '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+        + '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
     )
-    encoding: str = "UTF-8"
+    encoding = "UTF-8"
 
 
-def svg_tostring(xml: etree.Element, **tostring_kwargs) -> bytearray:
+def svg_tostring(xml: _Element, **tostring_kwargs: str | bool) -> bytes:
     """
     Contents of svg file with optional xml declaration.
 

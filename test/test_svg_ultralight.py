@@ -17,7 +17,7 @@ import pytest
 from lxml import etree
 
 # noinspection PyProtectedMember
-from svg_ultralight.svg_ultralight import new_svg_root, write_svg
+from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight import NSMAP
 from svg_ultralight.string_conversion import svg_tostring
 
@@ -184,4 +184,3 @@ class TestTostringKwargs:
             b"<blank/>",
             b"",
         ]
-

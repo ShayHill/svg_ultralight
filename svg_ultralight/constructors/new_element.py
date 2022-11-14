@@ -12,14 +12,16 @@ Will translate ``stroke_width=10`` to ``stroke-width="10"``
 """
 
 import copy
-from typing import Union
+from typing import TypeAlias, Union, overload
 
-from lxml import etree  # type: ignore
+from lxml import etree
 
-from ..string_conversion import set_attributes
+from svg_ultralight.string_conversion import set_attributes
+
+_Element: TypeAlias = etree._Element  # type: ignore
 
 
-def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
+def new_element(tag: str, **attributes: Union[str, float]) -> _Element:
     # noinspection PyShadowingNames
     """
     Create an etree.Element, make every kwarg value a string.
@@ -57,8 +59,8 @@ def new_element(tag: str, **attributes: Union[str, float]) -> etree.Element:
 
 
 def new_sub_element(
-    parent: etree.Element, tag: str, **attributes: Union[str, float]
-) -> etree.Element:
+    parent: _Element, tag: str, **attributes: Union[str, float]
+) -> _Element:
     # noinspection PyShadowingNames
     """
     Create an etree.SubElement, make every kwarg value a string.
@@ -78,9 +80,7 @@ def new_sub_element(
     return elem
 
 
-def update_element(
-    elem: etree.Element, **attributes: Union[str, float]
-) -> etree.Element:
+def update_element(elem: _Element, **attributes: Union[str, float]) -> _Element:
     """
     Update an existing etree.Element with additional params.
 
@@ -91,23 +91,30 @@ def update_element(
     return elem
 
 
+@overload
+def deepcopy_element(elem: list[_Element], **attributes: str | float) -> list[_Element]:
+    ...
+
+
+@overload
+def deepcopy_element(elem: _Element, **attributes: str | float) -> _Element:
+    ...
+
+
 def deepcopy_element(
-    elem: etree.Element, **attributes: Union[str, float]
-) -> etree.Element:
+    elem: _Element | list[_Element], **attributes: str | float
+) -> _Element | list[_Element]:
     """
     Create a deepcopy of an element. Optionally pass additional params.
 
-    :param elem: at etree element
+    :param elem: at etree element or list of elements
     :param attributes: element attribute names and values
+    :returns: a deepcopy of the element with updated attributes
+    TODO: change id when making a deepcopy
+    TODO: split this into two functions, deepcopy_element and deepcopy_elements
     """
     if isinstance(elem, list):
         return [deepcopy_element(x, **attributes) for x in elem]
     elem = copy.deepcopy(elem)
-    update_element(elem, **attributes)
+    _ = update_element(elem, **attributes)
     return elem
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()

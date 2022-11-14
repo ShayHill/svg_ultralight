@@ -17,13 +17,19 @@ import os
 import subprocess
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Dict, IO, Optional, Union
+from typing import IO, Dict, Optional, TypeAlias, Union, cast
 
-from lxml import etree  # type: ignore
+from lxml import etree
 
-from .constructors import update_element
-from .nsmap import NSMAP
-from .string_conversion import format_number, get_viewBox_str, svg_tostring
+from svg_ultralight.constructors import update_element
+from svg_ultralight.nsmap import NSMAP
+from svg_ultralight.string_conversion import (
+    format_number,
+    get_viewBox_str,
+    svg_tostring,
+)
+
+_Element: TypeAlias = etree._Element  # type: ignore
 
 
 def new_svg_root(
@@ -35,7 +41,7 @@ def new_svg_root(
     dpu_: float = 1,
     nsmap: Optional[Dict[Union[str, None], str]] = None,
     **attributes: Union[float, str],
-) -> etree.Element:
+) -> _Element:
     """
     Create an svg root element from viewBox style parameters.
 
@@ -55,6 +61,10 @@ def new_svg_root(
     if nsmap is None:
         nsmap = NSMAP
     if None not in (x_, y_, width_, height_):
+        assert x_ is not None
+        assert y_ is not None
+        assert width_ is not None
+        assert height_ is not None
         view_box = get_viewBox_str(x_, y_, width_, height_, pad_)
         pixel_width = format_number((width_ + pad_ * 2) * dpu_)
         pixel_height = format_number((height_ + pad_ * 2) * dpu_)
@@ -67,11 +77,11 @@ def new_svg_root(
 
 
 def write_svg(
-    svg: Union[str, IO[bytes]],
-    xml: etree.Element,
+    svg: Path | str | IO[bytes],
+    xml: _Element,
     stylesheet: Optional[str] = None,
     do_link_css: bool = False,
-    **tostring_kwargs,
+    **tostring_kwargs: str | bool,
 ) -> str:
     """
     Write an xml element as an svg file.
@@ -114,7 +124,8 @@ def write_svg(
     """
     if stylesheet is not None:
         if do_link_css is True:
-            relative_css_path = Path(stylesheet).relative_to(Path(svg).parent)
+            parent = Path(str(svg)).parent
+            relative_css_path = Path(stylesheet).relative_to(parent)
             link = etree.PI(
                 "xml-stylesheet", f'href="{relative_css_path}" type="text/css"'
             )
@@ -128,12 +139,14 @@ def write_svg(
     svg_contents = svg_tostring(xml, **tostring_kwargs)
 
     try:
-        svg.write(svg_contents)
-        return svg.name
+        svg_file = cast(IO[bytes], svg)
+        _ = svg_file.write(svg_contents)
+        return svg_file.name
     except AttributeError:
-        with open(svg, "wb") as svg_file:
-            svg_file.write(svg_contents)
-        return svg
+        svg_filename = cast(str, svg)
+        with open(svg_filename, "wb") as svg_file:
+            _ = svg_file.write(svg_contents)
+        return svg_filename
 
 
 def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> str:
@@ -169,7 +182,7 @@ def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> st
 def write_png(
     inkscape: str,
     png: str,
-    xml: etree.Element,
+    xml: _Element,
     stylesheet: Optional[str] = None,
 ) -> str:
     """
@@ -188,7 +201,7 @@ def write_png(
     """
     with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
         svg = write_svg(svg_file, xml, stylesheet)
-    write_png_from_svg(inkscape, svg, png)
+    _ = write_png_from_svg(inkscape, svg, png)
     os.unlink(svg)
     return png
 
@@ -226,7 +239,7 @@ def write_pdf_from_svg(inkscape: str, svg: str, pdf: Optional[str] = None) -> st
 def write_pdf(
     inkscape: str,
     pdf: str,
-    xml: etree.Element,
+    xml: _Element,
     stylesheet: Optional[str] = None,
 ) -> str:
     """
@@ -245,6 +258,6 @@ def write_pdf(
     """
     with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
         svg = write_svg(svg_file, xml, stylesheet)
-    write_pdf_from_svg(inkscape, svg, pdf)
+    _ = write_pdf_from_svg(inkscape, svg, pdf)
     os.unlink(svg)
     return pdf

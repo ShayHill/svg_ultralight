@@ -18,14 +18,15 @@ import re
 from dataclasses import dataclass
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
-from typing import Dict
+from typing import Dict, TypeAlias
 
-from lxml import etree  # type: ignore
+from lxml import etree
 
-from svg_ultralight import write_svg
-from .constructors import deepcopy_element
-from .strings import format_number
-from .svg_ultralight import new_svg_root
+from svg_ultralight.constructors import deepcopy_element
+from svg_ultralight.main import new_svg_root, write_svg
+from svg_ultralight.strings import format_number
+
+_Element: TypeAlias = etree._Element  # type: ignore
 
 
 @dataclass
@@ -120,7 +121,7 @@ class BoundingBox:
         return (self._translation_x + self._x) * self._scale
 
     @x.setter
-    def x(self, x) -> None:
+    def x(self, x: float) -> None:
         """
         Update transform values (do not alter self._x)
         """
@@ -134,7 +135,7 @@ class BoundingBox:
         return (self._translation_y + self._y) * self._scale
 
     @y.setter
-    def y(self, y) -> None:
+    def y(self, y: float) -> None:
         """
         Update transform values (do not alter self._y)
         """
@@ -148,7 +149,7 @@ class BoundingBox:
         return self.x + self.width
 
     @x2.setter
-    def x2(self, x2) -> None:
+    def x2(self, x2: float) -> None:
         """
         Update transform values (do not alter self._x)
         """
@@ -162,7 +163,7 @@ class BoundingBox:
         return self.y + self.height
 
     @y2.setter
-    def y2(self, y2) -> None:
+    def y2(self, y2: float) -> None:
         """
         Update transform values (do not alter self._y)
         """
@@ -241,7 +242,7 @@ class BoundingBox:
         )
         return "scale({}) translate({} {})".format(*transformation_values)
 
-    def merge(self, *others) -> BoundingBox:
+    def merge(self, *others: BoundingBox) -> BoundingBox:
         """
         Create a bounding box around all other bounding boxes.
 
@@ -273,7 +274,7 @@ class BoundingBox:
 
 def map_ids_to_bounding_boxes(
     inkscape: str,
-    xml: etree.Element,
+    xml: _Element,
 ) -> Dict[str, BoundingBox]:
     # noinspection SpellCheckingInspection
     """
@@ -313,13 +314,13 @@ def map_ids_to_bounding_boxes(
     bb_strings = re.split(r"[\\r]*\\n", bb_data)[:-1]
     os.unlink(svg_file.name)
 
-    id2bbox = {}
+    id2bbox: dict[str, BoundingBox] = {}
     for id_, *bounds in (x.split(",") for x in bb_strings):
         id2bbox[id_] = BoundingBox(*(float(x) for x in bounds))
     return id2bbox
 
 
-def get_bounding_box(inkscape: str, elem: etree.Element) -> BoundingBox:
+def get_bounding_box(inkscape: str, elem: _Element) -> BoundingBox:
     """
     Get bounding box around a single element.
 
