@@ -28,7 +28,7 @@ class TestMergeBoundingBoxes:
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
         with pytest.raises(DeprecationWarning):
-            bbox_a.merge(bbox_b)
+            _ = bbox_a.merge(bbox_b)
 
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
@@ -69,18 +69,21 @@ class TestMapIdsToBoundingBoxes:
         assert result["rect1"] == BoundingBox(0.0, 0.0, 16.0, 9.0)
         assert result["rect2"] == BoundingBox(0.0, 0.0, 8.0, 32.0)
 
+    def test_adds_missing_ids(self) -> None:
+        """Returns a dict with an entry for each element plus an envelope entry."""
+        xml = new_svg_root(10, 20, 160, 19, id="svg1")
+        rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
+        rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
+        rect3 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
+        result = map_ids_to_bounding_boxes(INKSCAPE, xml)
+        assert xml.get("id") in result.keys()
+        assert rect1.get("id") in result.keys()
+        assert rect2.get("id") in result.keys()
+        assert rect3.get("id") in result.keys()
+
 
 class TestGetBBox:
-    def test_single(self) -> None:
-        """
-        Return bounding box around entire group.
-        :return:
-        """
-        rect = new_element("rect", id="rect1", x=0, y=0, width=16, height=9)
-        result = get_bounding_box(INKSCAPE, rect)
-        assert result == BoundingBox(0, 0, 16, 9)
-
-    def test_grouped(self) -> None:
+    def test_raises_deprecation_warning(self) -> None:
         """
         Return bounding box around entire group.
         :return:
@@ -89,8 +92,8 @@ class TestGetBBox:
         group = new_sub_element(xml, "g", id="grouped elements")
         _ = new_sub_element(group, "rect", id="rect1", x=0, y=0, width=16, height=9)
         _ = new_sub_element(group, "rect", id="rect2", x=1, y=1, width=8, height=32)
-        result = get_bounding_box(INKSCAPE, group)
-        assert result == BoundingBox(0, 0, 16, 33)
+        with pytest.raises(DeprecationWarning):
+            _ = get_bounding_box(INKSCAPE, group)
 
 
 class TestAlterBoundingBox:

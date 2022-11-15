@@ -11,8 +11,6 @@ from lxml import etree
 from svg_ultralight import constructors
 
 
-
-
 class TestNewElement:
     def test_params(self) -> None:
         """Replace _ with -. Pass params.values() as strings"""
@@ -52,7 +50,7 @@ class TestNewSubElement:
     def test_sub_element(self) -> None:
         """New element is a sub-element of parent"""
         parent = constructors.new_element("g")
-        rect = constructors.new_sub_element(parent, "rect")
+        _ = constructors.new_sub_element(parent, "rect")
         assert etree.tostring(parent) == b"<g><rect/></g>"
 
 
@@ -62,22 +60,3 @@ class TestUpdateElement:
         elem = constructors.new_element("line", x=10, y1=80)
         _ = constructors.update_element(elem, stroke_width=2)
         assert etree.tostring(elem) == b'<line x="10" y1="80" stroke-width="2"/>'
-
-
-class TestDeepcopyElement:
-    def eest_is_copy(self) -> None:
-        """"""
-        group = constructors.new_element("g", id_=1)
-        line = constructors.new_sub_element(group, "line", x=10, y1=80, id_=2)
-        group_copy = constructors.deepcopy_element(group, stroke="black")
-        assert line in group
-        assert line not in group_copy
-
-    def test_attributes_except_id_match(self):
-        """Attributes match except"""
-        group = constructors.new_element("g", stroke="black", id_=1)
-        line = constructors.new_sub_element(group, "line", x=10, y1=80, id_=2)
-        group_copy = constructors.deepcopy_element(group)
-        assert group.attrib == group_copy.attrib
-        assert line.attrib == group_copy[0].attrib
-

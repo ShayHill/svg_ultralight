@@ -21,42 +21,15 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from typing import TypeAlias
+from copy import deepcopy
 
 from lxml import etree
 
-from svg_ultralight.constructors import deepcopy_element
 from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.strings import format_number
 
 _Element: TypeAlias = etree._Element  # type: ignore
 
-
-def recursively_fill_ids(elem: _Element) -> _Element:
-    """Set the id attribute of an element and all its children. Keep existing ids.
-
-    :param elem: an etree element
-    :returns: the element with an existing id or new random uique id
-
-    This is just a convenience function in case you make deepcopies and want to
-    replace the ids.
-    """
-    for child in elem:
-        _ = recursively_fill_ids(child)
-    if elem.get("id") is None:
-        elem.set("id", str(uuid.uuid4()))
-    return elem
-
-
-def recursively_reset_ids(elem: _Element) -> _Element:
-    """Replace the id attribute of an element and all its children.
-
-    :param elem: an etree element
-    :returns: the element with id attributes replaced
-    """
-    for child in elem:
-        _ = recursively_reset_ids(child)
-    elem.set("id", str(uuid.uuid4()))
-    return elem
 
 
 @dataclass
@@ -274,13 +247,27 @@ class BoundingBox:
         return BoundingBox(min_x, min_y, max_x - min_x, max_y - min_y)
 
 
-def _normalize_views(elem: _Element) -> _Element:
+def _fill_ids(*elem_args: _Element) -> None:
+    """Set the id attribute of an element and all its children. Keep existing ids.
+
+    :param elem: an etree element, accepts multiple arguments
+    """
+    if not elem_args:
+        return
+    elem = elem_args[0]
+    for child in elem:
+        _ = _fill_ids(child)
+    if elem.get("id") is None:
+        elem.set("id", f"svg_ul-{uuid.uuid4()}")
+    _fill_ids(*elem_args[1:])
+
+
+def _normalize_views(elem: _Element) -> None:
     """Create a square viewbox for any element with an svg tag.
 
     :param elem: an etree element
-    :returns: the element with a square viewbox
 
-    This prevents the bounding boxes from being skewed. Only do this to copies,
+    This prevents the bounding boxes from being distorted. Only do this to copies,
     because there's no way to undo it.
     """
     for child in elem:
@@ -289,13 +276,23 @@ def _normalize_views(elem: _Element) -> _Element:
         elem.set("viewBox", "0 0 1 1")
         elem.set("width", "1")
         elem.set("height", "1")
-    return elem
+
+
+def _envelop_copies(*elem_args: _Element) -> _Element:
+    """An svg root element containing all elem_args.
+
+    :param elem_args: one or more etree elements
+    :return: an etree element enveloping copies of elem_args with all views normalized
+    """
+    envelope = new_svg_root(0, 0, 1, 1, id_=f"envelope_{uuid.uuid4()}")
+    envelope.extend(deepcopy(e) for e in elem_args)
+    _normalize_views(envelope)
+    return envelope
 
 
 def map_ids_to_bounding_boxes(
     inkscape: str | Path, *elem_args: _Element
 ) -> dict[str, BoundingBox]:
-    # noinspection SpellCheckingInspection
     """Query an svg file for bounding-box dimensions
 
     :param inkscape: path to an inkscape executable on your local file system
@@ -324,13 +321,11 @@ def map_ids_to_bounding_boxes(
     This copies all elements except the root element in to a (0, 0, 1, 1) root. This
     will put the boxes where you'd expect them to be, no matter what root you use.
     """
-    xml_prime = new_svg_root(0, 0, 1, 1, id_=f"svg_root_{uuid.uuid4()}")
-    xml_prime.extend(deepcopy_element(e) for e in elem_args)
-    _ = recursively_fill_ids(xml_prime)
-    _ = _normalize_views(xml_prime)
+    _fill_ids(*elem_args)
+    envelope = _envelop_copies(*elem_args)
 
     with NamedTemporaryFile(mode="wb", delete=False, suffix=".svg") as svg_file:
-        svg = write_svg(svg_file, xml_prime)
+        svg = write_svg(svg_file, envelope)
 
     bb_process = Popen(f'"{inkscape}" --query-all {svg}', stdout=PIPE)
     bb_data = str(bb_process.communicate()[0])[2:-1]
@@ -356,5 +351,9 @@ def get_bounding_box(inkscape: str | Path, elem: _Element) -> BoundingBox:
     create an entire xml file with a custom nsmap (using
     `svg_ultralight.new_svg_root`) then call `map_ids_to_bounding_boxes` directly.
     """
+    raise DeprecationWarning(
+        "get_bounding_box is deprecated. "
+        + "Use map_ids_to_bounding_boxes(elem)[id] instead."
+    )
     id2bbox = map_ids_to_bounding_boxes(inkscape, elem)
     return id2bbox[elem.attrib["id"]]

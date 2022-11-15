@@ -12,7 +12,7 @@ Will translate ``stroke_width=10`` to ``stroke-width="10"``
 """
 
 import copy
-from typing import TypeAlias, Union, overload
+from typing import TypeAlias, Union
 
 from lxml import etree
 
@@ -22,7 +22,6 @@ _Element: TypeAlias = etree._Element  # type: ignore
 
 
 def new_element(tag: str, **attributes: Union[str, float]) -> _Element:
-    # noinspection PyShadowingNames
     """
     Create an etree.Element, make every kwarg value a string.
 
@@ -61,7 +60,6 @@ def new_element(tag: str, **attributes: Union[str, float]) -> _Element:
 def new_sub_element(
     parent: _Element, tag: str, **attributes: Union[str, float]
 ) -> _Element:
-    # noinspection PyShadowingNames
     """
     Create an etree.SubElement, make every kwarg value a string.
 
@@ -91,30 +89,18 @@ def update_element(elem: _Element, **attributes: Union[str, float]) -> _Element:
     return elem
 
 
-@overload
-def deepcopy_element(elem: list[_Element], **attributes: str | float) -> list[_Element]:
-    ...
-
-
-@overload
 def deepcopy_element(elem: _Element, **attributes: str | float) -> _Element:
-    ...
-
-
-def deepcopy_element(
-    elem: _Element | list[_Element], **attributes: str | float
-) -> _Element | list[_Element]:
     """
     Create a deepcopy of an element. Optionally pass additional params.
 
     :param elem: at etree element or list of elements
     :param attributes: element attribute names and values
     :returns: a deepcopy of the element with updated attributes
-    TODO: split this into two functions, deepcopy_element and deepcopy_elements
-    TODO: new_group function
     """
-    if isinstance(elem, list):
-        return [deepcopy_element(x, **attributes) for x in elem]
+    raise DeprecationWarning(
+        "deepcopy_element is deprecated. "
+        + "Use copy.deepcopy from the standard library instead."
+    )
     elem = copy.deepcopy(elem)
     _ = update_element(elem, **attributes)
     return elem
