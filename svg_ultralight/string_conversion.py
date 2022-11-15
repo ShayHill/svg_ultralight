@@ -11,7 +11,6 @@ Rounding some numbers to ensure quality svg rendering:
 """
 from enum import Enum
 from typing import TypeAlias, Union
-import uuid
 
 from lxml import etree
 
@@ -73,9 +72,6 @@ def set_attributes(elem: _Element, **attributes: Union[str, float]) -> None:
             val = str(v)
         elem.set(k, val)
 
-    if not elem.get("id"):
-        elem.set("id", str(uuid.uuid4()))
-
 
 class _TostringDefaults(Enum):
     """Default values for an svg xml_header"""
@@ -92,7 +88,7 @@ def svg_tostring(xml: _Element, **tostring_kwargs: str | bool) -> bytes:
     Contents of svg file with optional xml declaration.
 
     :param xml: root node of your svg geometry
-    :param tostring_kwargs: keyword arguments to etree.tostring. xml_header=True for
+    :param tostring_kwargs: keyword arguments treplace_ido etree.tostring. xml_header=True for
         sensible default values. See below.
 
     Further documentation in write_svg docstring.

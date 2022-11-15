@@ -91,19 +91,6 @@ def update_element(elem: _Element, **attributes: Union[str, float]) -> _Element:
     return elem
 
 
-def replace_id(elem: _Element) -> _Element:
-    """
-    Replace the id attribute of an element and all its children.
-
-    :param elem: an etree element
-    :returns: the element with id attributes replaced
-    """
-    _ = elem.attrib.pop('id', None)
-    _ = set_attributes(elem)
-    for child in elem:
-        _ = replace_id(child)
-    return elem
-
 @overload
 def deepcopy_element(elem: list[_Element], **attributes: str | float) -> list[_Element]:
     ...

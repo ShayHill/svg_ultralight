@@ -125,7 +125,6 @@ class TestNewSvgRoot:
             **{"viewBox": "0 1 2 3", "width": "2", "height": "3"}
         )
         result = new_svg_root(0, 1, 2, 3)
-        del(result.attrib["id"])
         assert result.attrib == expect.attrib
 
     def test_additional_params(self) -> None:
@@ -134,7 +133,6 @@ class TestNewSvgRoot:
             **{"attr": "value", "viewBox": "0 1 2 3", "width": "2", "height": "3"}
         )
         result = new_svg_root(0, 1, 2, 3, attr="value")
-        del(result.attrib["id"])
         assert result.attrib == expect.attrib
 
     def test_conflicting_params(self) -> None:
@@ -143,9 +141,6 @@ class TestNewSvgRoot:
             **{"viewBox": "0 1 2 3", "width": "2", "height": "30"}
         )
         result = new_svg_root(0, 1, 2, 3, height=30)
-        del(result.attrib["id"])
-        assert result.attrib == expect.attrib
-
 
 class TestTostringKwargs:
     """Pass write_svg **kwargs to lxml.etree.tostring"""

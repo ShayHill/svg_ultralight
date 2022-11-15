@@ -62,17 +62,12 @@ class TestMapIdsToBoundingBoxes:
         """
         Run with a temporary file.
         """
-        expected = {
-            "svg": BoundingBox(0.0, 0.0, 16.0, 32.0),
-            "rect1": BoundingBox(0.0, 0.0, 16.0, 9.0),
-            "rect2": BoundingBox(0.0, 0.0, 8.0, 32.0),
-        }
-
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         _ = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
         _ = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
         result = map_ids_to_bounding_boxes(INKSCAPE, xml)
-        assert result == expected
+        assert result["rect1"] == BoundingBox(0.0, 0.0, 16.0, 9.0)
+        assert result["rect2"] == BoundingBox(0.0, 0.0, 8.0, 32.0)
 
 
 class TestGetBBox:
