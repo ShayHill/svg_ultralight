@@ -13,7 +13,7 @@ import math
 import pytest
 
 from svg_ultralight import new_svg_root
-from svg_ultralight.constructors import new_element, new_sub_element
+from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.query import (
     BoundingBox,
     get_bounding_box,
@@ -105,5 +105,5 @@ class TestAlterBoundingBox:
         bbox.height = 200
         bbox.height = 40
         assert math.isclose(bbox.scale, 1)
-        assert math.isclose(bbox._translation_x, 90)
-        assert math.isclose(bbox._translation_y, 180)
+        assert math.isclose(bbox._translation_x, 90)  # type: ignore
+        assert math.isclose(bbox._translation_y, 180)  # type: ignore

@@ -88,10 +88,9 @@ def svg_tostring(xml: _Element, **tostring_kwargs: str | bool) -> bytes:
     Contents of svg file with optional xml declaration.
 
     :param xml: root node of your svg geometry
-    :param tostring_kwargs: keyword arguments treplace_ido etree.tostring. xml_header=True for
-        sensible default values. See below.
-
-    Further documentation in write_svg docstring.
+    :param tostring_kwargs: keyword arguments to etree.tostring.
+        pass xml_header=True for sensible defaults, see further documentation on xml
+        header in write_svg docstring.
     """
     tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
     if tostring_kwargs.get("xml_declaration"):
@@ -106,7 +105,7 @@ def get_viewBox_str(
     x: float, y: float, width: float, height: float, pad: float = 0
 ) -> str:
     """
-    Round arguments to ints and create a space-delimited string.
+    Create a space-delimited string.
 
     :param x: x value in upper-left corner
     :param y: y value in upper-left corner

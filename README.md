@@ -21,13 +21,11 @@ The most straightforward way to create SVG files with Python.
     **attributes: Union[float, str],
     -> etree.Element
 
-Create an svg root element from viewBox style arguments and provide the necessary svg-specific attributes and
-namespaces. This is your window onto the scene.
+Create an svg root element from viewBox style arguments and provide the necessary svg-specific attributes and namespaces. This is your window onto the scene.
 
 Three ways to call:
 
-1. The trailing-underscore arguments are the same you'd use to create a `rect` element (plus `pad_` and `dpu_`).
-`new_svg_root` will infer `viewBox`, `width`, and `height` svg attributes from these values.
+1. The trailing-underscore arguments are the same you'd use to create a `rect` element (plus `pad_` and `dpu_`).  `new_svg_root` will infer `viewBox`, `width`, and `height` svg attributes from these values.
 2. Use the svg attributes you already know: `viewBox`, `width`, `height`, etc. These will be written to the xml file.
 3. Of course, you can combine 1. and 2. if you know what you're doing.
 
@@ -39,11 +37,8 @@ See `namespaces` below.
 * `height_`: height of viewBox
 * `pad_`: the one small convenience I've provided. Optionally increase viewBox by `pad` in all directions.
 * `dpu_`: pixels per viewBox unit for output png images.
-* `nsmap`: namespaces. (defaults to svg_ultralight.NSMAP). Available as an argument should you wish to add additional
-namespaces. To do this, add items to NSMAP then call with `nsmap=NSMAP`.
-* `**attributes`: the trailing-underscore arguments are an *optional* shortcut for creating a scene. The entire svg
-interface is available to you through kwargs. See `A few helpers` below for details on attribute-name translation
-between Python and xml (the short version: `this_name` becomes `this-name` and `this_` becomes `this`)
+* `nsmap`: namespaces. (defaults to svg_ultralight.NSMAP). Available as an argument should you wish to add additional namespaces. To do this, add items to NSMAP then call with `nsmap=NSMAP`.
+* `**attributes`: the trailing-underscore arguments are an *optional* shortcut for creating a scene. The entire svg interface is available to you through kwargs. See `A few helpers` below for details on attribute-name translation between Python and xml (the short version: `this_name` becomes `this-name` and `this_` becomes `this`)
 
 ### namespaces (svg_ultralight.NSMAP)
 
@@ -166,18 +161,15 @@ As above, but creates a subelement.
     >>> etree.tostring(parent)
     b'<g><rect/></g>'
     
-### update_element and deepcopy_element
+### update_element
 
-These are two more ways to add params with the above-described name and type conversion. Again unnecessary, but
-potentially helpful. Easily understood from the code or docstrings.
+Another way to add params through the new_element name / float translator. Again unnecessary, but potentially helpful. Easily understood from the code or docstrings.
     
 ## Extras:
 
 ### query.map_ids_to_bounding_boxes
 
-Python cannot parse an svg file. Python can *create* an svg file, and Inkscape can parse (and inspect) it. Inkscape has
-a command-line interface capable of reading an svg file and returning some limited information. This is the only way I
-know for a Python program to:
+Python cannot parse an svg file. Python can *create* an svg file, and Inkscape can parse (and inspect) it. Inkscape has a command-line interface capable of reading an svg file and returning some limited information. This is the only way I know for a Python program to:
 
 1. create an svg file (optionally without writing to filesystem)
 2. query the svg file for bounding-box information
@@ -187,21 +179,11 @@ This would be necessary for, e.g., algorithmically fitting text in a box.
 
     from svg_ultralight.queries import map_ids_to_bounding_boxes
 
-You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty
-much all you can get out of it.
-
-### query.get_bounding_box
-
-Get the bounding box around an svg element. Works with group elements.
-
-Internally, this just creates an svg file around your element then calls `map_ids_to_bounding_boxes`.
-
-    from svg_ultralight.queries import get_bounding_box
+You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty much all you can get out of it.
 
 ### animate.write_gif
 
-Create an animated gif from a sequence of png filenames. This is a Pillow one-liner, but it's convenient for me to have
-it, so it might be convenient for you.
+Create an animated gif from a sequence of png filenames. This is a Pillow one-liner, but it's convenient for me to have it, so it might be convenient for you. Requires pillow, which is not a project dependency.
 
     from svg_ultralight.animate import write_gif
     

@@ -2,15 +2,27 @@
 # _*_ coding: utf-8 _*_
 """ One script to animate a list of pngs
 
+Requires: pillow, which is not a project dependency.
+
 :author: Shay Hill
 :created: 7/26/2020
 """
-from PIL import Image
+
+try:
+    from PIL import Image  # type: ignore
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        "`pip install pillow` to use svg_ultralight.animate module"
+    )
 from typing import Iterable
+from pathlib import Path
 
 
 def write_gif(
-    gif: str, pngs: Iterable[str], duration: float = 100, loop: int = 0
+    gif: str | Path,
+    pngs: Iterable[str] | Iterable[Path] | Iterable[str | Path],
+    duration: float = 100,
+    loop: int = 0,
 ) -> None:
     """
     Create a gif from a sequence of pngs.

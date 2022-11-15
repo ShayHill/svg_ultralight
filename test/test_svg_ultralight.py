@@ -26,13 +26,13 @@ from svg_ultralight.string_conversion import svg_tostring
 def css_source():
     """Temporary css file object with meaningless contents."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as css_source:
-        css_source.write("/** css for my project **/")
+        _ = css_source.write("/** css for my project **/")
     yield css_source.name
     os.unlink(css_source.name)
 
 
 @pytest.fixture
-def temp_filename(mode="w"):
+def temp_filename(mode:str ="w"):
     """Temporary file object to capture test output."""
     svg_output = tempfile.NamedTemporaryFile(mode=mode, delete=False)
     svg_output.close()

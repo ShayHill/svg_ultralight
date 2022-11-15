@@ -31,7 +31,6 @@ from svg_ultralight.strings import format_number
 _Element: TypeAlias = etree._Element  # type: ignore
 
 
-
 @dataclass
 class BoundingBox:
     """Mutable bounding box object for svg_ultralight.
@@ -301,6 +300,8 @@ def map_ids_to_bounding_boxes(
     :param elem_args: xml element (written to a temporary file then queried)
     :return: svg element ids (and a bounding box for the entire svg file as ``svg``)
         mapped to (x, y, width, height)
+    :effects: adds an id attribute to any element without one. These will all have
+        the prefix svg_ul-, so you can find and remove them later if desired.
 
     Bounding boxes are relative to svg viewbox. If viewbox x == -10,
     all bounding-box x values will be offset -10. So, everything is wrapped in a root
