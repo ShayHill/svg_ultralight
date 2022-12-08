@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """Simple functions to LIGHTLY assist in creating Scalable Vector Graphics.
 
 :author: Shay Hill
@@ -12,12 +10,11 @@ Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 Inkscape changed their command-line interface with version 1.0. These functions
 should work with all Inkscape versions. Please report any issues.
 """
-
 import os
 import subprocess
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import IO, Dict, Optional, TypeAlias, Union, cast
+from typing import IO, Dict, Optional, TypeAlias, cast
 
 from lxml import etree
 
@@ -29,7 +26,7 @@ from svg_ultralight.string_conversion import (
     svg_tostring,
 )
 
-_Element: TypeAlias = etree._Element  # type: ignore
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
 def new_svg_root(
@@ -39,9 +36,9 @@ def new_svg_root(
     height_: Optional[float] = None,
     pad_: float = 0,
     dpu_: float = 1,
-    nsmap: Optional[Dict[Union[str, None], str]] = None,
-    **attributes: Union[float, str],
-) -> _Element:
+    nsmap: Optional[Dict[str | None, str]] = None,
+    **attributes: float | str,
+) -> EtreeElement:
     """
     Create an svg root element from viewBox style parameters.
 
@@ -78,8 +75,8 @@ def new_svg_root(
 
 def write_svg(
     svg: Path | str | IO[bytes],
-    xml: _Element,
-    stylesheet: Optional[str] = None,
+    xml: EtreeElement,
+    stylesheet: Optional[Path | str] = None,
     do_link_css: bool = False,
     **tostring_kwargs: str | bool,
 ) -> str:
@@ -139,17 +136,18 @@ def write_svg(
     svg_contents = svg_tostring(xml, **tostring_kwargs)
 
     try:
-        svg_file = cast(IO[bytes], svg)
-        _ = svg_file.write(svg_contents)
-        return svg_file.name
+        _ = cast(IO[bytes], svg).write(svg_contents)
+        return cast(IO[bytes], svg).name
     except AttributeError:
-        svg_filename = cast(str, svg)
-        with open(svg_filename, "wb") as svg_file:
+        assert isinstance(svg, (str, Path))
+        with open(svg, "wb") as svg_file:
             _ = svg_file.write(svg_contents)
-        return svg_filename
+        return str(svg)
 
 
-def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> str:
+def write_png_from_svg(
+    inkscape: Path | str, svg: Path | str, png: Optional[Path | str] = None
+) -> str:
     """
     Convert an svg file to a png
 
@@ -164,6 +162,8 @@ def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> st
     """
     if png is None:
         png = str(Path(svg).with_suffix(".png"))
+    else:
+        png = str(png)
 
     # inkscape versions >= 1.0
     options = [f'"{svg}"', "--export-type=png", f'--export-filename="{png}"']
@@ -180,9 +180,9 @@ def write_png_from_svg(inkscape: str, svg: str, png: Optional[str] = None) -> st
 
 
 def write_png(
-    inkscape: str,
-    png: str,
-    xml: _Element,
+    inkscape: Path | str,
+    png: Path | str,
+    xml: EtreeElement,
     stylesheet: Optional[str] = None,
 ) -> str:
     """
@@ -203,10 +203,12 @@ def write_png(
         svg = write_svg(svg_file, xml, stylesheet)
     _ = write_png_from_svg(inkscape, svg, png)
     os.unlink(svg)
-    return png
+    return str(png)
 
 
-def write_pdf_from_svg(inkscape: str, svg: str, pdf: Optional[str] = None) -> str:
+def write_pdf_from_svg(
+    inkscape: Path | str, svg: Path | str, pdf: Optional[Path | str] = None
+) -> str:
     """
     Convert an svg file to a pdf
 
@@ -221,6 +223,8 @@ def write_pdf_from_svg(inkscape: str, svg: str, pdf: Optional[str] = None) -> st
     """
     if pdf is None:
         pdf = str(Path(svg).with_suffix(".pdf"))
+    else:
+        pdf = str(pdf)
 
     # inkscape versions >= 1.0
     options = [f'"{svg}"', "--export-type=pdf", f'--export-filename="{pdf}"']
@@ -237,10 +241,10 @@ def write_pdf_from_svg(inkscape: str, svg: str, pdf: Optional[str] = None) -> st
 
 
 def write_pdf(
-    inkscape: str,
-    pdf: str,
-    xml: _Element,
-    stylesheet: Optional[str] = None,
+    inkscape: Path | str,
+    pdf: Path | str,
+    xml: EtreeElement,
+    stylesheet: Optional[Path | str] = None,
 ) -> str:
     """
     Create a pdf file without writing an intermediate svg file.
@@ -260,4 +264,4 @@ def write_pdf(
         svg = write_svg(svg_file, xml, stylesheet)
     _ = write_pdf_from_svg(inkscape, svg, pdf)
     os.unlink(svg)
-    return pdf
+    return str(pdf)
