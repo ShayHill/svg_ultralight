@@ -1,5 +1,53 @@
-[tool.isort]
-profile = "black"
+[tool.poetry]
+name = "svg-ultralight"
+version = "0.9.1"
+description = "a sensible way to create svg files with Python"
+authors = ["Shay Hill <shay_public@hotmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "svg_ultralight", from = "src"}]
 
-[tool.pytest.ini_options]
-pythonpath = ["svg_ultralight"]
+[tool.poetry.dependencies]
+python = "^3.10"
+lxml = "^4.9.1"
+pillow = {version = "^9.3.0", optional = true}
+
+
+[tool.poetry.group.dev.dependencies]
+types-lxml = "^2022.11.8"
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__.py"]
+
+pythonVersion = "3.10"
+pythonPlatform = "Any"
+
+typeCheckingMode = "strict"
+reportShadowedImports = true
+reportCallInDefaultInitializer = true
+reportImplicitStringConcatenation = true
+reportMissingSuperCall = true
+reportPropertyTypeMismatch = true
+reportUninitializedInstanceVariable = true
+reportUnnecessaryTypeIgnoreComment = true
+reportUnusedCallResult = true
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = "too-many-instance-attributes,too-many-locals"
+
+[tool.pylint."BASIC"]
+good-names = "i,j,k,x,y,_"
+include-naming-hint = true
+
+[tool.pylint."PARAMETERS"]
+disable = "protected-access,c-extension-no-member,too-many-instance-attributes,too-many-locals"
+accept-no-param-doc = false
+accept-no-raise-doc = false
+accept-no-return-doc = false
+accept-no-yields-doc = false
