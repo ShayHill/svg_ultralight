@@ -23,12 +23,13 @@ from typing import TypeAlias
 from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.main import new_svg_root, write_svg
 
-_Element: TypeAlias = etree._Element  # type: ignore
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
-def _fill_ids(*elem_args: _Element) -> None:
+def _fill_ids(*elem_args: EtreeElement) -> None:
     """Set the id attribute of an element and all its children. Keep existing ids.
 
     :param elem: an etree element, accepts multiple arguments
@@ -43,7 +44,7 @@ def _fill_ids(*elem_args: _Element) -> None:
     _fill_ids(*elem_args[1:])
 
 
-def _normalize_views(elem: _Element) -> None:
+def _normalize_views(elem: EtreeElement) -> None:
     """Create a square viewbox for any element with an svg tag.
 
     :param elem: an etree element
@@ -59,7 +60,7 @@ def _normalize_views(elem: _Element) -> None:
         elem.set("height", "1")
 
 
-def _envelop_copies(*elem_args: _Element) -> _Element:
+def _envelop_copies(*elem_args: EtreeElement) -> EtreeElement:
     """An svg root element containing all elem_args.
 
     :param elem_args: one or more etree elements
@@ -72,7 +73,7 @@ def _envelop_copies(*elem_args: _Element) -> _Element:
 
 
 def map_ids_to_bounding_boxes(
-    inkscape: str | Path, *elem_args: _Element
+    inkscape: str | Path, *elem_args: EtreeElement
 ) -> dict[str, BoundingBox]:
     """Query an svg file for bounding-box dimensions
 
@@ -121,7 +122,7 @@ def map_ids_to_bounding_boxes(
     return id2bbox
 
 
-def get_bounding_box(inkscape: str | Path, elem: _Element) -> BoundingBox:
+def get_bounding_box(inkscape: str | Path, elem: EtreeElement) -> BoundingBox:
     """Get bounding box around a single element.
 
     :param inkscape: path to an inkscape executable on your local file system
@@ -140,3 +141,38 @@ def get_bounding_box(inkscape: str | Path, elem: _Element) -> BoundingBox:
     )
     id2bbox = map_ids_to_bounding_boxes(inkscape, elem)
     return id2bbox[elem.attrib["id"]]
+
+
+def pad_text(
+    inkscape: str | Path, text_elem: EtreeElement, capline_reference_char: str = "M"
+) -> PaddedText:
+    """Create a PaddedText instance from a text element.
+
+    :param inkscape: path to an inkscape executable on your local file system
+        IMPORTANT: path cannot end with ``.exe``.
+        Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
+    :param text: an etree element with a text tag
+    :param capline_reference_char: a character to use to determine the baseline and
+        capline. The default "M" is a good choice, but you might need something else
+        if using a weird font, or if you'd like to use the x-height instead of the
+        capline.
+    :return: a PaddedText instance
+    """
+    rmargin_ref = deepcopy(text_elem)
+    capline_ref = deepcopy(text_elem)
+    _ = rmargin_ref.attrib.pop("id", None)
+    _ = capline_ref.attrib.pop("id", None)
+    rmargin_ref.attrib["anchor"] = "end"
+    capline_ref.text = capline_reference_char
+    id2bbox = map_ids_to_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
+
+    bbox = id2bbox[text_elem.attrib["id"]]
+    rmargin_bbox = id2bbox[rmargin_ref.attrib["id"]]
+    capline_bbox = id2bbox[capline_ref.attrib["id"]]
+
+    tpad = bbox.y - capline_bbox.y
+    rpad = -rmargin_bbox.x2
+    bpad = capline_bbox.y2 - bbox.y2
+    lpad = bbox.x
+    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
+
