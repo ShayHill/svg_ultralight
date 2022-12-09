@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """ Quasi-private functions for high-level string conversion
 
 :author: Shay Hill

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """ xml namespace entries for svg files
 
 :author: Shay Hill

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """Explicit string formatting calls for arguments that aren't floats or strings.
 
 :author: Shay Hill

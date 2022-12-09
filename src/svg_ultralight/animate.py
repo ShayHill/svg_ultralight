@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """ One script to animate a list of pngs
 
-Requires: pillow, which is not a project dependency.
+Requires: pillow, which is an optional project dependency.
 
 :author: Shay Hill
 :created: 7/26/2020

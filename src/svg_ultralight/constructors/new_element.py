@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# _*_ coding: utf-8 _*_
 """SVG Element constructors. Create an svg element from a dictionary.
 
 :author: Shay Hill
