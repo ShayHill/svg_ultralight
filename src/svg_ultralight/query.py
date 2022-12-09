@@ -14,12 +14,12 @@ from __future__ import annotations
 import os
 import re
 import uuid
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
 from typing import TypeAlias
-from copy import deepcopy
 
 from lxml import etree
 
@@ -53,9 +53,9 @@ class BoundingBox:
 
     Define the bbox with x=, y=, width=, height=
 
-    Transform the BoundingBox by setting these variables. Each time you set x, x2, y,
-    y2, width, or height, private transformation values (_scale, _transform_x,
-    and _transform_y) will be updated.
+    Transform the BoundingBox by setting these variables. Each time you set x, cx,
+    x2, y, cy, y2, width, or height, private transformation values (_scale,
+    _transform_x, and _transform_y) will be updated.
 
     The ultimate transformation can be accessed through ``.transformation_string``.
     So the workflow will look like :
@@ -128,6 +128,26 @@ class BoundingBox:
         self._add_transform(1, x - self.x, 0)
 
     @property
+    def cx(self) -> float:
+        """Center x value"""
+        return self.x + self.width / 2
+
+    @cx.setter
+    def cx(self, value: float):
+        """Center x value"""
+        self._add_transform(1, value - self.cx, 0)
+
+    @property
+    def x2(self) -> float:
+        """x right value of bounding box"""
+        return self.x + self.width
+
+    @x2.setter
+    def x2(self, x2: float) -> None:
+        """Update transform values (do not alter self._x2)"""
+        self._add_transform(1, x2 - self.x2, 0)
+
+    @property
     def y(self) -> float:
         """y top value of bounding box"""
         return (self._translation_y + self._y) * self._scale
@@ -138,14 +158,14 @@ class BoundingBox:
         self._add_transform(1, 0, y - self.y)
 
     @property
-    def x2(self) -> float:
-        """x right value of bounding box"""
-        return self.x + self.width
+    def cy(self) -> float:
+        """Center y value"""
+        return self.y + self.height / 2
 
-    @x2.setter
-    def x2(self, x2: float) -> None:
-        """Update transform values (do not alter self._x)"""
-        self.x = x2 - self.width
+    @cy.setter
+    def cy(self, value: float):
+        """Center y value"""
+        self._add_transform(1, 0, value - self.cy)
 
     @property
     def y2(self) -> float:
