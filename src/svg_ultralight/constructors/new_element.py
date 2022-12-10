@@ -10,16 +10,17 @@ Will translate ``stroke_width=10`` to ``stroke-width="10"``
 """
 
 import copy
+import warnings
 from typing import TypeAlias, Union
 
 from lxml import etree
 
 from svg_ultralight.string_conversion import set_attributes
 
-_Element: TypeAlias = etree._Element  # type: ignore
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
-def new_element(tag: str, **attributes: Union[str, float]) -> _Element:
+def new_element(tag: str, **attributes: Union[str, float]) -> EtreeElement:
     """
     Create an etree.Element, make every kwarg value a string.
 
@@ -56,8 +57,8 @@ def new_element(tag: str, **attributes: Union[str, float]) -> _Element:
 
 
 def new_sub_element(
-    parent: _Element, tag: str, **attributes: Union[str, float]
-) -> _Element:
+    parent: EtreeElement, tag: str, **attributes: Union[str, float]
+) -> EtreeElement:
     """
     Create an etree.SubElement, make every kwarg value a string.
 
@@ -76,28 +77,33 @@ def new_sub_element(
     return elem
 
 
-def update_element(elem: _Element, **attributes: Union[str, float]) -> _Element:
+def update_element(elem: EtreeElement, **attributes: Union[str, float]) -> EtreeElement:
     """
     Update an existing etree.Element with additional params.
 
     :param elem: at etree element
     :param attributes: element attribute names and values
+    :returns: the element with updated attributes
+
+    This is to take advantage of the argument conversion in ``new_element``.
     """
     set_attributes(elem, **attributes)
     return elem
 
 
-def deepcopy_element(elem: _Element, **attributes: str | float) -> _Element:
+def deepcopy_element(elem: EtreeElement, **attributes: str | float) -> EtreeElement:
     """
     Create a deepcopy of an element. Optionally pass additional params.
 
     :param elem: at etree element or list of elements
     :param attributes: element attribute names and values
     :returns: a deepcopy of the element with updated attributes
+    :raises DeprecationWarning:
     """
-    raise DeprecationWarning(
+    warnings.warn(
         "deepcopy_element is deprecated. "
-        + "Use copy.deepcopy from the standard library instead."
+        + "Use copy.deepcopy from the standard library instead.",
+        category=DeprecationWarning,
     )
     elem = copy.deepcopy(elem)
     _ = update_element(elem, **attributes)

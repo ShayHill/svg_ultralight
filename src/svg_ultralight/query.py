@@ -38,7 +38,7 @@ def _fill_ids(*elem_args: EtreeElement) -> None:
         return
     elem = elem_args[0]
     for child in elem:
-        _ = _fill_ids(child)
+        _fill_ids(child)
     if elem.get("id") is None:
         elem.set("id", f"svg_ul-{uuid.uuid4()}")
     _fill_ids(*elem_args[1:])
@@ -53,7 +53,7 @@ def _normalize_views(elem: EtreeElement) -> None:
     because there's no way to undo it.
     """
     for child in elem:
-        _ = _normalize_views(child)
+        _normalize_views(child)
     if str(elem.tag).endswith("svg"):
         elem.set("viewBox", "0 0 1 1")
         elem.set("width", "1")
@@ -122,25 +122,27 @@ def map_ids_to_bounding_boxes(
     return id2bbox
 
 
-def get_bounding_box(inkscape: str | Path, elem: EtreeElement) -> BoundingBox:
-    """Get bounding box around a single element.
+def get_bounding_box(
+    inkscape: str | Path, *elem_args: EtreeElement
+) -> BoundingBox | tuple[BoundingBox, ...]:
+    """Get bounding box around a single element (or multiple elements).
 
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
     :param elem_args: xml elements
-    :return: a BoundingBox instance around elem.
+    :return: a BoundingBox instance around a single elem or a tuple of BoundingBox
+        instances if multiple elem_args are passed.
 
     This will work most of the time, but if you're missing an nsmap, you'll need to
     create an entire xml file with a custom nsmap (using
     `svg_ultralight.new_svg_root`) then call `map_ids_to_bounding_boxes` directly.
     """
-    raise DeprecationWarning(
-        "get_bounding_box is deprecated. "
-        + "Use map_ids_to_bounding_boxes(elem)[id] instead."
-    )
-    id2bbox = map_ids_to_bounding_boxes(inkscape, elem)
-    return id2bbox[elem.attrib["id"]]
+    id2bbox = map_ids_to_bounding_boxes(inkscape, *elem_args)
+    bboxes = [id2bbox[x.get("id", "")] for x in elem_args]
+    if len(bboxes) == 1:
+        return bboxes[0]
+    return tuple(bboxes)
 
 
 def pad_text(
@@ -151,7 +153,7 @@ def pad_text(
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
-    :param text: an etree element with a text tag
+    :param text_elem: an etree element with a text tag
     :param capline_reference_char: a character to use to determine the baseline and
         capline. The default "M" is a good choice, but you might need something else
         if using a weird font, or if you'd like to use the x-height instead of the
@@ -175,4 +177,3 @@ def pad_text(
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
     return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
-

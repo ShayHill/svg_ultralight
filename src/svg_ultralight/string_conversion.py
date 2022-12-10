@@ -14,7 +14,7 @@ from lxml import etree
 
 from svg_ultralight.nsmap import NSMAP
 
-_Element: TypeAlias = etree._Element  # type: ignore
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
 def format_number(num: float) -> str:
@@ -32,7 +32,7 @@ def format_number(num: float) -> str:
     return f"{num:0.6f}".rstrip("0").rstrip(".")
 
 
-def set_attributes(elem: _Element, **attributes: Union[str, float]) -> None:
+def set_attributes(elem: EtreeElement, **attributes: Union[str, float]) -> None:
     """
     Set name: value items as element attributes. Make every value a string.
 
@@ -58,17 +58,18 @@ def set_attributes(elem: _Element, **attributes: Union[str, float]) -> None:
     for dot in dots & set(attributes):
         setattr(elem, dot, attributes.pop(dot))
 
-    for k, v in attributes.items():
-        if ":" in k:
-            namespace, tag = k.split(":")
-            k = etree.QName(NSMAP[namespace], tag)
+    for key, val in attributes.items():
+        if ":" in key:
+            namespace, tag = key.split(":")
+            key = etree.QName(NSMAP[namespace], tag)
         else:
-            k = k.rstrip("_").replace("_", "-")
+            key = key.rstrip("_").replace("_", "-")
+
         try:
-            val = format_number(float(v))
+            val_as_str = format_number(float(val))
         except ValueError:
-            val = str(v)
-        elem.set(k, val)
+            val_as_str = str(val)
+        elem.set(key, val_as_str)
 
 
 class _TostringDefaults(Enum):
@@ -81,7 +82,7 @@ class _TostringDefaults(Enum):
     encoding = "UTF-8"
 
 
-def svg_tostring(xml: _Element, **tostring_kwargs: str | bool) -> bytes:
+def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool) -> bytes:
     """
     Contents of svg file with optional xml declaration.
 
@@ -89,6 +90,7 @@ def svg_tostring(xml: _Element, **tostring_kwargs: str | bool) -> bytes:
     :param tostring_kwargs: keyword arguments to etree.tostring.
         pass xml_header=True for sensible defaults, see further documentation on xml
         header in write_svg docstring.
+    :return: bytestring of svg file contents
     """
     tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
     if tostring_kwargs.get("xml_declaration"):

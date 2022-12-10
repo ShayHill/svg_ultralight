@@ -129,7 +129,7 @@ def write_svg(
             xml.addprevious(link)
         else:
             style = etree.Element("style", type="text/css")
-            with open(stylesheet) as css_file:
+            with open(stylesheet, encoding="utf-8") as css_file:
                 style.text = etree.CDATA("\n" + "".join(css_file.readlines()) + "\n")
             xml.insert(0, style)
 
@@ -156,6 +156,8 @@ def write_png_from_svg(
     :param png: optional path to png output file
     :return: png filename
     :effects: creates a new png from svg filename
+    :raises ValueError: if unable to write png. This could result from an error with
+        Inkscape.
 
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
@@ -217,6 +219,8 @@ def write_pdf_from_svg(
     :param pdf: optional path to png output file
     :return: pdf filename
     :effects: creates a new pfd from svg filename
+    :raises ValueError: if unable to write pdf. This could result from an error with
+        Inkscape.
 
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.

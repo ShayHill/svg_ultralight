@@ -11,12 +11,13 @@ all be updated as the BoundElement instance is updated.
 :created: 2022-12-09
 """
 
-from typing import Any
+from typing import Any, TypeAlias
 
 from lxml import etree
+
 from svg_ultralight.query import BoundingBox
 
-EtreeElement = etree._Element  # type: ignore
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
 class BoundElement:
@@ -46,8 +47,7 @@ class BoundElement:
         """
         if name in self._bbox_setters | {"scale"}:
             return getattr(self.bbox, name)
-        else:
-            raise AttributeError(f"{self.__class__.__name__} has no attribute {name}")
+        raise AttributeError(f"{self.__class__.__name__} has no attribute {name}")
 
     def __setattr__(self, name: str, value: Any):
         """Set settable BounsingBox attributes and update the element."""
@@ -56,5 +56,3 @@ class BoundElement:
             self._update_elem()
         else:
             super().__setattr__(name, value)
-
-

@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 from svg_ultralight.strings import format_number
@@ -84,6 +85,8 @@ class BoundingBox:
     def scale(self) -> float:
         """Read-only scale.
 
+        :return: uniform scale of the bounding box
+
         self.scale is publicly visible, because it's convenient to fit a (usually
         text) element somewhere then scale other elements to the same size--even
         though element width and height may be different. This is a read-only
@@ -100,72 +103,113 @@ class BoundingBox:
 
     @property
     def x(self) -> float:
-        """x left value of bounding box"""
+        """x left value of bounding box.
+
+        :return: internal _x value transformed by scale and translation
+        """
         return (self._translation_x + self._x) * self._scale
 
     @x.setter
     def x(self, x: float) -> None:
-        """Update transform values (do not alter self._x)"""
+        """Update transform values (do not alter self._x)
+
+        :param x: new x value after transformation
+        """
         self._add_transform(1, x - self.x, 0)
 
     @property
     def cx(self) -> float:
-        """Center x value"""
+        """Center x value
+
+        :return: midpoint of transformed x and x2
+        """
         return self.x + self.width / 2
 
     @cx.setter
     def cx(self, value: float):
-        """Center x value"""
+        """Center x value
+
+        :param value: new center x value after transformation
+        """
         self._add_transform(1, value - self.cx, 0)
 
     @property
     def x2(self) -> float:
-        """x right value of bounding box"""
+        """x right value of bounding box
+
+        :return: transformed x + transformed width
+        """
         return self.x + self.width
 
     @x2.setter
     def x2(self, x2: float) -> None:
-        """Update transform values (do not alter self._x2)"""
+        """Update transform values (do not alter self._x2)
+
+        :param x2: new x2 value after transformation
+        """
         self._add_transform(1, x2 - self.x2, 0)
 
     @property
     def y(self) -> float:
-        """y top value of bounding box"""
+        """y top value of bounding box
+
+        :return: internal _y value transformed by scale and translation
+        """
         return (self._translation_y + self._y) * self._scale
 
     @y.setter
     def y(self, y: float) -> None:
-        """Update transform values (do not alter self._y)"""
+        """Update transform values (do not alter self._y)
+
+        :param y: new y value after transformation
+        """
         self._add_transform(1, 0, y - self.y)
 
     @property
     def cy(self) -> float:
-        """Center y value"""
+        """Center y value
+
+        :return: midpoint of transformed y and y2
+        """
         return self.y + self.height / 2
 
     @cy.setter
     def cy(self, value: float):
-        """Center y value"""
+        """Center y value
+
+        :param value: new center y value after transformation
+        """
         self._add_transform(1, 0, value - self.cy)
 
     @property
     def y2(self) -> float:
-        """y bottom value of bounding box"""
+        """y bottom value of bounding box
+
+        :return: transformed y + transformed height
+        """
         return self.y + self.height
 
     @y2.setter
     def y2(self, y2: float) -> None:
-        """Update transform values (do not alter self._y)"""
+        """Update transform values (do not alter self._y)
+
+        :param y2: new y2 value after transformation
+        """
         self.y = y2 - self.height
 
     @property
     def width(self) -> float:
-        """Width of transformed bounding box"""
+        """Width of transformed bounding box
+
+        :return: internal _width value transformed by scale
+        """
         return self._width * self._scale
 
     @width.setter
     def width(self, width: float) -> None:
         """Update transform values, Do not alter self._width.
+
+        :param width: new width value after transformation
 
         Here transformed x and y value will be preserved. That is, the bounding box
         is scaled, but still anchored at (transformed) self.x and self.y
@@ -178,12 +222,17 @@ class BoundingBox:
 
     @property
     def height(self) -> float:
-        """Height of transformed bounding box"""
+        """Height of transformed bounding box
+
+        :return: internal _height value transformed by scale
+        """
         return self._height * self._scale
 
     @height.setter
     def height(self, height: float) -> None:
         """Update transform values, Do not alter self._height.
+
+        :param height: new height value after transformation
 
         Here transformed x and y value will be preserved. That is, the bounding box
         is scaled, but still anchored at (transformed) self.x and self.y
@@ -192,6 +241,10 @@ class BoundingBox:
 
     def _add_transform(self, scale: float, translation_x: float, translation_y: float):
         """Transform the bounding box by updating the transformation attributes
+
+        :param scale: scale factor
+        :param translation_x: x translation
+        :param translation_y: y translation
 
         Transformation attributes are _translation_x, _translation_y, and _scale
         """
@@ -208,21 +261,23 @@ class BoundingBox:
         Use with
         ``update_element(elem, transform=bbox.transform_string)``
         """
-        transformation_values = (
+        scale, trans_x, trans_y = (
             format_number(x)
             for x in (self._scale, self._translation_x, self._translation_y)
         )
-        return "scale({}) translate({} {})".format(*transformation_values)
+        return f"scale({scale}) translate({trans_x} {trans_y})"
 
     def merge(self, *others: BoundingBox) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
 
         :param others: one or more bounding boxes to merge with self
         :return: a bounding box around self and other bounding boxes
+        :raises DeprecationWarning:
         """
-        raise DeprecationWarning(
+        warnings.warn(
             "Method a.merge(b, c) is deprecated. "
-            + "Use classmethod BoundingBox.merged(a, b, c) instead."
+            + "Use classmethod BoundingBox.merged(a, b, c) instead.",
+            category=DeprecationWarning,
         )
         return BoundingBox.merged(self, *others)
 
@@ -230,11 +285,12 @@ class BoundingBox:
     def merged(cls, *bboxes: BoundingBox) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
 
+        :param bboxes: one or more bounding boxes
+        :return: a bounding box encompasing all bboxes args
+        :raises ValueError: if no bboxes are given
+
         This can be used to repace a bounding box after the element it bounds has
         been transformed with instance.transform_string.
-
-        :param others: one or more bounding boxes
-        :return: a bounding box encompasing all bboxes args
         """
         if not bboxes:
             raise ValueError("At least one bounding box is required")

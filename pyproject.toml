@@ -38,15 +38,20 @@ reportUninitializedInstanceVariable = true
 reportUnnecessaryTypeIgnoreComment = true
 reportUnusedCallResult = true
 
+[tool.pylint."MAIN"]
+load-plugins = "pylint.extensions.docparams"
+
 [tool.pylint."MESSAGES CONTROL"]
-disable = "too-many-instance-attributes,too-many-locals"
+disable = [
+    "too-many-instance-attributes,too-many-locals,protected-access,c-extension-no-member,too-many-instance-attributes",
+    "too-many-locals,import-error,too-many-arguments"
+]
 
 [tool.pylint."BASIC"]
-good-names = "i,j,k,x,y,_"
+good-names = "i,j,k,x,y,x2,y2,cx,cy,x_,y_,get_viewBox_str,r,g,b,_"
 include-naming-hint = true
 
 [tool.pylint."PARAMETERS"]
-disable = "protected-access,c-extension-no-member,too-many-instance-attributes,too-many-locals"
 accept-no-param-doc = false
 accept-no-raise-doc = false
 accept-no-return-doc = false

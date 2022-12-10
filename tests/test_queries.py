@@ -8,15 +8,12 @@ your system.
 """
 
 import math
+
 import pytest
 
 from svg_ultralight import new_svg_root
 from svg_ultralight.constructors import new_sub_element
-from svg_ultralight.query import (
-    BoundingBox,
-    get_bounding_box,
-    map_ids_to_bounding_boxes,
-)
+from svg_ultralight.query import BoundingBox, map_ids_to_bounding_boxes
 
 INKSCAPE = r"C:\Program Files\Inkscape\bin\inkscape"
 
@@ -25,8 +22,8 @@ class TestMergeBoundingBoxes:
     def test_merge_deprecation_warning(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
-        with pytest.raises(DeprecationWarning):
-            _ = bbox_a.merge(bbox_b)
+        assert pytest.warns(DeprecationWarning, BoundingBox.merge, bbox_a, bbox_b)
+        assert bbox_a.merge(bbox_b) == BoundingBox.merged(bbox_a, bbox_b)
 
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
@@ -78,20 +75,6 @@ class TestMapIdsToBoundingBoxes:
         assert rect1.get("id") in result.keys()
         assert rect2.get("id") in result.keys()
         assert rect3.get("id") in result.keys()
-
-
-class TestGetBBox:
-    def test_raises_deprecation_warning(self) -> None:
-        """
-        Return bounding box around entire group.
-        :return:
-        """
-        xml = new_svg_root(10, 20, 160, 19, id="svg1")
-        group = new_sub_element(xml, "g", id="grouped elements")
-        _ = new_sub_element(group, "rect", id="rect1", x=0, y=0, width=16, height=9)
-        _ = new_sub_element(group, "rect", id="rect2", x=1, y=1, width=8, height=32)
-        with pytest.raises(DeprecationWarning):
-            _ = get_bounding_box(INKSCAPE, group)
 
 
 class TestAlterBoundingBox:

@@ -62,10 +62,13 @@ enough to lay out text on a business card.
 :created: 2021-11-28
 """
 
-from svg_ultralight.query import BoundingBox
+from typing import TypeAlias
+
 from lxml import etree
 
-EtreeElement = etree._Element  # type: ignore
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+
+EtreeElement: TypeAlias = etree._Element  # type: ignore
 
 
 class PaddedText:
@@ -126,7 +129,10 @@ class PaddedText:
 
     @tpad.setter
     def tpad(self, value: float) -> None:
-        """Set the top padding of this line of text."""
+        """Set the top padding of this line of text.
+
+        :param value: The new top padding.
+        """
         self.base_tpad = value / self.bbox.scale
 
     @property
@@ -139,7 +145,10 @@ class PaddedText:
 
     @bpad.setter
     def bpad(self, value: float) -> None:
-        """Set the bottom padding of this line of text."""
+        """Set the bottom padding of this line of text.
+
+        :param value: The new bottom padding.
+        """
         self.base_bpad = value / self.bbox.scale
 
     @property
