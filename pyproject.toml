@@ -9,7 +9,7 @@ packages = [{include = "svg_ultralight", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-lxml = "^4.9.1"
+lxml = "^4.10.0"
 pillow = {version = "^9.3.0", optional = true}
 
 
