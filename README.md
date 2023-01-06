@@ -1,15 +1,15 @@
-# svg_ultralight 
+# svg_ultralight
 
 The most straightforward way to create SVG files with Python.
 
 ## Four principal functions:
 
     from svg_ultralight import new_svg_root, write_svg, write_png_from_svg, write_png
-    
+
 ## One convenience:
 
     from svg_ultralight import NSMAP
-    
+
 ### new_svg_root
     x_: Optional[float],
     y_: Optional[float],
@@ -78,7 +78,7 @@ Write an xml element as an svg file. This will link or inline your css code and 
     svg: str
     png: Optional[str]
     -> str
-    
+
 Convert an svg file to a png. Python does not have a library for this. That has an upside, as any library would be one more set of svg implementation idiosyncrasies we'd have to deal with. Inkscape will convert the file. This function provides the necessary command-line arguments.
 
 * `inkscape_exe`: path to inkscape.exe
@@ -94,9 +94,9 @@ Convert an svg file to a png. Python does not have a library for this. That has 
     xml: etree.Element,
     stylesheet: Optional[str] = None
     -> str
-    
+
 Create a png without writing an initial svg to your filesystem. This is not faster (it may be slightly slower), but it may be important when writing many images (animation frames) to your filesystem.
-    
+
 * `inkscape_exe`: path to inkscape.exe
 * `png`: path to output file (include extension .png)
 * `param xml`: root node of your svg geometry (created by `new_svg_root`)
@@ -115,7 +115,7 @@ I do want to keep this ultralight and avoid creating some pseudo scripting langu
     tag: str
     **params: Union[str, float]
     -> etree.Element
-    
+
 Python allows underscores in variable names; xml uses dashes.
 
 Python understands numbers; xml wants strings.
@@ -133,7 +133,7 @@ Translates underscores to hyphens
     >>> elem = new_element('line', stroke_width=1)
     >>> etree.tostring(elem)
     b'<line stroke-width="1"/>'
-    
+
 Removes trailing underscores. You'll almost certainly want to use reserved names like ``class`` as svg parameters. This
 can be done by passing the name with a trailing underscore.
 
@@ -153,18 +153,18 @@ Special handling for a 'text' argument. Places value between element tags.
     tag: str
     **params: Union[str, float]
     -> etree.Element
-    
+
 As above, but creates a subelement.
 
     >>> parent = etree.Element('g')
     >>> _ = new_sub_element('rect')
     >>> etree.tostring(parent)
     b'<g><rect/></g>'
-    
+
 ### update_element
 
 Another way to add params through the new_element name / float translator. Again unnecessary, but potentially helpful. Easily understood from the code or docstrings.
-    
+
 ## Extras:
 
 ### query.map_ids_to_bounding_boxes
@@ -186,6 +186,5 @@ You can get a tiny bit more sophisticated with Inkscape bounding-box queries, bu
 Create an animated gif from a sequence of png filenames. This is a Pillow one-liner, but it's convenient for me to have it, so it might be convenient for you. Requires pillow, which is not a project dependency.
 
     from svg_ultralight.animate import write_gif
-    
-[Full Documentation and Tutorial](https://shayallenhill.com/svg-with-css-in-python/)
 
+[Full Documentation and Tutorial](https://shayallenhill.com/svg-with-css-in-python/)

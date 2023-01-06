@@ -75,11 +75,11 @@ def set_attributes(elem: EtreeElement, **attributes: Union[str, float]) -> None:
 class _TostringDefaults(Enum):
     """Default values for an svg xml_header"""
 
-    doctype = (
+    DOCTYPE = (
         '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
         + '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
     )
-    encoding = "UTF-8"
+    ENCODING = "UTF-8"
 
 
 def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool) -> bytes:
@@ -95,8 +95,9 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool) -> bytes:
     tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
     if tostring_kwargs.get("xml_declaration"):
         for default in _TostringDefaults:
-            value = tostring_kwargs.get(default.name, default.value)
-            tostring_kwargs[default.name] = value
+            arg_name = default.name.lower()
+            value = tostring_kwargs.get(arg_name, default.value)
+            tostring_kwargs[arg_name] = value
     svg_contents = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
     return svg_contents
 

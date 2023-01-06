@@ -37,7 +37,7 @@ class BoundElement:
     def _update_elem(self):
         self.elem.attrib["transform"] = self.bbox.transform_string
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> str:
         """Allow direct access to a subset of BoundingBox attributes.
 
         :param name: x, y, x2, y2, width, height, scale

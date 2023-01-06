@@ -8,7 +8,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 
-from svg_ultralight.strings import format_number
+from svg_ultralight.string_conversion import format_number
 
 
 @dataclass

@@ -7,13 +7,13 @@ Requires: pillow, which is an optional project dependency.
 """
 
 try:
-    from PIL import Image  # type: ignore
+    from PIL import Image
 except ModuleNotFoundError as exc:
     raise ModuleNotFoundError(
         "`pip install pillow` to use svg_ultralight.animate module"
     ) from exc
-from typing import Iterable
 from pathlib import Path
+from typing import Iterable
 
 
 def write_gif(

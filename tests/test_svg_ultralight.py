@@ -14,9 +14,10 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
+from svg_ultralight import NSMAP
+
 # noinspection PyProtectedMember
 from svg_ultralight.main import new_svg_root, write_svg
-from svg_ultralight import NSMAP
 from svg_ultralight.string_conversion import svg_tostring
 
 
@@ -30,7 +31,7 @@ def css_source():
 
 
 @pytest.fixture
-def temp_filename(mode:str ="w"):
+def temp_filename(mode: str = "w"):
     """Temporary file object to capture test output."""
     svg_output = tempfile.NamedTemporaryFile(mode=mode, delete=False)
     svg_output.close()
@@ -43,7 +44,11 @@ class TestWriteSvg:
         """Insert stylesheet reference"""
         blank = etree.Element("blank")
         write_svg(
-            temp_filename, blank, css_source, do_link_css=True, xml_declaration=True,
+            temp_filename,
+            blank,
+            css_source,
+            do_link_css=True,
+            xml_declaration=True,
         )
         with open(temp_filename, "rb") as svg_binary:
             svg_lines = [x.decode() for x in svg_binary.readlines()]
@@ -105,13 +110,13 @@ def svg_root(**kwargs) -> etree.Element:
     namespace = tuple(NSMAP.items())
     xmlns = [f'xmlns="{namespace[0][1]}"']
     xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
-    attributes = ' '.join([f'{k}="{v}"' for k, v in kwargs.items()])
+    attributes = " ".join([f'{k}="{v}"' for k, v in kwargs.items()])
     return etree.fromstring(f'<svg {" ".join(xmlns)} {attributes}/>'.encode())
 
 
 class TestNewSvgRoot:
     def test_nsmap(self) -> None:
-        """ NSMAP passed by default and parseable by lxml """
+        """NSMAP passed by default and parseable by lxml"""
         result = new_svg_root()
         assert result.nsmap == NSMAP
 
@@ -119,9 +124,7 @@ class TestNewSvgRoot:
         """Arguments and xmlns appear in element.
 
         Build the svg element namespace from NSMAP and compare to output"""
-        expect = svg_root(
-            **{"viewBox": "0 1 2 3", "width": "2", "height": "3"}
-        )
+        expect = svg_root(**{"viewBox": "0 1 2 3", "width": "2", "height": "3"})
         result = new_svg_root(0, 1, 2, 3)
         assert result.attrib == expect.attrib
 
@@ -134,11 +137,10 @@ class TestNewSvgRoot:
         assert result.attrib == expect.attrib
 
     def test_conflicting_params(self) -> None:
-        """ Explicit params overwrite trailing-underscore-inferred params """
-        expect = svg_root(
-            **{"viewBox": "0 1 2 3", "width": "2", "height": "30"}
-        )
+        """Explicit params overwrite trailing-underscore-inferred params"""
+        expect = svg_root(**{"viewBox": "0 1 2 3", "width": "2", "height": "30"})
         result = new_svg_root(0, 1, 2, 3, height=30)
+
 
 class TestTostringKwargs:
     """Pass write_svg **kwargs to lxml.etree.tostring"""
