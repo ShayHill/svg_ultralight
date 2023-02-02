@@ -6,6 +6,6 @@
 
 
 def pytest_assertrepr_compare(config, op, left, right):
-    """See full error diffs"""
+    """See full error diffs."""
     if op in ("==", "!="):
         return [f"{left} {op} {right}"]

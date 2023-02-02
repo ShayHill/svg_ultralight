@@ -1,4 +1,4 @@
-"""Simple functions to LIGHTLY assist in creating Scalable Vector Graphics.
+r"""Simple functions to LIGHTLY assist in creating Scalable Vector Graphics.
 
 :author: Shay Hill
 created: 10/7/2019
@@ -10,11 +10,13 @@ Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 Inkscape changed their command-line interface with version 1.0. These functions
 should work with all Inkscape versions. Please report any issues.
 """
+from __future__ import annotations
+
 import os
 import subprocess
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import IO, Dict, Optional, TypeAlias, cast
+from typing import IO, TYPE_CHECKING, TypeGuard
 
 from lxml import etree
 
@@ -26,21 +28,50 @@ from svg_ultralight.string_conversion import (
     svg_tostring,
 )
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from lxml.etree import _Element as EtreeElement  # type: ignore
+
+
+def _is_floats(objs: Sequence[object]) -> TypeGuard[Sequence[float]]:
+    """Determine if a list of objects is a list of numbers.
+
+    :param objs: list of objects
+    :return: True if all objects are numbers
+    """
+    return all(isinstance(x, (float, int)) for x in objs)
+
+
+def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
+    """Determine if an object is file-like.
+
+    :param obj: object
+    :return: True if object is file-like
+    """
+    return hasattr(obj, "read") and hasattr(obj, "write")
+
+
+def _is_pathable(obj: object) -> TypeGuard[Path | str]:
+    """Determine if an object is a path of could be cast into a path.
+
+    :param obj: object
+    :return: True if object is a path
+    """
+    return isinstance(obj, (Path, str))
 
 
 def new_svg_root(
-    x_: Optional[float] = None,
-    y_: Optional[float] = None,
-    width_: Optional[float] = None,
-    height_: Optional[float] = None,
+    x_: float | None = None,
+    y_: float | None = None,
+    width_: float | None = None,
+    height_: float | None = None,
     pad_: float = 0,
     dpu_: float = 1,
-    nsmap: Optional[Dict[str | None, str]] = None,
+    nsmap: dict[str | None, str] | None = None,
     **attributes: float | str,
 ) -> EtreeElement:
-    """
-    Create an svg root element from viewBox style parameters.
+    """Create an svg root element from viewBox style parameters.
 
     :param x_: x value in upper-left corner
     :param y_: y value in upper-left corner
@@ -57,14 +88,13 @@ def new_svg_root(
     """
     if nsmap is None:
         nsmap = NSMAP
-    if None not in (x_, y_, width_, height_):
-        assert x_ is not None
-        assert y_ is not None
-        assert width_ is not None
-        assert height_ is not None
-        view_box = get_viewBox_str(x_, y_, width_, height_, pad_)
-        pixel_width = format_number((width_ + pad_ * 2) * dpu_)
-        pixel_height = format_number((height_ + pad_ * 2) * dpu_)
+
+    view_box_args = [x_, y_, width_, height_]
+    if _is_floats(view_box_args):
+        x, y, width, height = view_box_args
+        view_box = get_viewBox_str(x, y, width, height, pad_)
+        pixel_width = format_number((width + pad_ * 2) * dpu_)
+        pixel_height = format_number((height + pad_ * 2) * dpu_)
         attributes["viewBox"] = attributes.get("viewBox", view_box)
         attributes["width"] = attributes.get("width", pixel_width)
         attributes["height"] = attributes.get("height", pixel_height)
@@ -76,12 +106,12 @@ def new_svg_root(
 def write_svg(
     svg: Path | str | IO[bytes],
     xml: EtreeElement,
-    stylesheet: Optional[Path | str] = None,
+    stylesheet: Path | str | None = None,
+    *,
     do_link_css: bool = False,
     **tostring_kwargs: str | bool,
 ) -> str:
-    """
-    Write an xml element as an svg file.
+    r"""Write an xml element as an svg file.
 
     :param svg: open binary file object or path to output file (include extension .svg)
     :param xml: root node of your svg geometry
@@ -92,6 +122,7 @@ def write_svg(
         sensible default values. See below.
     :return: svg filename
     :effects: creates svg file at ``svg``
+    :raises TypeError: if ``svg`` is not a Path, str, or binary file object
 
     It's often useful to write a temporary svg file, so a tempfile.NamedTemporaryFile
     object (or any open binary file object can be passed instead of an svg filename).
@@ -129,27 +160,27 @@ def write_svg(
             xml.addprevious(link)
         else:
             style = etree.Element("style", type="text/css")
-            with open(stylesheet, encoding="utf-8") as css_file:
+            with Path(stylesheet).open(encoding="utf-8") as css_file:
                 style.text = etree.CDATA("\n" + "".join(css_file.readlines()) + "\n")
             xml.insert(0, style)
 
     svg_contents = svg_tostring(xml, **tostring_kwargs)
 
-    try:
-        _ = cast(IO[bytes], svg).write(svg_contents)
-        return cast(IO[bytes], svg).name
-    except AttributeError:
-        assert isinstance(svg, (str, Path))
-        with open(svg, "wb") as svg_file:
+    if _is_io_bytes(svg):
+        _ = svg.write(svg_contents)
+        return svg.name
+    if _is_pathable(svg):
+        with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)
         return str(svg)
+    msg = f"svg must be a path-like object or a file-like object, not {type(svg)}"
+    raise TypeError(msg)
 
 
 def write_png_from_svg(
-    inkscape: Path | str, svg: Path | str, png: Optional[Path | str] = None
+    inkscape: Path | str, svg: Path | str, png: Path | str | None = None
 ) -> str:
-    """
-    Convert an svg file to a png
+    """Convert an svg file to a png.
 
     :param inkscape: path to inkscape executable (without .exe extension!)
     :param svg: path to svg file
@@ -162,10 +193,7 @@ def write_png_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
-    if png is None:
-        png = str(Path(svg).with_suffix(".png"))
-    else:
-        png = str(png)
+    png = str(Path(svg).with_suffix(".png")) if png is None else str(png)
 
     # inkscape versions >= 1.0
     options = [f'"{svg}"', "--export-type=png", f'--export-filename="{png}"']
@@ -178,17 +206,17 @@ def write_png_from_svg(
     if return_code == 0:
         return png
 
-    raise ValueError(f"failed to write {png}")
+    msg = f"failed to write {png} with inkscape {inkscape}"
+    raise ValueError(msg)
 
 
 def write_png(
     inkscape: Path | str,
     png: Path | str,
     xml: EtreeElement,
-    stylesheet: Optional[str] = None,
+    stylesheet: str | None = None,
 ) -> str:
-    """
-    Create a png file without writing an intermediate svg file.
+    """Create a png file without writing an intermediate svg file.
 
     :param inkscape: path to inkscape executable (without .exe extension!)
     :param png: path to output png file
@@ -209,10 +237,9 @@ def write_png(
 
 
 def write_pdf_from_svg(
-    inkscape: Path | str, svg: Path | str, pdf: Optional[Path | str] = None
+    inkscape: Path | str, svg: Path | str, pdf: Path | str | None = None
 ) -> str:
-    """
-    Convert an svg file to a pdf
+    """Convert an svg file to a pdf.
 
     :param inkscape: path to inkscape executable (without .exe extension!)
     :param svg: path to svg file
@@ -225,10 +252,7 @@ def write_pdf_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
-    if pdf is None:
-        pdf = str(Path(svg).with_suffix(".pdf"))
-    else:
-        pdf = str(pdf)
+    pdf = str(Path(svg).with_suffix(".pdf")) if pdf is None else str(pdf)
 
     # inkscape versions >= 1.0
     options = [f'"{svg}"', "--export-type=pdf", f'--export-filename="{pdf}"']
@@ -241,17 +265,17 @@ def write_pdf_from_svg(
     if return_code == 0:
         return pdf
 
-    raise ValueError(f"failed to write {pdf}")
+    msg = f"failed to write {pdf} from {svg}"
+    raise ValueError(msg)
 
 
 def write_pdf(
     inkscape: Path | str,
     pdf: Path | str,
     xml: EtreeElement,
-    stylesheet: Optional[Path | str] = None,
+    stylesheet: Path | str | None = None,
 ) -> str:
-    """
-    Create a pdf file without writing an intermediate svg file.
+    """Create a pdf file without writing an intermediate svg file.
 
     :param inkscape: path to inkscape executable (without .exe extension!)
     :param pdf: path to output pdf file

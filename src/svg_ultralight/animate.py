@@ -1,19 +1,22 @@
-""" One script to animate a list of pngs
+"""One script to animate a list of pngs.
 
 Requires: pillow, which is an optional project dependency.
 
 :author: Shay Hill
 :created: 7/26/2020
 """
+from __future__ import annotations
 
 try:
     from PIL import Image  # type: ignore
 except ModuleNotFoundError as exc:
-    raise ModuleNotFoundError(
-        "`pip install pillow` to use svg_ultralight.animate module"
-    ) from exc
-from pathlib import Path
-from typing import Iterable
+    MSG = "`pip install pillow` to use svg_ultralight.animate module"
+    raise ModuleNotFoundError(MSG) from exc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 
 def write_gif(
@@ -22,8 +25,7 @@ def write_gif(
     duration: float = 100,
     loop: int = 0,
 ) -> None:
-    """
-    Create a gif from a sequence of pngs.
+    """Create a gif from a sequence of pngs.
 
     :param gif: output filename (include .gif extension)
     :param pngs: png filenames

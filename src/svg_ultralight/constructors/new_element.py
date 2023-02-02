@@ -9,20 +9,22 @@ parameters.
 Will translate ``stroke_width=10`` to ``stroke-width="10"``
 """
 
+from __future__ import annotations
+
 import copy
 import warnings
-from typing import TypeAlias, Union
+from typing import TYPE_CHECKING
 
 from lxml import etree
 
 from svg_ultralight.string_conversion import set_attributes
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
-def new_element(tag: str, **attributes: Union[str, float]) -> EtreeElement:
-    """
-    Create an etree.Element, make every kwarg value a string.
+def new_element(tag: str, **attributes: str | float) -> EtreeElement:
+    """Create an etree.Element, make every kwarg value a string.
 
     :param tag: element tag
     :param attributes: element attribute names and values
@@ -57,10 +59,9 @@ def new_element(tag: str, **attributes: Union[str, float]) -> EtreeElement:
 
 
 def new_sub_element(
-    parent: EtreeElement, tag: str, **attributes: Union[str, float]
+    parent: EtreeElement, tag: str, **attributes: str | float
 ) -> EtreeElement:
-    """
-    Create an etree.SubElement, make every kwarg value a string.
+    """Create an etree.SubElement, make every kwarg value a string.
 
     :param parent: parent element
     :param tag: element tag
@@ -77,9 +78,8 @@ def new_sub_element(
     return elem
 
 
-def update_element(elem: EtreeElement, **attributes: Union[str, float]) -> EtreeElement:
-    """
-    Update an existing etree.Element with additional params.
+def update_element(elem: EtreeElement, **attributes: str | float) -> EtreeElement:
+    """Update an existing etree.Element with additional params.
 
     :param elem: at etree element
     :param attributes: element attribute names and values
@@ -92,8 +92,7 @@ def update_element(elem: EtreeElement, **attributes: Union[str, float]) -> Etree
 
 
 def deepcopy_element(elem: EtreeElement, **attributes: str | float) -> EtreeElement:
-    """
-    Create a deepcopy of an element. Optionally pass additional params.
+    """Create a deepcopy of an element. Optionally pass additional params.
 
     :param elem: at etree element or list of elements
     :param attributes: element attribute names and values

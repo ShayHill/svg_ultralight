@@ -1,4 +1,4 @@
-""" Quasi-private functions for high-level string conversion
+"""Quasi-private functions for high-level string conversion.
 
 :author: Shay Hill
 :created: 7/26/2020
@@ -7,19 +7,21 @@ Rounding some numbers to ensure quality svg rendering:
 * Rounding floats to six digits after the decimal
 * Rounding viewBox dimensions to ints
 """
+from __future__ import annotations
+
 from enum import Enum
-from typing import TypeAlias, Union
+from typing import TYPE_CHECKING
 
 from lxml import etree
 
 from svg_ultralight.nsmap import NSMAP
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
 def format_number(num: float) -> str:
-    """
-    Format strings at limited precision
+    """Format strings at limited precision.
 
     :param num: anything that can print as a float.
     :return: str
@@ -32,9 +34,8 @@ def format_number(num: float) -> str:
     return f"{num:0.6f}".rstrip("0").rstrip(".")
 
 
-def set_attributes(elem: EtreeElement, **attributes: Union[str, float]) -> None:
-    """
-    Set name: value items as element attributes. Make every value a string.
+def set_attributes(elem: EtreeElement, **attributes: str | float) -> None:
+    """Set name: value items as element attributes. Make every value a string.
 
     :param elem: element to receive element.set(keyword, str(value)) calls
     :param attributes: element attribute names and values. Knows what to do with 'text'
@@ -73,7 +74,8 @@ def set_attributes(elem: EtreeElement, **attributes: Union[str, float]) -> None:
 
 
 class _TostringDefaults(Enum):
-    """Default values for an svg xml_header"""
+
+    """Default values for an svg xml_header."""
 
     DOCTYPE = (
         '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n'
@@ -83,8 +85,7 @@ class _TostringDefaults(Enum):
 
 
 def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> bytes:
-    """
-    Contents of svg file with optional xml declaration.
+    """Contents of svg file with optional xml declaration.
 
     :param xml: root node of your svg geometry
     :param tostring_kwargs: keyword arguments to etree.tostring.
@@ -98,15 +99,13 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
             arg_name = default.name.lower()
             value = tostring_kwargs.get(arg_name, default.value)
             tostring_kwargs[arg_name] = value
-    svg_contents = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
-    return svg_contents
+    return etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
 
 
 def get_viewBox_str(
     x: float, y: float, width: float, height: float, pad: float = 0
 ) -> str:
-    """
-    Create a space-delimited string.
+    """Create a space-delimited string.
 
     :param x: x value in upper-left corner
     :param y: y value in upper-left corner

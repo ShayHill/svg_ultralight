@@ -11,16 +11,19 @@ all be updated as the BoundElement instance is updated.
 :created: 2022-12-09
 """
 
-from typing import Any, TypeAlias
 
-from lxml import etree
+from __future__ import annotations
 
-from svg_ultralight.query import BoundingBox
+from typing import TYPE_CHECKING
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from lxml.etree import _Element as EtreeElement  # type: ignore
+
+    from svg_ultralight.query import BoundingBox
 
 
 class BoundElement:
+
     """An element with a bounding box.
 
     Updates the element when x, y, x2, y2, width, or height are set.
@@ -30,7 +33,12 @@ class BoundElement:
 
     _bbox_setters = {"x", "cx", "x2", "y", "cy", "y2", "width", "height"}
 
-    def __init__(self, element: EtreeElement, bounding_box: BoundingBox):
+    def __init__(self, element: EtreeElement, bounding_box: BoundingBox) -> None:
+        """Initialize a BoundElement instance.
+
+        :param element: the element to be bound
+        :param bounding_box: the bounding box around the element
+        """
         self.elem = element
         self.bbox = bounding_box
 
@@ -47,10 +55,15 @@ class BoundElement:
         """
         if name in self._bbox_setters | {"scale"}:
             return getattr(self.bbox, name)
-        raise AttributeError(f"{self.__class__.__name__} has no attribute {name}")
+        msg = f"{self.__class__.__name__} has no attribute {name}"
+        raise AttributeError(msg)
 
-    def __setattr__(self, name: str, value: Any):
-        """Set settable BounsingBox attributes and update the element."""
+    def __setattr__(self, name: str, value: float) -> None:
+        """Set settable BoundingBox attributes and update the element.
+
+        :param name: x, y, x2, y2, width, height, scale
+        :param value: the new value of self.bbox.name
+        """
         if name in self._bbox_setters:
             setattr(self.bbox, name, value)
             self._update_elem()

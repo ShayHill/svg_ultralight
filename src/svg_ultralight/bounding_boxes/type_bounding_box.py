@@ -13,6 +13,7 @@ from svg_ultralight.string_conversion import format_number
 
 @dataclass
 class BoundingBox:
+
     """Mutable bounding box object for svg_ultralight.
 
     :param x: left x value
@@ -111,7 +112,7 @@ class BoundingBox:
 
     @x.setter
     def x(self, x: float) -> None:
-        """Update transform values (do not alter self._x)
+        """Update transform values (do not alter self._x).
 
         :param x: new x value after transformation
         """
@@ -119,7 +120,7 @@ class BoundingBox:
 
     @property
     def cx(self) -> float:
-        """Center x value
+        """Center x value.
 
         :return: midpoint of transformed x and x2
         """
@@ -127,7 +128,7 @@ class BoundingBox:
 
     @cx.setter
     def cx(self, value: float):
-        """Center x value
+        """Center x value.
 
         :param value: new center x value after transformation
         """
@@ -135,7 +136,7 @@ class BoundingBox:
 
     @property
     def x2(self) -> float:
-        """x right value of bounding box
+        """x right value of bounding box.
 
         :return: transformed x + transformed width
         """
@@ -143,7 +144,7 @@ class BoundingBox:
 
     @x2.setter
     def x2(self, x2: float) -> None:
-        """Update transform values (do not alter self._x2)
+        """Update transform values (do not alter self._x2).
 
         :param x2: new x2 value after transformation
         """
@@ -151,7 +152,7 @@ class BoundingBox:
 
     @property
     def y(self) -> float:
-        """y top value of bounding box
+        """y top value of bounding box.
 
         :return: internal _y value transformed by scale and translation
         """
@@ -159,7 +160,7 @@ class BoundingBox:
 
     @y.setter
     def y(self, y: float) -> None:
-        """Update transform values (do not alter self._y)
+        """Update transform values (do not alter self._y).
 
         :param y: new y value after transformation
         """
@@ -167,7 +168,7 @@ class BoundingBox:
 
     @property
     def cy(self) -> float:
-        """Center y value
+        """Center y value.
 
         :return: midpoint of transformed y and y2
         """
@@ -175,7 +176,7 @@ class BoundingBox:
 
     @cy.setter
     def cy(self, value: float):
-        """Center y value
+        """Center y value.
 
         :param value: new center y value after transformation
         """
@@ -183,7 +184,7 @@ class BoundingBox:
 
     @property
     def y2(self) -> float:
-        """y bottom value of bounding box
+        """y bottom value of bounding box.
 
         :return: transformed y + transformed height
         """
@@ -191,7 +192,7 @@ class BoundingBox:
 
     @y2.setter
     def y2(self, y2: float) -> None:
-        """Update transform values (do not alter self._y)
+        """Update transform values (do not alter self._y).
 
         :param y2: new y2 value after transformation
         """
@@ -199,7 +200,7 @@ class BoundingBox:
 
     @property
     def width(self) -> float:
-        """Width of transformed bounding box
+        """Width of transformed bounding box.
 
         :return: internal _width value transformed by scale
         """
@@ -222,7 +223,7 @@ class BoundingBox:
 
     @property
     def height(self) -> float:
-        """Height of transformed bounding box
+        """Height of transformed bounding box.
 
         :return: internal _height value transformed by scale
         """
@@ -240,7 +241,7 @@ class BoundingBox:
         self.width = height * self.width / self.height
 
     def _add_transform(self, scale: float, translation_x: float, translation_y: float):
-        """Transform the bounding box by updating the transformation attributes
+        """Transform the bounding box by updating the transformation attributes.
 
         :param scale: scale factor
         :param translation_x: x translation
@@ -293,7 +294,8 @@ class BoundingBox:
         been transformed with instance.transform_string.
         """
         if not bboxes:
-            raise ValueError("At least one bounding box is required")
+            msg = "At least one bounding box is required"
+            raise ValueError(msg)
         min_x = min(x.x for x in bboxes)
         max_x = max(x.x + x.width for x in bboxes)
         min_y = min(x.y for x in bboxes)

@@ -1,4 +1,4 @@
-""" Test queries on a temporary file
+"""Test queries on a temporary file.
 
 :author: Shay Hill
 :created: 7/25/2020
@@ -23,7 +23,8 @@ class TestMergeBoundingBoxes:
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
         assert pytest.warns(DeprecationWarning, BoundingBox.merge, bbox_a, bbox_b)
-        assert bbox_a.merge(bbox_b) == BoundingBox.merged(bbox_a, bbox_b)
+        with pytest.warns(DeprecationWarning):
+            assert bbox_a.merge(bbox_b) == BoundingBox.merged(bbox_a, bbox_b)
 
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
@@ -37,9 +38,7 @@ class TestMergeBoundingBoxes:
 
 class TestTransformBoundingBoxes:
     def test_transforms_commutative(self):
-        """
-        Scale then transform = transform then scale
-        """
+        """Scale then transform = transform then scale."""
         bbox_a = BoundingBox(-20000, -4, 10, 30)
         bbox_b = BoundingBox(-20000, -4, 10, 30)
 
@@ -54,9 +53,7 @@ class TestTransformBoundingBoxes:
 
 class TestMapIdsToBoundingBoxes:
     def test_gets_bboxes(self) -> None:
-        """
-        Run with a temporary file.
-        """
+        """Run with a temporary file."""
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         _ = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
         _ = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
@@ -71,15 +68,15 @@ class TestMapIdsToBoundingBoxes:
         rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
         rect3 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
         result = map_ids_to_bounding_boxes(INKSCAPE, xml)
-        assert xml.get("id") in result.keys()
-        assert rect1.get("id") in result.keys()
-        assert rect2.get("id") in result.keys()
-        assert rect3.get("id") in result.keys()
+        assert xml.get("id") in result
+        assert rect1.get("id") in result
+        assert rect2.get("id") in result
+        assert rect3.get("id") in result
 
 
 class TestAlterBoundingBox:
     def test_reverse_width(self) -> None:
-        """adjust width one way then the other returns to original box"""
+        """adjust width one way then the other returns to original box."""
         bbox = BoundingBox(10, 20, 30, 40)
         bbox.x = 100
         bbox.y = 200

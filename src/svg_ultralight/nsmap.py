@@ -1,4 +1,4 @@
-""" xml namespace entries for svg files
+"""xml namespace entries for svg files.
 
 :author: Shay Hill
 :created: 1/14/2021

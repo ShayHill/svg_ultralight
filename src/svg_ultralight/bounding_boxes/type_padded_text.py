@@ -62,16 +62,19 @@ enough to lay out text on a business card.
 :created: 2021-11-28
 """
 
-from typing import TypeAlias
 
-from lxml import etree
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
 class PaddedText:
+
     """A line of text with a bounding box and padding."""
 
     def __init__(
@@ -82,7 +85,7 @@ class PaddedText:
         rpad: float,
         bpad: float,
         lpad: float,
-    ):
+    ) -> None:
         """Initialize a PaddedText instance.
 
         :param elem: The text element.
@@ -233,7 +236,7 @@ class PaddedText:
         Svg_Ultralight BoundingBoxes preserve x and y when scaling. This is
         consistent with how rectangles, viewboxes, and anything else defined by x, y,
         width, height behaves in SVG. This is unintuitive for text, because the
-        baseline is near y2 (y + height) not y. So, we preserve baseline (alter y
+        baseline is near y2 (y + height) not y. So, we preserve baseline (alter y
         *and* y2) when scaling.
         """
         baseline = self.baseline

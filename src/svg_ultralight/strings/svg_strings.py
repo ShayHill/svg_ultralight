@@ -7,14 +7,19 @@ The `string_conversion` module will format floats or strings. Some other formatt
 make things easier.
 """
 
-from typing import Iterable
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from svg_ultralight.string_conversion import format_number
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 def svg_color_tuple(rgb_floats: tuple[float, float, float]) -> str:
-    """
-    Turn an rgb tuple (0-255, 0-255, 0-255) into an svg color definition.
+    """Turn an rgb tuple (0-255, 0-255, 0-255) into an svg color definition.
 
     :param rgb_floats: (0-255, 0-255, 0-255)
     :return: "rgb(128,128,128)"
@@ -24,8 +29,7 @@ def svg_color_tuple(rgb_floats: tuple[float, float, float]) -> str:
 
 
 def svg_ints(floats: Iterable[float]) -> str:
-    """
-    Space-delimited ints
+    """Space-delimited ints.
 
     :param floats: and number of floats
     :return: each float rounded to an int, space delimited
@@ -34,8 +38,7 @@ def svg_ints(floats: Iterable[float]) -> str:
 
 
 def svg_float_tuples(tuples: Iterable[tuple[float, float]]) -> str:
-    """
-    Space-delimited tuples
+    """Space-delimited tuples.
 
     :param tuples: [(a, b), (c, d)]
     :return: "a,b c,d"

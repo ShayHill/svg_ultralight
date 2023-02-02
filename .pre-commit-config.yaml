@@ -71,7 +71,7 @@ repos:
   rev: v3.3.1
   hooks:
   - args:
-    - --py37-plus
+    - --py310-plus
     id: pyupgrade
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
@@ -96,8 +96,10 @@ repos:
     - --disable=no-member
     - --disable=import-error
     - --disable=too-many-arguments
+    - --disable=too-many-locals
     - --disable=too-many-instance-attributes
     - --disable=consider-using-with
+    - --disable=no-name-in-module
     - --load-plugins=pylint.extensions.docparams
     - --accept-no-param-doc=n
     - --accept-no-raise-doc=n
@@ -105,10 +107,27 @@ repos:
     - --accept-no-yields-doc=n
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  # Ruff version.
+  # ignores
+  # ANN101 Missing type annotation for `self` in method
+  # ANN102 Missing type annotation for `cls` in classmethod
+  # ANN202 Missing return type annotation for private function (wants -> None everywhere)
+  # B905 `zip()` without an explicit `strict=` parameter
+  # COM812 Trailing comma missing
+  # D211 no blank line before class
+  # D213 multi line summary second line
+  # ISC003 Explicitly concatenated string should be implicitly concatenated
+  # N802 Function name should be lowercase
+  # PGH003 Use specific rule codes when ignoring type issues
+  # PLR0913 Too many arguments to function call
+  # PTH108 `os.unlink` should be replaced by `.unlink()`
   rev: 'v0.0.238'
   hooks:
     - id: ruff
+      exclude: "tests"
+      args:
+      - --select=ALL
+      - --ignore=ANN101,ANN102,ANN202,B905,COM812,D211,D213,ISC003,N802,PGH003,PLR0913,PTH108
+      - --fix
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python

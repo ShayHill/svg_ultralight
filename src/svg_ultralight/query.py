@@ -1,4 +1,4 @@
-""" Query an SVG file for bounding boxes
+"""Query an SVG file for bounding boxes.
 
 :author: Shay Hill
 :created: 7/25/2020
@@ -15,18 +15,18 @@ import os
 import re
 import uuid
 from copy import deepcopy
-from pathlib import Path
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
-from typing import TypeAlias
-
-from lxml import etree
+from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.main import new_svg_root, write_svg
 
-EtreeElement: TypeAlias = etree._Element  # type: ignore
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
 def _fill_ids(*elem_args: EtreeElement) -> None:
@@ -61,7 +61,7 @@ def _normalize_views(elem: EtreeElement) -> None:
 
 
 def _envelop_copies(*elem_args: EtreeElement) -> EtreeElement:
-    """An svg root element containing all elem_args.
+    """Create an svg root element enveloping all elem_args.
 
     :param elem_args: one or more etree elements
     :return: an etree element enveloping copies of elem_args with all views normalized
@@ -75,7 +75,7 @@ def _envelop_copies(*elem_args: EtreeElement) -> EtreeElement:
 def map_ids_to_bounding_boxes(
     inkscape: str | Path, *elem_args: EtreeElement
 ) -> dict[str, BoundingBox]:
-    """Query an svg file for bounding-box dimensions
+    r"""Query an svg file for bounding-box dimensions.
 
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
@@ -124,7 +124,7 @@ def map_ids_to_bounding_boxes(
 def get_bounding_box(
     inkscape: str | Path, *elem_args: EtreeElement
 ) -> BoundingBox | tuple[BoundingBox, ...]:
-    """Get bounding box around a single element (or multiple elements).
+    r"""Get bounding box around a single element (or multiple elements).
 
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
@@ -147,7 +147,7 @@ def get_bounding_box(
 def pad_text(
     inkscape: str | Path, text_elem: EtreeElement, capline_reference_char: str = "M"
 ) -> PaddedText:
-    """Create a PaddedText instance from a text element.
+    r"""Create a PaddedText instance from a text element.
 
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
