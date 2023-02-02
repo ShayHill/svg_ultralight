@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "svg-ultralight"
-version = "0.11.0"
+version = "0.11.1"
 description = "a sensible way to create svg files with Python"
 authors = ["Shay Hill <shay_public@hotmail.com>"]
 license = "MIT"
@@ -23,7 +23,7 @@ pre-commit = "^2.21.0"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.11.0"
+version = "0.11.1"
 tag_format = "$version"
 version_files = [
     "pyproject.toml:^version"
