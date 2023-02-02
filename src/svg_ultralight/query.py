@@ -110,7 +110,6 @@ def map_ids_to_bounding_boxes(
 
     with NamedTemporaryFile(mode="wb", delete=False, suffix=".svg") as svg_file:
         svg = write_svg(svg_file, envelope)
-
     bb_process = Popen(f'"{inkscape}" --query-all {svg}', stdout=PIPE)
     bb_data = str(bb_process.communicate()[0])[2:-1]
     bb_strings = re.split(r"[\\r]*\\n", bb_data)[:-1]

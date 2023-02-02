@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 from lxml import etree
+from lxml.etree import _Element as EtreeElement  # type: ignore
 
 from svg_ultralight import NSMAP
 
@@ -44,11 +45,7 @@ class TestWriteSvg:
         """Insert stylesheet reference"""
         blank = etree.Element("blank")
         write_svg(
-            temp_filename,
-            blank,
-            css_source,
-            do_link_css=True,
-            xml_declaration=True,
+            temp_filename, blank, css_source, do_link_css=True, xml_declaration=True
         )
         with open(temp_filename, "rb") as svg_binary:
             svg_lines = [x.decode() for x in svg_binary.readlines()]
@@ -84,9 +81,7 @@ class TestWriteSvg:
         with open(temp_filename, "rb") as svg_binary:
             svg_lines = [x.decode() for x in svg_binary.readlines()]
 
-        assert svg_lines == [
-            "<blank/>\n",
-        ]
+        assert svg_lines == ["<blank/>\n"]
 
         # test with do_link_css = False
         write_svg(temp_filename, blank)
@@ -95,7 +90,7 @@ class TestWriteSvg:
         assert svg_lines_false == svg_lines
 
 
-def svg_root(**kwargs) -> etree.Element:
+def svg_root(**kwargs: str | float) -> EtreeElement:
     """
     Create an svg root from attribute kwargs
 
@@ -140,6 +135,7 @@ class TestNewSvgRoot:
         """Explicit params overwrite trailing-underscore-inferred params"""
         expect = svg_root(**{"viewBox": "0 1 2 3", "width": "2", "height": "30"})
         result = new_svg_root(0, 1, 2, 3, height=30)
+        assert result.attrib == expect.attrib
 
 
 class TestTostringKwargs:

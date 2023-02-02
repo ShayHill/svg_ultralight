@@ -25,6 +25,9 @@ pre-commit = "^2.21.0"
 name = "cz_conventional_commits"
 version = "0.11.0"
 tag_format = "$version"
+version_files = [
+    "pyproject.toml:^version"
+]
 
 [build-system]
 requires = ["poetry-core"]
@@ -32,7 +35,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
 include = ["src"]
-exclude = ["**/__pycache__.py", "**/tests/**"]
+exclude = ["**/__pycache__.py", "**/tests/*"]
 
 pythonVersion = "3.10"
 pythonPlatform = "Any"

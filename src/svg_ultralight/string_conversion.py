@@ -82,7 +82,7 @@ class _TostringDefaults(Enum):
     ENCODING = "UTF-8"
 
 
-def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool) -> bytes:
+def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> bytes:
     """
     Contents of svg file with optional xml declaration.
 

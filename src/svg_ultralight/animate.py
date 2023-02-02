@@ -7,7 +7,7 @@ Requires: pillow, which is an optional project dependency.
 """
 
 try:
-    from PIL import Image
+    from PIL import Image  # type: ignore
 except ModuleNotFoundError as exc:
     raise ModuleNotFoundError(
         "`pip install pillow` to use svg_ultralight.animate module"
