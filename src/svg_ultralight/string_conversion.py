@@ -17,6 +17,8 @@ from lxml import etree
 from svg_ultralight.nsmap import NSMAP
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
@@ -32,6 +34,15 @@ def format_number(num: float) -> str:
     strings to reduce filesize and increase readability
     """
     return f"{num:0.6f}".rstrip("0").rstrip(".")
+
+
+def format_numbers(nums: Iterable[float]) -> list[str]:
+    """Format multiple strings to limited precision.
+
+    :param nums: iterable of floats
+    :return: list of formatted strings
+    """
+    return [format_number(num) for num in nums]
 
 
 def set_attributes(elem: EtreeElement, **attributes: str | float) -> None:

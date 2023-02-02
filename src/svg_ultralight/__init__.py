@@ -21,6 +21,7 @@ from svg_ultralight.main import (
     write_svg,
 )
 from svg_ultralight.nsmap import NSMAP
+from svg_ultralight.string_conversion import format_number, format_numbers
 
 __all__ = [
     "BoundElement",
@@ -37,4 +38,6 @@ __all__ = [
     "write_pdf_from_svg",
     "write_pdf",
     "NSMAP",
+    "format_number",
+    "format_numbers",
 ]
