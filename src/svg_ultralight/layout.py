@@ -69,20 +69,22 @@ def pad_and_scale(
     print_h = Measurement(print_height or 0)
 
     scale = _infer_scale(width, height, print_w.value, print_h.value)
-    pad = expand_pad_arg(pad, scale)
+    pads = expand_pad_arg(pad)
 
     if scale == 1:
-        return pad, {}
+        return pads, {}
+
+    scaled_pads = (pads[0] / scale, pads[1] / scale, pads[2] / scale, pads[3] / scale)
 
     if math.isclose(print_w.value / width, scale):
         padded_w = Measurement(print_w.native)
-        padded_w.value += (pad[1] + pad[3]) / scale
-        return pad, {"width": padded_w.native}
+        padded_w.value += pads[1] + pads[3]
+        return scaled_pads, {"width": padded_w.native}
 
     if math.isclose(print_h.value / height, scale):
         padded_h = Measurement(print_h.native)
-        padded_h.value += (pad[0] + pad[2]) / scale
-        return pad, {"height": padded_h.native}
+        padded_h.value += pads[0] + pads[2]
+        return scaled_pads, {"height": padded_h.native}
 
     msg = "Unable to infer print area from viewbox and padding"
     raise ValueError(msg)

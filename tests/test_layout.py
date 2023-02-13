@@ -61,13 +61,13 @@ class TestLayout:
     def test_print_width(self):
         """Test that print width is used to calculate pad"""
         pad, width_attribs = layout.pad_and_scale(96, 4, "0.25in", "2in", 0)
-        assert pad == (48, 48, 48, 48)
+        assert pad == (12, 12, 12, 12)
         assert width_attribs == {"width": "2.5in"}
 
     def test_print_height(self):
         """Test that print width is used to calculate pad"""
         pad, width_attribs = layout.pad_and_scale(3, 96, "0.25in", 0, "2in")
-        assert pad == (48, 48, 48, 48)
+        assert pad == (12, 12, 12, 12)
         assert width_attribs == {"height": "2.5in"}
 
     def test_width_wins(self):
@@ -81,3 +81,10 @@ class TestLayout:
         pad, width_attribs = layout.pad_and_scale(3, 4, 0, 200, 2)
         assert pad == (0, 0, 0, 0)
         assert width_attribs == {"height": "2"}
+
+    def test_padding_scale(self):
+        """Test that padding is scaled"""
+        pad, width_attribs = layout.pad_and_scale(1, 1, 1, 5, None)
+
+        assert pad == (0.2, 0.2, 0.2, 0.2)
+        assert width_attribs == {"width": "7"}
