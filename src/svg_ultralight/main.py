@@ -14,19 +14,17 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO, TYPE_CHECKING, TypeGuard
 
 from lxml import etree
 
+from svg_ultralight import layout
 from svg_ultralight.constructors import update_element
 from svg_ultralight.nsmap import NSMAP
-from svg_ultralight.string_conversion import (
-    format_number,
-    get_viewBox_str,
-    svg_tostring,
-)
+from svg_ultralight.string_conversion import get_viewBox_str, svg_tostring
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -66,8 +64,10 @@ def new_svg_root(
     y_: float | None = None,
     width_: float | None = None,
     height_: float | None = None,
-    pad_: float = 0,
-    dpu_: float = 1,
+    *,
+    pad_: float | tuple[float, ...] = 0,
+    print_width_: float | str | None = None,
+    print_height_: float | str | None = None,
     nsmap: dict[str | None, str] | None = None,
     **attributes: float | str,
 ) -> EtreeElement:
@@ -77,30 +77,44 @@ def new_svg_root(
     :param y_: y value in upper-left corner
     :param width_: width of viewBox
     :param height_: height of viewBox
-    :param pad_: optionally increase viewBox by pad in all directions
-    :param dpu_: optionally scale image (pixels per unit of bounding box)
+    :param pad_: optionally increase viewBox by pad in all directions. Acceps a
+        single value or a tuple of values applied to (cycled over) top, right,
+        bottom, left. pad can be floats or dimension strings*
+    :param print_width_: optionally explicitly set unpadded width in units (float) or
+        a dimension string*
+    :param print_height_: optionally explicitly set unpadded height in units (float)
+        or a dimension string*
     :param nsmap: optionally pass a namespace map of your choosing
     :param attributes: element attribute names and values
     :return: root svg element
 
+    * dimension strings are strings with a float value and a unit. Valid units are
+    formatted as "1in", "2cm", or "3mm".
+
     All viewBox-style (trailing underscore) parameters are optional. Any kwargs will
-    be passed to ``etree.Element`` as element parameters.
+    be passed to ``etree.Element`` as element parameters. These will supercede any
+    parameters inferred from the trailing underscore parameters.
     """
+    if "dpu_" in attributes:
+        _ = sys.stdout.write(
+            "WARNING: dpu_ is deprecated. Use print_width or print_height instead.\n"
+        )
     if nsmap is None:
         nsmap = NSMAP
 
+    inferred_attribs: dict[str, float | str] = {}
     view_box_args = [x_, y_, width_, height_]
     if _is_floats(view_box_args):
         x, y, width, height = view_box_args
-        view_box = get_viewBox_str(x, y, width, height, pad_)
-        pixel_width = format_number((width + pad_ * 2) * dpu_)
-        pixel_height = format_number((height + pad_ * 2) * dpu_)
-        attributes["viewBox"] = attributes.get("viewBox", view_box)
-        attributes["width"] = attributes.get("width", pixel_width)
-        attributes["height"] = attributes.get("height", pixel_height)
+        pads, scale_attribs = layout.pad_and_scale(
+            width, height, pad_, print_width_, print_height_
+        )
+        inferred_attribs["viewBox"] = get_viewBox_str(x, y, width, height, pads)
+        inferred_attribs.update(scale_attribs)
+    inferred_attribs.update(attributes)
     # can only pass nsmap on instance creation
     svg_root = etree.Element(f"{{{nsmap[None]}}}svg", nsmap=nsmap)
-    return update_element(svg_root, **attributes)
+    return update_element(svg_root, **inferred_attribs)
 
 
 def write_svg(

@@ -101,9 +101,10 @@ def map_ids_to_bounding_boxes(
 
     This calls the command and formats the output into a dictionary.
 
-    dpu_ arguments to new_svg_root transform the bounding boxes in non-useful ways.
-    This copies all elements except the root element in to a (0, 0, 1, 1) root. This
-    will put the boxes where you'd expect them to be, no matter what root you use.
+    Scaling arguments ("width", "height") to new_svg_root transform the bounding
+    boxes in non-useful ways.  This copies all elements except the root element in to
+    a (0, 0, 1, 1) root. This will put the boxes where you'd expect them to be, no
+    matter what root you use.
     """
     _fill_ids(*elem_args)
     envelope = _envelop_copies(*elem_args)

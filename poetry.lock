@@ -379,6 +379,18 @@ files = [
 ]
 
 [[package]]
+name = "paragraphs"
+version = "0.2.0"
+description = "Incorporate long strings painlessly, beautifully into Python code."
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "paragraphs-0.2.0-py3-none-any.whl", hash = "sha256:b4da057603da7bbd6a9dca295e8872b55af92fa4c73882adc6f962f5fbd56dad"},
+    {file = "paragraphs-0.2.0.tar.gz", hash = "sha256:f1e4d467fe09aa11c2530b70a6bf1015d93dcc222e87bcd376a84d806409126f"},
+]
+
+[[package]]
 name = "pillow"
 version = "9.4.0"
 description = "Python Imaging Library (Fork)"
@@ -742,4 +754,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ccb205821c8d7203889baf161c3dbf4ac82394398bdb91bf4744d3752025faa5"
+content-hash = "4c6829f07e137c1c8d72dc19fd7be47b346e3fac6746f2c1d7d6273ca71271c0"

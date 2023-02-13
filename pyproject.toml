@@ -11,6 +11,7 @@ packages = [{include = "svg_ultralight", from = "src"}]
 python = "^3.10"
 lxml = "^4.9.2"
 pillow = { version = "^9.4.0", optional = true }
+paragraphs = "^0.2.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -119,21 +119,19 @@ class TestNewSvgRoot:
 
         Build the svg element namespace from NSMAP and compare to output
         """
-        expect = svg_root(**{"viewBox": "0 1 2 3", "width": "2", "height": "3"})
+        expect = svg_root(**{"viewBox": "0 1 2 3"})
         result = new_svg_root(0, 1, 2, 3)
         assert result.attrib == expect.attrib
 
     def test_additional_params(self) -> None:
         """Pass additional params."""
-        expect = svg_root(
-            **{"attr": "value", "viewBox": "0 1 2 3", "width": "2", "height": "3"}
-        )
+        expect = svg_root(**{"attr": "value", "viewBox": "0 1 2 3"})
         result = new_svg_root(0, 1, 2, 3, attr="value")
         assert result.attrib == expect.attrib
 
     def test_conflicting_params(self) -> None:
         """Explicit params overwrite trailing-underscore-inferred params."""
-        expect = svg_root(**{"viewBox": "0 1 2 3", "width": "2", "height": "30"})
+        expect = svg_root(**{"viewBox": "0 1 2 3", "height": "30"})
         result = new_svg_root(0, 1, 2, 3, height=30)
         assert result.attrib == expect.attrib
 

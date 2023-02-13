@@ -114,7 +114,11 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
 
 
 def get_viewBox_str(
-    x: float, y: float, width: float, height: float, pad: float = 0
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    pad: float | tuple[float, float, float, float] = 0,
 ) -> str:
     """Create a space-delimited string.
 
@@ -125,8 +129,12 @@ def get_viewBox_str(
     :param pad: optionally increase viewBox by pad in all directions
     :return: space-delimited string "x y width height"
     """
+    if not isinstance(pad, tuple):
+        pad = (pad,) * 4
+    pad_t, pad_r, pad_b, pad_l = pad
+    pad_h = pad_l + pad_r
+    pad_v = pad_t + pad_b
     dims = [
-        format_number(a + b)
-        for a, b in zip((x, y, width, height), (-pad, -pad, pad * 2, pad * 2))
+        format_number(x) for x in (x - pad_l, y - pad_t, width + pad_h, height + pad_v)
     ]
     return " ".join(dims)
