@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
     from lxml.etree import _Element as EtreeElement  # type: ignore
 
+    from svg_ultralight.pad_argument import PadArg
+
 
 def _is_floats(objs: Sequence[object]) -> TypeGuard[Sequence[float]]:
     """Determine if a list of objects is a list of numbers.
@@ -65,7 +67,7 @@ def new_svg_root(
     width_: float | None = None,
     height_: float | None = None,
     *,
-    pad_: float | tuple[float, ...] = 0,
+    pad_: PadArg = 0,
     print_width_: float | str | None = None,
     print_height_: float | str | None = None,
     nsmap: dict[str | None, str] | None = None,
