@@ -8,11 +8,12 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 
+from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.string_conversion import format_number
 
 
 @dataclass
-class BoundingBox:
+class BoundingBox(SupportsBounds):
 
     """Mutable bounding box object for svg_ultralight.
 
@@ -127,12 +128,12 @@ class BoundingBox:
         return self.x + self.width / 2
 
     @cx.setter
-    def cx(self, value: float):
+    def cx(self, cx: float):
         """Center x value.
 
-        :param value: new center x value after transformation
+        :param cx: new center x value after transformation
         """
-        self._add_transform(1, value - self.cx, 0)
+        self._add_transform(1, cx - self.cx, 0)
 
     @property
     def x2(self) -> float:
@@ -175,12 +176,12 @@ class BoundingBox:
         return self.y + self.height / 2
 
     @cy.setter
-    def cy(self, value: float):
+    def cy(self, cy: float):
         """Center y value.
 
-        :param value: new center y value after transformation
+        :param cy: new center y value after transformation
         """
-        self._add_transform(1, 0, value - self.cy)
+        self._add_transform(1, 0, cy - self.cy)
 
     @property
     def y2(self) -> float:

@@ -67,13 +67,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
 if TYPE_CHECKING:
     from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
-class PaddedText:
+class PaddedText(SupportsBounds):
 
     """A line of text with a bounding box and padding."""
 
@@ -259,3 +260,50 @@ class PaddedText:
         :effects: the text_element bounding box is scaled to height - tpad - bpad.
         """
         self.padded_width *= height / self.padded_height
+
+    x = lmargin
+    x2 = rmargin
+    y = capline
+    y2 = baseline
+    width = padded_width
+    height = padded_height
+
+    @property
+    def cx(self) -> float:
+        """The x coordinate of the center between margins.
+
+        :return: the x coordinate of the center between margins
+        """
+        return self.lmargin + self.padded_width / 2
+
+    @cx.setter
+    def cx(self, cx: float):
+        """Set the x coordinate of the center between margins.
+
+        :param cx: the new x coordinate of the center between margins
+        """
+        self.lmargin = cx - self.padded_width / 2
+
+    @property
+    def cy(self) -> float:
+        """The y coordinate of the center between baseline and capline.
+
+        :return: the y coordinate of the center between baseline and capline
+        """
+        return self.capline + self.padded_height / 2
+
+    @cy.setter
+    def cy(self, cy: float):
+        """Set the y coordinate of the center between baseline and capline.
+
+        :param cy: the new y coordinate of the center between baseline and capline
+        """
+        self.capline = cy - self.padded_height / 2
+
+    @property
+    def scale(self) -> float:
+        """The scale of the text element.
+
+        :return: the scale of the text element
+        """
+        return self.bbox.scale
