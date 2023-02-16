@@ -124,13 +124,15 @@ repos:
   # PGH003 Use specific rule codes when ignoring type issues
   # PLR0913 Too many arguments to function call
   # PTH108 `os.unlink` should be replaced by `.unlink()`
+  #
+  # PLR2004 Magic value in comparison, consider replacing with a constant
   rev: 'v0.0.238'
   hooks:
     - id: ruff
       exclude: "tests"
       args:
       - --select=ALL
-      - --ignore=ANN101,ANN102,ANN202,B905,COM812,D211,D213,ISC003,N802,PGH003,PLR0913,PTH108
+      - --ignore=ANN101,ANN102,ANN202,B905,COM812,D211,D213,ISC003,N802,PGH003,PLR0913,PTH108,PLR2004
       - --fix
 
 # reads pyproject.toml for additional config

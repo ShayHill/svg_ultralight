@@ -33,6 +33,8 @@ if TYPE_CHECKING:
 
     from svg_ultralight.pad_argument import PadArg
 
+_FourFloats = tuple[float, float, float, float]
+
 
 def _is_floats(objs: Sequence[object]) -> TypeGuard[Sequence[float]]:
     """Determine if a list of objects is a list of numbers.
@@ -41,6 +43,15 @@ def _is_floats(objs: Sequence[object]) -> TypeGuard[Sequence[float]]:
     :return: True if all objects are numbers
     """
     return all(isinstance(x, (float, int)) for x in objs)
+
+
+def _is_four_floats(objs: tuple[object, ...]) -> TypeGuard[_FourFloats]:
+    """Is obj a 4-tuple of numbers?.
+
+    :param objs: list of objects
+    :return: True if all objects are numbers and there are 4 of them
+    """
+    return len(objs) == 4 and _is_floats(objs)
 
 
 def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
@@ -105,13 +116,12 @@ def new_svg_root(
         nsmap = NSMAP
 
     inferred_attribs: dict[str, float | str] = {}
-    view_box_args = [x_, y_, width_, height_]
-    if _is_floats(view_box_args):
-        x, y, width, height = view_box_args
-        pads, scale_attribs = layout.pad_and_scale(
-            width, height, pad_, print_width_, print_height_
+    view_box_args = (x_, y_, width_, height_)
+    if _is_four_floats(view_box_args):
+        padded_viewbox, scale_attribs = layout.pad_and_scale(
+            view_box_args, pad_, print_width_, print_height_
         )
-        inferred_attribs["viewBox"] = get_viewBox_str(x, y, width, height, pads)
+        inferred_attribs["viewBox"] = get_viewBox_str(*padded_viewbox)
         inferred_attribs.update(scale_attribs)
     inferred_attribs.update(attributes)
     # can only pass nsmap on instance creation

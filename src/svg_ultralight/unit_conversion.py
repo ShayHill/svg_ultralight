@@ -1,5 +1,10 @@
 """Convert between absolute units.
 
+Model everything in user units, then use "width" and "height" in the svg root element
+to scale these units to the desired size.
+
+I borrowed test values and and conventions from Inkscape's `inkek.units.py`.
+
 :author: Shay Hill
 :created: 2023-02-12
 """
@@ -9,17 +14,58 @@ import re
 
 from svg_ultralight.string_conversion import format_number
 
-RE_UNIT = re.compile(r"(?P<value>.*\d)(?P<unit>[a-z]*)$")
+# units per inch
+_UPI = 96
+
+# units per centimeter
+_UPC = 96 / 2.54
 
 
-class UnitOfMeasurement(enum.Enum):
+class Unit(enum.Enum):
 
     """SVG Units of measurement."""
 
-    USER_UNITS = ("", 1)
-    INCHES = ("in", 96)
-    CENTIMETERS = ("cm", 96 / 2.54)
-    MILLIMETERS = ("mm", 96 / 25.4)
+    IN = "in", _UPI  # inches
+    PT = "pt", 4 / 3  # points
+    PX = "px", 1  # pixels
+    MM = "mm", _UPC / 10  # millimeters
+    CM = "cm", _UPC  # centimeters
+    M = "m", _UPC * 100  # meters
+    KM = "km", _UPC * 100000  # kilometers
+    Q = "Q", _UPC / 40  # quarter-millimeters
+    PC = "pc", _UPI / 6  # picas
+    YD = "yd", _UPI * 36  # yards
+    FT = "ft", _UPI * 12  # feet
+    USER = "", 1  # "user units" without a unit specifier
+
+
+_UNIT_SPECIFIERS = [x.value[0] for x in Unit]
+_UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
+
+_NUMBER = r"([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?"
+_UNIT_RE = re.compile(rf"(?P<unit>{'|'.join(_UNIT_SPECIFIERS)})")
+_NUMBER_RE = re.compile(rf"(?P<number>{_NUMBER})")
+_UNIT_AND_NUMBER_RE = re.compile(rf"^{_NUMBER_RE.pattern}{_UNIT_RE.pattern}$")
+
+
+def _parse_unit(value: str) -> tuple[float, str]:
+    """Split the value and unit from a string.
+
+    :param value: The value to parse (e.g. "55.32px")
+    :param default_unit: The unit to use if none is specified (e.g. "px")
+    :return: A tuple of the value and unit specifier
+    :raise ValueError: If the value cannot be parsed
+
+    Take a value such as "55.32px" and return (55.32, 'px'). Preserves non-units, so
+    "55.32" returns (55.32, ""). These are actually pixels, but you don't want "px"
+    in your viewbox calls. It is best to work in non-specified "user units" and then
+    set the svg width and height to an specified unit. Within the function, "55.32"
+    would be identified as "fully_specified".
+    """
+    if fully_specified := _UNIT_AND_NUMBER_RE.match(str(value)):
+        return float(fully_specified["number"]), fully_specified["unit"]
+    msg = f"Cannot parse value and unit from {value}"
+    raise ValueError(msg)
 
 
 @dataclasses.dataclass
@@ -28,32 +74,25 @@ class Measurement:
     """Measurement with unit of measurement.
 
     Converts to and stores the value in user units. Also retains the input units so
-    you can scale or add then convert.
+    you can update the value then convert back.
     """
 
     value: float
-    native_unit: UnitOfMeasurement
+    native_unit: Unit
 
     def __init__(self, measurement: float | str) -> None:
         """Create a measurement from a string or float.
 
-        :param measurement: a float (user units) or string with units. Supports
-            "0in", "0cm", "0mm", "0"
+        :param measurement: a float (user units) or string with unit specifier.
         :raises ValueError: if the input units cannot be identified
         """
-        match_measurement = RE_UNIT.match(str(measurement))
-        if match_measurement is None:
-            msg = f"cannot parse measurement: {measurement}"
-            raise ValueError(msg)
-
-        unit = match_measurement["unit"]
-        try:
-            self.native_unit = next(x for x in UnitOfMeasurement if x.value[0] == unit)
-        except StopIteration as e:
-            msg = f"unknown unit of measurement: '{unit}'"
-            raise ValueError(msg) from e
-
-        self.value = float(match_measurement["value"]) * self.native_unit.value[1]
+        if isinstance(measurement, (float, int)):
+            self.value = measurement
+            self.native_unit = Unit.USER
+        else:
+            value, unit_specifier = _parse_unit("0" + measurement)
+            self.native_unit = _UNIT_SPECIFIER2UNIT[unit_specifier]
+            self.value = value * self.native_unit.value[1]
 
     def set_value(self, value: float) -> None:
         """Set the value of the measurement in user units.
@@ -62,13 +101,21 @@ class Measurement:
         """
         self.value = value
 
-    def get_as(self, unit: UnitOfMeasurement) -> str:
+    def _get_float_as(self, unit: Unit) -> float:
+        """Get the measurement in the specified unit.
+
+        :param unit: the unit to convert to
+        :return: the measurement in the specified unit
+        """
+        return self.value / unit.value[1]
+
+    def get_as(self, unit: Unit) -> str:
         """Get the measurement in the specified unit.
 
         :param unit: the unit to convert to
         :return: the measurement in the specified unit, always as a string
         """
-        value = self.value / unit.value[1]
+        value = self._get_float_as(unit)
         return f"{format_number(value)}{unit.value[0]}"
 
     @property
@@ -78,27 +125,3 @@ class Measurement:
         :return: self.value in initial unit used to init Measurement instance
         """
         return self.get_as(self.native_unit)
-
-    @property
-    def inches(self) -> str:
-        """Get the value in inches.
-
-        :return: self.value in inches as a string "0.0in"
-        """
-        return self.get_as(UnitOfMeasurement.INCHES)
-
-    @property
-    def centimeters(self) -> str:
-        """Get the value in centimeters.
-
-        :return: self.value in centimeters as a string "0.0cm"
-        """
-        return self.get_as(UnitOfMeasurement.CENTIMETERS)
-
-    @property
-    def millimeters(self) -> str:
-        """Get the value in millimeters.
-
-        :return: self.value in millimeters as a string "0.0mm"
-        """
-        return self.get_as(UnitOfMeasurement.MILLIMETERS)
