@@ -140,13 +140,6 @@ class Measurement:
         value, self.native_unit = _parse_unit(measurement_arg)
         self.value = value * self.native_unit.value[1]
 
-    def set_value(self, value: float) -> None:
-        """Set the value of the measurement in user units.
-
-        :param value: the new value in user units
-        """
-        self.value = value
-
     def get_value(self, unit: Unit | None = None) -> float:
         """Get the measurement in the specified unit.
 
@@ -203,3 +196,29 @@ class Measurement:
         result = Measurement(self.native_unit)
         result.value = self.value - other.value
         return result
+
+    def __mul__(self, scalar: float) -> "Measurement":
+        """Multiply a measurement by a scalar.
+
+        :param scalar: the scalar to multiply by
+        :return: the measurement multiplied by the scalar in self native unit
+        """
+        result = Measurement(self.native_unit)
+        result.value = self.value * scalar
+        return result
+
+    def __rmul__(self, scalar: float) -> "Measurement":
+        """Multiply a measurement by a scalar.
+
+        :param scalar: the scalar to multiply by
+        :return: the measurement multiplied by the scalar in self native unit
+        """
+        return self.__mul__(scalar)
+
+    def __truediv__(self, scalar: float) -> "Measurement":
+        """Divide a measurement by a scalar.
+
+        :param scalar: the scalar to divide by
+        :return: the measurement divided by the scalar in self native unit
+        """
+        return self.__mul__(1.0 / scalar)

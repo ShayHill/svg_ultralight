@@ -118,6 +118,18 @@ class TestMeasurement:
         b_unit = Measurement(f"2{unit.value[0]}")
         assert (a_unit - b_unit).value == Measurement(f"-1{unit.value[0]}").value
 
+    def test_multiply(self, unit):
+        """Test that values are multiplied."""
+        assert (Measurement((1, unit)) * 4).value == Measurement((4, unit)).value
+
+    def test_rmultiply(self, unit):
+        """Test that values are multiplied."""
+        assert (4 * Measurement((1, unit))).value == Measurement((4, unit)).value
+
+    def test_divide(self, unit):
+        """Test that values are multiplied."""
+        assert (Measurement((1, unit)) / 4).value == Measurement((1 / 4, unit)).value
+
 
 class TestLayout:
     def test_standard(self):
