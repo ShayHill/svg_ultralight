@@ -90,6 +90,7 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     | (str, Unit)   | ("55.32", Unit.PX) | (55.32, Unit.PX)   |
     | (float, Unit) | (55.32, Unit.PX)   | (55.32, Unit.PX)   |
     | Unit          | Unit.PX            | (0.0, Unit.PX)     |
+    | Measurement   | Measurement("3in") | (3.0, Unit.IN)     |
 
     """
     failure_msg = f"Cannot parse value and unit from {measurement_arg}"

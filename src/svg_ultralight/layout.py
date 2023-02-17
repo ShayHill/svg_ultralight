@@ -3,10 +3,57 @@
 :author: Shay Hill
 :created: 2023-02-12
 """
+from collections.abc import Sequence
 
-
-from svg_ultralight.pad_argument import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import Measurement
+
+PadArg = float | str | Measurement | Sequence[float | str | Measurement]
+
+
+def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
+    """Transform a single value or tuple of values to a 4-tuple of user units.
+
+    :param pad: padding value(s)
+    :return: 4-tuple of padding values in (scaled) user units
+
+    >>> expand_pad_arg(1)
+    (1.0, 1.0, 1.0, 1.0)
+
+    >>> expand_pad_arg((1, 2))
+    (1.0, 2.0, 1.0, 2.0)
+
+    >>> expand_pad_arg("1in")
+    (96.0, 96.0, 96.0, 96.0)
+
+    >>> expand_pad_arg(("1in", "2in"))
+    (96.0, 192.0, 96.0, 192.0)
+
+    >>> expand_pad_arg(Measurement("1in"))
+    (96.0, 96.0, 96.0, 96.0)
+
+    >>> expand_pad_arg((Measurement("1in"), Measurement("2in")))
+    (96.0, 192.0, 96.0, 192.0)
+    """
+    if isinstance(pad, (int, float, str, Measurement)):
+        return expand_pad_arg([pad])
+    as_ms = [m if isinstance(m, Measurement) else Measurement(m) for m in pad]
+    as_units = [m.value for m in as_ms]
+    as_units = [as_units[i % len(as_units)] for i in range(4)]
+    return as_units[0], as_units[1], as_units[2], as_units[3]
+
+
+def pad_viewbox(
+    viewbox: tuple[float, float, float, float], pads: tuple[float, float, float, float]
+) -> tuple[float, float, float, float]:
+    """Expand viewbox by padding.
+
+    :param viewbox: viewbox to pad (x, y, width height)
+    :param pads: padding (top, right, bottom, left)
+    :return: padded viewbox
+    """
+    x, y, width, height = viewbox
+    top, right, bottom, left = pads
+    return x - left, y - top, width + left + right, height + top + bottom
 
 
 def _scale_pads(
@@ -20,20 +67,6 @@ def _scale_pads(
     """
     top, right, bottom, left = pads
     return top * scale, right * scale, bottom * scale, left * scale
-
-
-def _pad_viewbox(
-    viewbox: tuple[float, float, float, float], pads: tuple[float, float, float, float]
-) -> tuple[float, float, float, float]:
-    """Expand viewbox by padding.
-
-    :param viewbox: viewbox to pad (x, y, width height)
-    :param pads: padding (top, right, bottom, left)
-    :return: padded viewbox
-    """
-    x, y, width, height = viewbox
-    top, right, bottom, left = pads
-    return x - left, y - top, width + left + right, height + top + bottom
 
 
 def pad_and_scale(
@@ -120,7 +153,7 @@ def pad_and_scale(
 
     # no print information given, pad and return viewbox
     if print_width is None and print_height is None:
-        return _pad_viewbox(viewbox, pads), {}
+        return pad_viewbox(viewbox, pads), {}
 
     _, _, viewbox_w, viewbox_h = viewbox
     print_w = Measurement(print_width or 0)
@@ -132,21 +165,15 @@ def pad_and_scale(
     elif print_height is None:
         print_h.native_unit = print_w.native_unit
 
-    # If only a unit is given, take width and height as the value.
-    print_w.value = print_w.value or viewbox_w
-    print_h.value = print_h.value or viewbox_h
-
-    # scaling is safe for 0 width and/or 0 height viewboxes. Padding may provide a
-    # non-zero width and height later.
-    has_dimensions = (viewbox_w > 0, viewbox_h > 0)
-    if has_dimensions == (True, False):
-        scale = print_w.value / viewbox_w
-    elif has_dimensions == (False, True):
-        scale = print_h.value / viewbox_h
-    elif has_dimensions == (True, True):
-        scale = min(print_w.value / viewbox_w, print_h.value / viewbox_h)
-    else:
-        scale = 1
+    # scaling is safe for zero values. If both are zero, the scaling will be 1.
+    # Padding might add a non-zero value to width or height later, producing a valid
+    # viewbox, but that isn't guaranteed here.
+    candidate_scales: set[float] = set()
+    if print_w.value and viewbox_w:
+        candidate_scales.add(print_w.value / viewbox_w)
+    if print_h.value and viewbox_h:
+        candidate_scales.add(print_h.value / viewbox_h)
+    scale = min(candidate_scales, default=1)
 
     print_w.value = viewbox_w * scale
     print_h.value = viewbox_h * scale
@@ -156,5 +183,5 @@ def pad_and_scale(
     print_h.value += pads[0] + pads[2]
 
     # scale pads to viewbox to match input size when later scaled to print area
-    padded_viewbox = _pad_viewbox(viewbox, _scale_pads(pads, scale))
+    padded_viewbox = pad_viewbox(viewbox, _scale_pads(pads, 1 / scale))
     return padded_viewbox, {"width": print_w.native, "height": print_h.native}

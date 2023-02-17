@@ -69,7 +69,7 @@ def new_sub_element(
     :returns: new ``tag`` element
 
         >>> parent = etree.Element('g')
-        >>> _ = new_sub_element('rect')
+        >>> _ = new_sub_element(parent, 'rect')
         >>> etree.tostring(parent)
         b'<g><rect/></g>'
     """

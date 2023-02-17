@@ -150,14 +150,14 @@ class TestLayout:
         """Test that print width is used to calculate pad"""
         viewbox = (0, 0, 96, 0)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", "2in")
-        assert padded == (-48, -48, 192, 96)
+        assert padded == (-12, -12, 120, 24)
         assert width_attribs == {"width": "2.5in", "height": "0.5in"}
 
     def test_0_height(self):
         """Test that print width is used to calculate pad"""
         viewbox = (0, 0, 0, 96)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", None, "2in")
-        assert padded == (-48, -48, 96, 192)
+        assert padded == (-12, -12, 24, 120)
         assert width_attribs == {"width": "0.5in", "height": "2.5in"}
 
     def test_string_padding(self):
@@ -173,6 +173,15 @@ class TestLayout:
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", "2in")
         assert padded == (-24, -24, 48, 48)
         assert width_attribs == {"width": "0.5in", "height": "0.5in"}
+
+    def test_pad_print_at_input_scale(self):
+        """Test that padding is applied at the input scale.
+
+        Padding get small as scale of user units increases."""
+        viewbox = (0, 0, 1, 1)
+        padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "4in")
+        assert padded == (-0.25, -0.25, 1.5, 1.5)
+        assert width_attribs == {"width": "6in", "height": "6in"}
 
     def test_width_wins(self):
         """The tighter fit (width or height) should be used"""
