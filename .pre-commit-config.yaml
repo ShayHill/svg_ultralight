@@ -133,7 +133,7 @@ repos:
       args:
       - --select=ALL
       - --ignore=ANN101,ANN102,ANN202,B905,COM812,D211,D213,ISC003,N802,PGH003,PLR0913,PTH108,PLR2004
-      - --fix
+      # - --fix
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python

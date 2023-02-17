@@ -53,6 +53,7 @@ MeasurementArg = (
     | tuple[float, str]
     | tuple[str, Unit]
     | tuple[float, Unit]
+    | Unit
 )
 
 _UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
@@ -75,6 +76,21 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     so "55.32" returns (55.32, Unit.USER) These are actually pixels, but you don't
     want "px" in your viewbox calls. It is best to work in non-specified "user units"
     and then set the svg width and height to an specified unit.
+
+    Can handle a lot of args:
+
+    | arg type      | example            | result             |
+    | ------------- | ------------------ | ------------------ |
+    | float         | 55.32              | (55.32, Unit.USER) |
+    | str           | "55.32px"          | (55.32, Unit.PX)   |
+    | str           | "55.32"            | (55.32, Unit.USER) |
+    | str           | "px"               | (0.0, Unit.PX)     |
+    | (str, str)    | ("55.32", "px")    | (55.32, Unit.PX)   |
+    | (float, str)  | (55.32, "px")      | (55.32, Unit.PX)   |
+    | (str, Unit)   | ("55.32", Unit.PX) | (55.32, Unit.PX)   |
+    | (float, Unit) | (55.32, Unit.PX)   | (55.32, Unit.PX)   |
+    | Unit          | Unit.PX            | (0.0, Unit.PX)     |
+
     """
     failure_msg = f"Cannot parse value and unit from {measurement_arg}"
     unit: str | Unit
@@ -88,11 +104,15 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
         if isinstance(measurement_arg, (int, float)):
             return _parse_unit((measurement_arg, ""))
 
+        if isinstance(measurement_arg, Unit):
+            return _parse_unit((0, measurement_arg))
+
         if number_unit := _NUMBER_AND_UNIT.match(str(measurement_arg)):
             return _parse_unit((number_unit["number"], number_unit["unit"]))
 
         if unit_only := _UNIT_RE.match(str(measurement_arg)):
             return _parse_unit((0, unit_only["unit"]))
+
     except (ValueError, KeyError) as e:
         raise ValueError(failure_msg) from e
 
@@ -164,13 +184,22 @@ class Measurement:
         """
         return self.get_str(self.native_unit)
 
+    def __add__(self, other: "Measurement") -> "Measurement":
+        """Add two measurements.
 
-def convert_value(measurement_arg: MeasurementArg, unit: Unit) -> float:
-    """Get the measurement in the specified unit.
+        :param other: the other measurement
+        :return: the sum of the two measurements in self native unit
+        """
+        result = Measurement(self.native_unit)
+        result.value = self.value + other.value
+        return result
 
-    :param measurement_arg: a measurement string, e.g. "1.2m"
-    :param unit: an output unit
-    :return: the measurement in the specified unit as a float
-    """
-    measurement = Measurement(measurement_arg)
-    return measurement.get_value(unit)
+    def __sub__(self, other: "Measurement") -> "Measurement":
+        """Subtract two measurements.
+
+        :param other: the other measurement
+        :return: the difference of the two measurements in self native unit
+        """
+        result = Measurement(self.native_unit)
+        result.value = self.value - other.value
+        return result

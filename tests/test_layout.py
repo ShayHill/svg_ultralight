@@ -20,7 +20,7 @@ import pytest
 
 from svg_ultralight import layout
 from svg_ultralight.string_conversion import format_number
-from svg_ultralight.unit_conversion import Measurement, Unit, _parse_unit, convert_value
+from svg_ultralight.unit_conversion import Measurement, Unit, _parse_unit
 
 INKSCAPE_SCALARS = {
     "in": 96.0,
@@ -106,13 +106,17 @@ class TestMeasurement:
         expected = f"{format_number(1/3)}{unit.value[0]}"
         assert a_unit.native == expected
 
-    def test_convert_value(self):
-        """Test that value is converted to other units.
+    def test_add(self, unit):
+        """Test that values are added."""
+        a_unit = Measurement(f"1{unit.value[0]}")
+        b_unit = Measurement(f"2{unit.value[0]}")
+        assert (a_unit + b_unit).value == Measurement(f"3{unit.value[0]}").value
 
-        Spot check for a few values.
-        """
-        assert convert_value("1in", Unit.PX) == 96
-        assert convert_value((72, Unit.PT), Unit.IN) == 1
+    def test_subtract(self, unit):
+        """Test that values are subtracted."""
+        a_unit = Measurement(f"1{unit.value[0]}")
+        b_unit = Measurement(f"2{unit.value[0]}")
+        assert (a_unit - b_unit).value == Measurement(f"-1{unit.value[0]}").value
 
 
 class TestLayout:
