@@ -9,6 +9,7 @@
 # pyright: reportUnknownVariableType=false
 # pyright: analyzeUnannotatedFunctions = false
 # pyright: reportMissingParameterType = false
+# pyright: reportPrivateUsage = false
 
 
 import itertools as it
@@ -19,7 +20,7 @@ import pytest
 
 from svg_ultralight import layout
 from svg_ultralight.string_conversion import format_number
-from svg_ultralight.unit_conversion import Measurement, Unit
+from svg_ultralight.unit_conversion import Measurement, Unit, _parse_unit, convert_value
 
 INKSCAPE_SCALARS = {
     "in": 96.0,
@@ -48,6 +49,36 @@ def unit_pair(request) -> Iterator[Unit]:
     return request.param
 
 
+class TestParseUnit:
+    def test_float(self):
+        """Test that a float is returned."""
+        assert _parse_unit(1.0) == (1, Unit.USER)
+
+    def test_float_str(self):
+        """Test that a float is returned."""
+        assert _parse_unit("1.0") == (1, Unit.USER)
+
+    def test_float_str_tuple(self):
+        """Test that a float is returned."""
+        assert _parse_unit((1.0, "")) == (1, Unit.USER)
+
+    def test_str_str_tuple(self):
+        """Test that a float is returned."""
+        assert _parse_unit(("1.0", "")) == (1, Unit.USER)
+
+    def test_float_unit_tuple(self):
+        """Test that a float is returned."""
+        assert _parse_unit((1.0, Unit.PX)) == (1, Unit.PX)
+
+    def test_str_unit_tuple(self):
+        """Test that a float is returned."""
+        assert _parse_unit(("1.0", Unit.PX)) == (1, Unit.PX)
+
+    def test_str_with_unit(self):
+        """Test that a float is returned."""
+        assert _parse_unit("1.0px") == (1, Unit.PX)
+
+
 class TestMeasurement:
     def test_unit_identified(self, unit):
         """Test that unit is identified correctly."""
@@ -63,7 +94,7 @@ class TestMeasurement:
         """Test that value is converted to other units."""
         unit_a, unit_b = unit_pair
         a_unit = Measurement(f"1{unit_a.value[0]}")
-        a_as_b = a_unit._get_float_as(unit_b)
+        a_as_b = a_unit.get_value(unit_b)
         b_unit = Measurement(f"{a_as_b}{unit_b.value[0]}")
         assert math.isclose(b_unit.value, a_unit.value)
 
@@ -74,6 +105,14 @@ class TestMeasurement:
         expected_unit_specifier = unit.value[0]
         expected = f"{format_number(1/3)}{unit.value[0]}"
         assert a_unit.native == expected
+
+    def test_convert_value(self):
+        """Test that value is converted to other units.
+
+        Spot check for a few values.
+        """
+        assert convert_value("1in", Unit.PX) == 96
+        assert convert_value((72, Unit.PT), Unit.IN) == 1
 
 
 class TestLayout:
