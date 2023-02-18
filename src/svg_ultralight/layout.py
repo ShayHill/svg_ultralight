@@ -5,7 +5,7 @@
 """
 from collections.abc import Sequence
 
-from svg_ultralight.unit_conversion import Measurement
+from svg_ultralight.unit_conversion import Measurement, MeasurementArg
 
 PadArg = float | str | Measurement | Sequence[float | str | Measurement]
 
@@ -69,11 +69,68 @@ def _scale_pads(
     return top * scale, right * scale, bottom * scale, left * scale
 
 
+def _infer_scale(
+    print_h: Measurement, print_w: Measurement, viewbox_h: float, viewbox_w: float
+) -> float:
+    """Determine size of viewbox units.
+
+    :param print_h: height of print area
+    :param print_w: width of print area
+    :param viewbox_h: height of viewbox
+    :param viewbox_w: width of viewbox
+    :return: scale factor to apply to viewbox to match print area
+    :raises ValueError: if no valid scale can be determined
+
+    If one of width or height cannot be used, will defer to the other.
+
+    Will ignore ONE, but not both of these conditions:
+    * print_w > 0 / viewbox_w == 0
+    * print_h > 0 / viewbox_h == 0
+
+    Any potential scale would be infinite, so this raises a ValueError
+
+    Will ignore ONE, but not both of these conditions:
+    * print_w == 0 / viewbox_w > 0
+    * print_h == 0 / viewbox_h > 0
+
+    The print area is invalid, but there is special handling for this. Interpret
+    viewbox units as print_w.native_unit and determe print area from viewbox area 1
+    to 1.
+
+        >>> _infer_scale(Measurement("in"), Measurement("in"), 1, 2)
+        96
+
+    Will additionally raise a ValueError for any negative measurement.
+
+    Scaling is safe for zero values. If both are zero, the scaling will be 1.
+    Padding might add a non-zero value to width or height later, producing a valid
+    viewbox, but that isn't guaranteed here.
+    """
+    if any(x < 0 for x in (print_h.value, print_w.value, viewbox_h, viewbox_w)):
+        msg = "Negative values are not allowed"
+        raise ValueError(msg)
+
+    candidate_scales: set[float] = set()
+    if print_w.value and viewbox_w:
+        candidate_scales.add(print_w.value / viewbox_w)
+    if print_h.value and viewbox_h:
+        candidate_scales.add(print_h.value / viewbox_h)
+    if candidate_scales:
+        # size of picture is determined by print area
+        return min(candidate_scales)
+    if any([print_w.value, print_h.value]):
+        msg = "All potential scales would be infinite."
+        raise ValueError(msg)
+    # a print unit was given, but not a print size. Size of picture is determined
+    # by interpreting viewbox dimensions as print_width or print_height units
+    return print_w.native_unit.value[1]
+
+
 def pad_and_scale(
     viewbox: tuple[float, float, float, float],
     pad: PadArg,
-    print_width: float | str | None = None,
-    print_height: float | str | None = None,
+    print_width: MeasurementArg | None = None,
+    print_height: MeasurementArg | None = None,
 ) -> tuple[tuple[float, float, float, float], dict[str, float | str]]:
     """Expand and scale the pad argument. If necessary, scale image.
 
@@ -165,15 +222,7 @@ def pad_and_scale(
     elif print_height is None:
         print_h.native_unit = print_w.native_unit
 
-    # scaling is safe for zero values. If both are zero, the scaling will be 1.
-    # Padding might add a non-zero value to width or height later, producing a valid
-    # viewbox, but that isn't guaranteed here.
-    candidate_scales: set[float] = set()
-    if print_w.value and viewbox_w:
-        candidate_scales.add(print_w.value / viewbox_w)
-    if print_h.value and viewbox_h:
-        candidate_scales.add(print_h.value / viewbox_h)
-    scale = min(candidate_scales, default=1)
+    scale = _infer_scale(print_h, print_w, viewbox_h, viewbox_w)
 
     print_w.value = viewbox_w * scale
     print_h.value = viewbox_h * scale
@@ -184,4 +233,7 @@ def pad_and_scale(
 
     # scale pads to viewbox to match input size when later scaled to print area
     padded_viewbox = pad_viewbox(viewbox, _scale_pads(pads, 1 / scale))
-    return padded_viewbox, {"width": print_w.native, "height": print_h.native}
+    return padded_viewbox, {
+        "width": print_w.get_svg(print_w.native_unit),
+        "height": print_h.get_svg(print_h.native_unit),
+    }

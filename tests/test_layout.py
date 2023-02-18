@@ -98,14 +98,6 @@ class TestMeasurement:
         b_unit = Measurement(f"{a_as_b}{unit_b.value[0]}")
         assert math.isclose(b_unit.value, a_unit.value)
 
-    def test_conversion_to_string(self, unit):
-        """Test that value is converted to other units."""
-        a_unit = Measurement(f"1{unit.value[0]}")
-        a_unit.value /= 3
-        expected_unit_specifier = unit.value[0]
-        expected = f"{format_number(1/3)}{unit.value[0]}"
-        assert a_unit.native == expected
-
     def test_add(self, unit):
         """Test that values are added."""
         a_unit = Measurement(f"1{unit.value[0]}")
@@ -140,6 +132,17 @@ class TestLayout:
         assert padded == (-4, -3, 13, 14)
         assert width_attribs == {}
 
+    def test_from_svg_drawings(self):
+        """This one doesn't look right in the project.
+
+        Run here to see if there is a bug.
+        """
+        viewbox = (0, 0, 100, 50)
+        pad = ("1in", "1in", "1in", "1in")
+        padded, width_attribs = layout.pad_and_scale(viewbox, pad, "pt")
+        assert padded == (-72.0, -72.0, 244.0, 194.0)
+        assert width_attribs == {"width": "244pt", "height": "194pt"}
+
     def test_0_area(self):
         """Zero area viewbox is padded"""
         viewbox = (0, 0, 0, 0)
@@ -167,12 +170,12 @@ class TestLayout:
         assert padded == (-96, -96, 193, 193)
         assert width_attribs == {}
 
-    def test_print_width(self):
-        """Test that print width is used to calculate pad"""
+    def test_infinite_width(self):
+        """Raise ValueError if no non-infinite scale can be inferred."""
         viewbox = (0, 0, 0, 0)
-        padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", "2in")
-        assert padded == (-24, -24, 48, 48)
-        assert width_attribs == {"width": "0.5in", "height": "0.5in"}
+        with pytest.raises(ValueError) as excinfo:
+            _ = layout.pad_and_scale(viewbox, "0.25in", "2in")
+        assert "infinite" in str(excinfo.value)
 
     def test_pad_print_at_input_scale(self):
         """Test that padding is applied at the input scale.

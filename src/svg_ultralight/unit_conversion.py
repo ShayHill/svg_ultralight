@@ -156,7 +156,37 @@ class Measurement:
             unit = _UNIT_SPECIFIER2UNIT[unit]
         return self.value / unit.value[1]
 
+    def get_tuple(self, unit: Unit | None = None) -> tuple[float, Unit]:
+        """Get the measurement as a tuple of value and unit.
+
+        :param unit: optional unit to convert to
+        :return: value in specified as a tuple
+        """
+        return self.get_value(unit), unit or Unit.USER
+
     def get_str(self, unit: Unit | None = None) -> str:
+        """Get the measurement in the specified unit as a string.
+
+        :param optional unit: the unit to convert to
+        :return: the measurement in the specified unit as a string
+
+        The input arguments for groups of measurements are less flexible than for
+        single measurements. Single measurements can be defined by something like
+        `(1, "in")`, but groups can be passed as single or tuples, so there is no way
+        to differentiate between (1, "in") and "1in" or (1, "in") as ("1", "0in").
+        That is a limitation, but doint it that way preserved the flexibility (and
+        backwards compatibility) of being able to define padding as "1in" everywhere
+        or (1, 2, 3, 4) for top, right, bottom, left.
+
+        The string from this method is different from the string in the `get_svg`
+        method, because this string will print a full printable precision, while the
+        svg string will print a reduced precision. So this string can be used to as
+        an argument to pad or print_width without losing precision.
+        """
+        value, unit = self.get_tuple(unit)
+        return f"{value}{unit.value[0]}"
+
+    def get_svg(self, unit: Unit | None = None) -> str:
         """Get the measurement in the specified unit as it would be written in svg.
 
         :param optional unit: the unit to convert to
@@ -165,18 +195,9 @@ class Measurement:
         Rounds values to 6 decimal places as recommended by svg guidance online.
         Higher precision just changes file size without imroving quality.
         """
+        value, unit = self.get_tuple(unit)
         value = format_number(self.get_value(unit))
-        if unit is None:
-            return value
         return f"{value}{unit.value[0]}"
-
-    @property
-    def native(self) -> str:
-        """Get the value in the native unit.
-
-        :return: self.value in initial unit used to init Measurement instance
-        """
-        return self.get_str(self.native_unit)
 
     def __add__(self, other: "Measurement") -> "Measurement":
         """Add two measurements.
