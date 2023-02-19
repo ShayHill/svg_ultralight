@@ -284,7 +284,7 @@ class BoundingBox(SupportsBounds):
         return BoundingBox.merged(self, *others)
 
     @classmethod
-    def merged(cls, *bboxes: BoundingBox) -> BoundingBox:
+    def merged(cls, *bboxes: SupportsBounds) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
 
         :param bboxes: one or more bounding boxes

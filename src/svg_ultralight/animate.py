@@ -8,7 +8,7 @@ Requires: pillow, which is an optional project dependency.
 from __future__ import annotations
 
 try:
-    from PIL import Image  # type: ignore
+    from PIL import Image
 except ModuleNotFoundError as exc:
     MSG = "`pip install pillow` to use svg_ultralight.animate module"
     raise ModuleNotFoundError(MSG) from exc

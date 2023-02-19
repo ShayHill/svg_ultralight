@@ -21,28 +21,17 @@ from typing import IO, TYPE_CHECKING, TypeGuard
 
 from lxml import etree
 
-from svg_ultralight import layout
 from svg_ultralight.constructors import update_element
+from svg_ultralight.layout import pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import get_viewBox_str, svg_tostring
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from lxml.etree import _Element as EtreeElement  # type: ignore
 
-    from svg_ultralight.pad_argument import PadArg
+    from svg_ultralight.layout import PadArg
 
 _FourFloats = tuple[float, float, float, float]
-
-
-def _is_floats(objs: Sequence[object]) -> TypeGuard[Sequence[float]]:
-    """Determine if a list of objects is a list of numbers.
-
-    :param objs: list of objects
-    :return: True if all objects are numbers
-    """
-    return all(isinstance(x, (float, int)) for x in objs)
 
 
 def _is_four_floats(objs: tuple[object, ...]) -> TypeGuard[_FourFloats]:
@@ -51,7 +40,7 @@ def _is_four_floats(objs: tuple[object, ...]) -> TypeGuard[_FourFloats]:
     :param objs: list of objects
     :return: True if all objects are numbers and there are 4 of them
     """
-    return len(objs) == 4 and _is_floats(objs)
+    return len(objs) == 4 and all(isinstance(x, (float, int)) for x in objs)
 
 
 def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
@@ -61,15 +50,6 @@ def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
     :return: True if object is file-like
     """
     return hasattr(obj, "read") and hasattr(obj, "write")
-
-
-def _is_pathable(obj: object) -> TypeGuard[Path | str]:
-    """Determine if an object is a path of could be cast into a path.
-
-    :param obj: object
-    :return: True if object is a path
-    """
-    return isinstance(obj, (Path, str))
 
 
 def new_svg_root(
@@ -118,7 +98,7 @@ def new_svg_root(
     inferred_attribs: dict[str, float | str] = {}
     view_box_args = (x_, y_, width_, height_)
     if _is_four_floats(view_box_args):
-        padded_viewbox, scale_attribs = layout.pad_and_scale(
+        padded_viewbox, scale_attribs = pad_and_scale(
             view_box_args, pad_, print_width_, print_height_
         )
         inferred_attribs["viewBox"] = get_viewBox_str(*padded_viewbox)
@@ -195,7 +175,7 @@ def write_svg(
     if _is_io_bytes(svg):
         _ = svg.write(svg_contents)
         return svg.name
-    if _is_pathable(svg):
+    if isinstance(svg, (Path, str)):
         with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)
         return str(svg)
