@@ -1,46 +1,37 @@
-[tool.poetry]
+[project]
 name = "svg-ultralight"
 version = "0.18.3"
 description = "a sensible way to create svg files with Python"
-authors = ["Shay Hill <shay_public@hotmail.com>"]
-license = "MIT"
+authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
+license = { text = "MIT" }
 readme = "README.md"
-packages = [{include = "svg_ultralight", from = "src"}]
+requires-python = ">=3.10"
+dependencies = ["lxml", "pillow", "paragraphs"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-lxml = "^4.9.2"
-pillow = { version = "^9.4.0", optional = true }
-paragraphs = "^0.2.0"
+[project.optional-dependencies]
+dev = ["types-lxml", "pytest", "commitizen", "pre-commit"]
 
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry.group.dev.dependencies]
-types-lxml = "^2022.11.8"
-pytest = "^7.2.0"
-commitizen = "^2.39.1"
-pre-commit = "^2.21.0"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
+
 
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.18.3"
 tag_format = "$version"
-version_files = [
-    "pyproject.toml:^version"
-]
+version_files = ["pyproject.toml:^version"]
 annotated_tag = true
 major_version_zero = true
 
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.pyright]
 include = ["src"]
-exclude = ["**/__pycache__.py", "**/tests/*"]
+exclude = ["**/__pycache__.py"]
 
 pythonVersion = "3.10"
 pythonPlatform = "Any"
@@ -49,10 +40,11 @@ typeCheckingMode = "strict"
 reportShadowedImports = true
 reportCallInDefaultInitializer = true
 reportImplicitStringConcatenation = true
+# reportMissingSuperCall = true
 reportPropertyTypeMismatch = true
 reportUninitializedInstanceVariable = true
 reportUnnecessaryTypeIgnoreComment = true
 reportUnusedCallResult = true
 
-venvPath = "C:\\Users\\shaya\\AppData\\Local\\pypoetry\\Cache\\virtualenvs"
-venv = "C:\\Users\\shaya\\AppData\\Local\\pypoetry\\Cache\\virtualenvs\\svg-ultralight-EYpd0DT3-py3.11"
+venvPath = "."
+venv = "./venv"
