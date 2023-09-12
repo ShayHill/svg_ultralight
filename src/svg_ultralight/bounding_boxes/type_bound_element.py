@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 
 class BoundElement(SupportsBounds):
-
     """An element with a bounding box.
 
     Updates the element when x, y, x2, y2, width, or height are set.
@@ -54,12 +53,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.x
 
     @x.setter
-    def x(self, x: float):
+    def x(self, value: float):
         """Set the x coordinate of the left edge of the bounding box.
 
-        :param x: the new x coordinate of the left edge of the bounding box
+        :param value: the new x coordinate of the left edge of the bounding box
         """
-        self.bbox.x = x
+        self.bbox.x = value
         self._update_elem()
 
     @property
@@ -71,12 +70,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.x2
 
     @x2.setter
-    def x2(self, x2: float):
+    def x2(self, value: float):
         """Set the x coordinate of the right edge of the bounding box.
 
-        :param x2: the new x coordinate of the right edge of the bounding box
+        :param value: the new x coordinate of the right edge of the bounding box
         """
-        self.bbox.x2 = x2
+        self.bbox.x2 = value
         self._update_elem()
 
     @property
@@ -88,12 +87,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.cx
 
     @cx.setter
-    def cx(self, cx: float):
+    def cx(self, value: float):
         """Set the x coordinate of the center of the bounding box.
 
-        :param cx: the new x coordinate of the center of the bounding box
+        :param value: the new x coordinate of the center of the bounding box
         """
-        self.bbox.cx = cx
+        self.bbox.cx = value
         self._update_elem()
 
     @property
@@ -105,12 +104,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.y
 
     @y.setter
-    def y(self, y: float):
+    def y(self, value: float):
         """Set the y coordinate of the top edge of the bounding box.
 
-        :param y: the new y coordinate of the top edge of the bounding box
+        :param value: the new y coordinate of the top edge of the bounding box
         """
-        self.bbox.y = y
+        self.bbox.y = value
         self._update_elem()
 
     @property
@@ -122,12 +121,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.y2
 
     @y2.setter
-    def y2(self, y2: float):
+    def y2(self, value: float):
         """Set the y coordinate of the bottom edge of the bounding box.
 
-        :param y2: the new y coordinate of the bottom edge of the bounding box
+        :param value: the new y coordinate of the bottom edge of the bounding box
         """
-        self.bbox.y2 = y2
+        self.bbox.y2 = value
         self._update_elem()
 
     @property
@@ -139,12 +138,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.cy
 
     @cy.setter
-    def cy(self, cy: float):
+    def cy(self, value: float):
         """Set the y coordinate of the center of the bounding box.
 
-        :param cy: the new y coordinate of the center of the bounding box
+        :param value: the new y coordinate of the center of the bounding box
         """
-        self.bbox.cy = cy
+        self.bbox.cy = value
         self._update_elem()
 
     @property
@@ -156,12 +155,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.width
 
     @width.setter
-    def width(self, width: float):
+    def width(self, value: float):
         """Set the width of the bounding box.
 
-        :param width: the new width of the bounding box
+        :param value: the new width of the bounding box
         """
-        self.bbox.width = width
+        self.bbox.width = value
         self._update_elem()
 
     @property
@@ -173,12 +172,12 @@ class BoundElement(SupportsBounds):
         return self.bbox.height
 
     @height.setter
-    def height(self, height: float):
+    def height(self, value: float):
         """Set the height of the bounding box.
 
-        :param height: the new height of the bounding box
+        :param value: the new height of the bounding box
         """
-        self.bbox.height = height
+        self.bbox.height = value
         self._update_elem()
 
     @property

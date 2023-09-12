@@ -10,7 +10,7 @@ Rounding some numbers to ensure quality svg rendering:
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from lxml import etree
 
@@ -73,19 +73,18 @@ def set_attributes(elem: EtreeElement, **attributes: str | float) -> None:
     for key, val in attributes.items():
         if ":" in key:
             namespace, tag = key.split(":")
-            key = etree.QName(NSMAP[namespace], tag)
+            key_ = etree.QName(NSMAP[namespace], tag)
         else:
-            key = key.rstrip("_").replace("_", "-")
+            key_ = key.rstrip("_").replace("_", "-")
 
         try:
             val_as_str = format_number(float(val))
         except ValueError:
             val_as_str = str(val)
-        elem.set(key, val_as_str)
+        elem.set(key_, val_as_str)
 
 
 class _TostringDefaults(Enum):
-
     """Default values for an svg xml_header."""
 
     DOCTYPE = (
@@ -110,7 +109,8 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
             arg_name = default.name.lower()
             value = tostring_kwargs.get(arg_name, default.value)
             tostring_kwargs[arg_name] = value
-    return etree.tostring(etree.ElementTree(xml), **tostring_kwargs)
+    as_bytes = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)  # type: ignore
+    return cast(bytes, as_bytes)
 
 
 def get_viewBox_str(
@@ -130,7 +130,7 @@ def get_viewBox_str(
     :return: space-delimited string "x y width height"
     """
     if not isinstance(pad, tuple):
-        pad = (pad,) * 4
+        pad = (pad, pad, pad, pad)
     pad_t, pad_r, pad_b, pad_l = pad
     pad_h = pad_l + pad_r
     pad_v = pad_t + pad_b

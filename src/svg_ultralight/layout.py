@@ -3,11 +3,15 @@
 :author: Shay Hill
 :created: 2023-02-12
 """
+
+from __future__ import annotations
+
 from collections.abc import Sequence
+from typing import Union
 
 from svg_ultralight.unit_conversion import Measurement, MeasurementArg
 
-PadArg = float | str | Measurement | Sequence[float | str | Measurement]
+PadArg = Union[float, str, Measurement, Sequence[Union[float, str, Measurement]]]
 
 
 def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
@@ -34,7 +38,7 @@ def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
     >>> expand_pad_arg((Measurement("1in"), Measurement("2in")))
     (96.0, 192.0, 96.0, 192.0)
     """
-    if isinstance(pad, (int, float, str, Measurement)):
+    if isinstance(pad, str) or not isinstance(pad, Sequence):
         return expand_pad_arg([pad])
     as_ms = [m if isinstance(m, Measurement) else Measurement(m) for m in pad]
     as_units = [m.value for m in as_ms]

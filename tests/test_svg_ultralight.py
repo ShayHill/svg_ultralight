@@ -7,6 +7,7 @@ Explicitly tests string output, so any change in format will cause the tests to 
 No tests for png writing.
 """
 
+from __future__ import annotations
 import os
 import tempfile
 from pathlib import Path

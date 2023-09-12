@@ -103,6 +103,7 @@ def deepcopy_element(elem: EtreeElement, **attributes: str | float) -> EtreeElem
         "deepcopy_element is deprecated. "
         + "Use copy.deepcopy from the standard library instead.",
         category=DeprecationWarning,
+        stacklevel=1,
     )
     elem = copy.deepcopy(elem)
     _ = update_element(elem, **attributes)

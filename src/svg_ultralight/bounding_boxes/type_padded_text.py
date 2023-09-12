@@ -75,7 +75,6 @@ if TYPE_CHECKING:
 
 
 class PaddedText(SupportsBounds):
-
     """A line of text with a bounding box and padding."""
 
     def __init__(
@@ -261,12 +260,111 @@ class PaddedText(SupportsBounds):
         """
         self.padded_width *= height / self.padded_height
 
-    x = lmargin
-    x2 = rmargin
-    y = capline
-    y2 = baseline
-    width = padded_width
-    height = padded_height
+    @property
+    def x(self) -> float:
+        """The left margin of this line of text.
+
+        :return: The left margin of this line of text.
+        """
+        return self.lmargin
+
+    @x.setter
+    def x(self, value: float) -> None:
+        """Set the left margin of this line of text.
+
+        :param value: The new left margin of this line of text.
+        """
+        self.lmargin = value
+
+    @property
+    def x2(self) -> float:
+        """The right margin of this line of text.
+
+        :return: The right margin of this line of text.
+        """
+        return self.rmargin
+
+    @x2.setter
+    def x2(self, value: float) -> None:
+        """Set the right margin of this line of text.
+
+        :param value: The new right margin of this line of this text.
+        """
+        self.rmargin = value
+
+    @property
+    def y(self) -> float:
+        """The capline of this line of text.
+
+        :return: The capline of this line of text.
+        """
+        return self.capline
+
+    @y.setter
+    def y(self, value: float) -> None:
+        """Set the capline of this line of text.
+
+        :param value: The new capline of this line of text.
+        """
+        self.capline = value
+
+    @property
+    def y2(self) -> float:
+        """The baseline of this line of text.
+
+        :return: The baseline of this line of text.
+        """
+        return self.baseline
+
+    @y2.setter
+    def y2(self, value: float) -> None:
+        """Set the baseline of this line of text.
+
+        :param value: The new baseline of this line of text.
+        """
+        self.baseline = value
+
+    @property
+    def width(self) -> float:
+        """The width of this line of text with padding.
+
+        :return: The scaled width of this line of text with padding.
+        """
+        return self.padded_width
+
+    @width.setter
+    def width(self, value: float) -> None:
+        """Scale to width without scaling padding.
+
+        :param value: The new width of this line of text.
+        :effects: the text_element bounding box is scaled to width - lpad - rpad.
+
+        Svg_Ultralight BoundingBoxes preserve x and y when scaling. This is
+        consistent with how rectangles, viewboxes, and anything else defined by x, y,
+        width, height behaves in SVG. This is unintuitive for text, because the
+        baseline is near y2 (y + height) not y. So, we preserve baseline (alter y
+        *and* y2) when scaling.
+        """
+        baseline = self.baseline
+        self.padded_width = value
+        self.baseline = baseline
+
+    @property
+    def height(self) -> float:
+        """The height of this line of text with padding.
+
+        :return: The scaled height of this line of text with padding.
+        """
+        return self.padded_height
+
+    @height.setter
+    def height(self, value: float) -> None:
+        """Scale to height without scaling padding.
+
+        :param value: The new height of this line of text.
+        :effects: the text_element bounding box is scaled to height - tpad - bpad.
+        """
+        self.padded_height = value
 
     @property
     def cx(self) -> float:
@@ -277,12 +375,12 @@ class PaddedText(SupportsBounds):
         return self.lmargin + self.padded_width / 2
 
     @cx.setter
-    def cx(self, cx: float):
+    def cx(self, value: float):
         """Set the x coordinate of the center between margins.
 
-        :param cx: the new x coordinate of the center between margins
+        :param value: the new x coordinate of the center between margins
         """
-        self.lmargin = cx - self.padded_width / 2
+        self.lmargin = value - self.padded_width / 2
 
     @property
     def cy(self) -> float:
@@ -293,12 +391,12 @@ class PaddedText(SupportsBounds):
         return self.capline + self.padded_height / 2
 
     @cy.setter
-    def cy(self, cy: float):
+    def cy(self, value: float):
         """Set the y coordinate of the center between baseline and capline.
 
-        :param cy: the new y coordinate of the center between baseline and capline
+        :param value: the new y coordinate of the center between baseline and capline
         """
-        self.capline = cy - self.padded_height / 2
+        self.capline = value - self.padded_height / 2
 
     @property
     def scale(self) -> float:

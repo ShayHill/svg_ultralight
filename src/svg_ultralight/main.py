@@ -17,7 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import IO, TYPE_CHECKING, TypeGuard
+from typing import IO, TYPE_CHECKING
 
 from lxml import etree
 
@@ -31,10 +31,8 @@ if TYPE_CHECKING:
 
     from svg_ultralight.layout import PadArg
 
-_FourFloats = tuple[float, float, float, float]
 
-
-def _is_four_floats(objs: tuple[object, ...]) -> TypeGuard[_FourFloats]:
+def _is_four_floats(objs: tuple[object, ...]) -> bool:
     """Is obj a 4-tuple of numbers?.
 
     :param objs: list of objects
@@ -43,7 +41,7 @@ def _is_four_floats(objs: tuple[object, ...]) -> TypeGuard[_FourFloats]:
     return len(objs) == 4 and all(isinstance(x, (float, int)) for x in objs)
 
 
-def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
+def _is_io_bytes(obj: object) -> bool:
     """Determine if an object is file-like.
 
     :param obj: object
@@ -98,8 +96,12 @@ def new_svg_root(
     inferred_attribs: dict[str, float | str] = {}
     view_box_args = (x_, y_, width_, height_)
     if _is_four_floats(view_box_args):
+        assert isinstance(x_, (float, int))
+        assert isinstance(y_, (float, int))
+        assert isinstance(width_, (float, int))
+        assert isinstance(height_, (float, int))
         padded_viewbox, scale_attribs = pad_and_scale(
-            view_box_args, pad_, print_width_, print_height_
+            (x_, y_, width_, height_), pad_, print_width_, print_height_
         )
         inferred_attribs["viewBox"] = get_viewBox_str(*padded_viewbox)
         inferred_attribs.update(scale_attribs)
@@ -173,8 +175,8 @@ def write_svg(
     svg_contents = svg_tostring(xml, **tostring_kwargs)
 
     if _is_io_bytes(svg):
-        _ = svg.write(svg_contents)
-        return svg.name
+        _ = svg.write(svg_contents)  # type: ignore
+        return svg.name  # type: ignore
     if isinstance(svg, (Path, str)):
         with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)

@@ -5,7 +5,7 @@ description = "a sensible way to create svg files with Python"
 authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = ["lxml", "pillow", "paragraphs"]
 
 [project.optional-dependencies]
@@ -23,7 +23,7 @@ addopts = "--doctest-modules"
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    env_list = py{311,310}
+    env_list = py{39,311,310}
 
     [testenv]
     deps = pytest
@@ -44,7 +44,7 @@ major_version_zero = true
 include = ["src"]
 exclude = ["**/__pycache__.py"]
 
-pythonVersion = "3.10"
+pythonVersion = "3.9"
 pythonPlatform = "Any"
 
 typeCheckingMode = "strict"

@@ -8,9 +8,13 @@ I borrowed test values and and conventions from Inkscape's `inkek.units.py`.
 :author: Shay Hill
 :created: 2023-02-12
 """
+
+from __future__ import annotations
+
 import dataclasses
 import enum
 import re
+from typing import Union
 
 from svg_ultralight.string_conversion import format_number
 
@@ -22,7 +26,6 @@ _UPC = 96 / 2.54
 
 
 class Unit(enum.Enum):
-
     """SVG Units of measurement.
 
     Value is (unit conversion, unit specifier)
@@ -46,15 +49,15 @@ class Unit(enum.Enum):
 
 
 # the arguments this module will attempt to interpret as a string with a unit specifier
-MeasurementArg = (
-    float
-    | str
-    | tuple[str, str]
-    | tuple[float, str]
-    | tuple[str, Unit]
-    | tuple[float, Unit]
-    | Unit
-)
+MeasurementArg = Union[
+    float,
+    str,
+    tuple[str, str],
+    tuple[float, str],
+    tuple[str, Unit],
+    tuple[float, Unit],
+    Unit,
+]
 
 _UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
 
@@ -122,7 +125,6 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
 
 @dataclasses.dataclass
 class Measurement:
-
     """Measurement with unit of measurement.
 
     Converts to and stores the value in user units. Also retains the input units so
@@ -195,11 +197,11 @@ class Measurement:
         Rounds values to 6 decimal places as recommended by svg guidance online.
         Higher precision just changes file size without imroving quality.
         """
-        value, unit = self.get_tuple(unit)
-        value = format_number(self.get_value(unit))
-        return f"{value}{unit.value[0]}"
+        _, unit = self.get_tuple(unit)
+        value_as_str = format_number(self.get_value(unit))
+        return f"{value_as_str}{unit.value[0]}"
 
-    def __add__(self, other: "Measurement") -> "Measurement":
+    def __add__(self, other: Measurement) -> Measurement:
         """Add two measurements.
 
         :param other: the other measurement
@@ -209,7 +211,7 @@ class Measurement:
         result.value = self.value + other.value
         return result
 
-    def __sub__(self, other: "Measurement") -> "Measurement":
+    def __sub__(self, other: Measurement) -> Measurement:
         """Subtract two measurements.
 
         :param other: the other measurement
@@ -219,7 +221,7 @@ class Measurement:
         result.value = self.value - other.value
         return result
 
-    def __mul__(self, scalar: float) -> "Measurement":
+    def __mul__(self, scalar: float) -> Measurement:
         """Multiply a measurement by a scalar.
 
         :param scalar: the scalar to multiply by
@@ -229,7 +231,7 @@ class Measurement:
         result.value = self.value * scalar
         return result
 
-    def __rmul__(self, scalar: float) -> "Measurement":
+    def __rmul__(self, scalar: float) -> Measurement:
         """Multiply a measurement by a scalar.
 
         :param scalar: the scalar to multiply by
@@ -237,7 +239,7 @@ class Measurement:
         """
         return self.__mul__(scalar)
 
-    def __truediv__(self, scalar: float) -> "Measurement":
+    def __truediv__(self, scalar: float) -> Measurement:
         """Divide a measurement by a scalar.
 
         :param scalar: the scalar to divide by
