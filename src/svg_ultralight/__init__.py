@@ -13,14 +13,14 @@ from svg_ultralight.constructors.new_element import (
     new_sub_element,
     update_element,
 )
-from svg_ultralight.main import (
-    new_svg_root,
+from svg_ultralight.inkscape import (
     write_pdf,
     write_pdf_from_svg,
     write_png,
     write_png_from_svg,
-    write_svg,
+    write_root,
 )
+from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import format_number, format_numbers
 
@@ -39,6 +39,7 @@ __all__ = [
     "write_png",
     "write_pdf_from_svg",
     "write_pdf",
+    "write_root",
     "NSMAP",
     "format_number",
     "format_numbers",
