@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO, TYPE_CHECKING
@@ -59,6 +58,7 @@ def new_svg_root(
     pad_: PadArg = 0,
     print_width_: float | str | None = None,
     print_height_: float | str | None = None,
+    dpu_: float = 1,
     nsmap: dict[str | None, str] | None = None,
     **attributes: float | str,
 ) -> EtreeElement:
@@ -71,25 +71,24 @@ def new_svg_root(
     :param pad_: optionally increase viewBox by pad in all directions. Acceps a
         single value or a tuple of values applied to (cycled over) top, right,
         bottom, left. pad can be floats or dimension strings*
-    :param print_width_: optionally explicitly set unpadded width in units (float) or
-        a dimension string*
-    :param print_height_: optionally explicitly set unpadded height in units (float)
-        or a dimension string*
+    :param print_width_: optionally explicitly set unpadded width in units
+        (float) or a dimension string*
+    :param print_height_: optionally explicitly set unpadded height in units
+        (float) or a dimension string*
+    :param dpu_: dots per unit. Scale the output by this factor. This is
+        different from print_width_ and print_height_ in that dpu_ scales the
+        *padded* output.
     :param nsmap: optionally pass a namespace map of your choosing
     :param attributes: element attribute names and values
     :return: root svg element
 
-    * dimension strings are strings with a float value and a unit. Valid units are
-    formatted as "1in", "2cm", or "3mm".
+    * dimension strings are strings with a float value and a unit. Valid units
+      are formatted as "1in", "2cm", or "3mm".
 
-    All viewBox-style (trailing underscore) parameters are optional. Any kwargs will
-    be passed to ``etree.Element`` as element parameters. These will supercede any
-    parameters inferred from the trailing underscore parameters.
+    All viewBox-style (trailing underscore) parameters are optional. Any kwargs
+    will be passed to ``etree.Element`` as element parameters. These will
+    supercede any parameters inferred from the trailing underscore parameters.
     """
-    if "dpu_" in attributes:
-        _ = sys.stdout.write(
-            "WARNING: dpu_ is deprecated. Use print_width or print_height instead.\n"
-        )
     if nsmap is None:
         nsmap = NSMAP
 
@@ -101,7 +100,7 @@ def new_svg_root(
         assert isinstance(width_, (float, int))
         assert isinstance(height_, (float, int))
         padded_viewbox, scale_attribs = pad_and_scale(
-            (x_, y_, width_, height_), pad_, print_width_, print_height_
+            (x_, y_, width_, height_), pad_, print_width_, print_height_, dpu_
         )
         inferred_attribs["viewBox"] = get_viewBox_str(*padded_viewbox)
         inferred_attribs.update(scale_attribs)

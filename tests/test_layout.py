@@ -24,13 +24,13 @@ from svg_ultralight.unit_conversion import Measurement, Unit, _parse_unit
 
 INKSCAPE_SCALARS = {
     "in": 96.0,
-    "pt": 1.3333333333333333,
+    "pt": 4.0 / 3.0,
     "px": 1.0,
-    "mm": 3.779527559055118,
-    "cm": 37.79527559055118,
-    "m": 3779.527559055118,
-    "km": 3779527.559055118,
-    "Q": 0.94488188976378,
+    "mm": 96.0 / 25.4,
+    "cm": 960.0 / 25.4,
+    "m": 96000.0 / 25.4,
+    "km": 96000000.0 / 25.4,
+    "Q": 24.0 / 25.4,
     "pc": 16.0,
     "yd": 3456.0,
     "ft": 1152.0,
@@ -199,3 +199,26 @@ class TestLayout:
         padded, width_attribs = layout.pad_and_scale(viewbox, 0, 200, 2)
         assert padded == (1, 2, 3, 6)
         assert width_attribs == {"width": "1", "height": "2"}
+
+    def test_pad_is_constant(self):
+        """Pad does not change with scale."""
+        viewbox = (0, 0, 10, 20)
+        padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "10in")
+        assert padded == (-1.0, -1.0, 12.0, 22.0)
+        assert width_attribs == {"width": "12in", "height": "22in"}
+
+        padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "100in")
+        assert [format_number(x) for x in padded] == ['-0.1', '-0.1', '10.2', '20.2']
+        assert width_attribs == {"width": "102in", "height": "202in"}
+
+    def test_dpu_(self):
+        """dpu_ scales the padded output."""
+        viewbox = (0, 0, 10, 20)
+        padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "10in")
+        assert padded == (-1.0, -1.0, 12.0, 22.0)
+        assert width_attribs == {"width": "12in", "height": "22in"}
+
+        padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "10in", dpu=2)
+        assert padded == (-1.0, -1.0, 12.0, 22.0)
+        assert width_attribs == {"width": "24in", "height": "44in"}
+

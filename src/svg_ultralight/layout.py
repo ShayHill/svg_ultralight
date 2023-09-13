@@ -135,80 +135,110 @@ def pad_and_scale(
     pad: PadArg,
     print_width: MeasurementArg | None = None,
     print_height: MeasurementArg | None = None,
+    dpu: float = 1,
 ) -> tuple[tuple[float, float, float, float], dict[str, float | str]]:
     """Expand and scale the pad argument. If necessary, scale image.
 
     :param viewbox: viewbox to pad (x, y, width height)
-    :param pad: padding to add around image, in user units or inches.
-        if a sequence, it should be (top, right, bottom, left).
-        if a single float or string, it will be applied to all sides.
-        if two floats, top and bottom then left and right.
-        if three floats, top, left and right, then bottom.
+    :param pad: padding to add around image, in user units or inches. if a
+        sequence, it should be (top, right, bottom, left). if a single float or
+        string, it will be applied to all sides. if two floats, top and bottom
+        then left and right. if three floats, top, left and right, then bottom.
         if four floats, top, right, bottom, left.
-    :param print_width: width of print area, in user units (float), a string with a
-        unit specifier (e.g., "452mm"), or just a unit specifier (e.g., "pt")
-    :param print_height: height of print area, in user units (float), a string with a
-        unit specifier (e.g., "452mm"), or just a unit specifier (e.g., "pt")
+    :param print_width: width of print area, in user units (float), a string
+        with a unit specifier (e.g., "452mm"), or just a unit specifier (e.g.,
+        "pt")
+    :param print_height: height of print area, in user units (float), a string
+        with a unit specifier (e.g., "452mm"), or just a unit specifier (e.g.,
+        "pt")
+    :param dpu: scale the print units. This is useful when you want to print the
+        same image at different sizes.
     :return: padded viewbox 4-tuple and scaling attributes
 
-    SVGs are built in "user units". An optional width and height (not the viewbox
-    with and height, these are separate arguments) define the size of those user
-    units.
+    SVGs are built in "user units". An optional width and height (not the
+    viewbox with and height, these are separate arguments) define the size of
+    those user units.
 
-    * If the width and height are not specified, the user units are 1 pixel (1/96th
-    of an inch).
+    * If the width and height are not specified, the user units are 1 pixel
+      (1/96th of an inch).
 
-    * If the width and height are specified, the user units become whatever they need
-    to be to fit that requirement. For instance, if the viewbox width is 96 and the
-    width argument is "1in", then the user units are *still* pixels, because there
-    are 96 pixels in an inch. If the viewbox with is 2 and the width argument is
-    "1in", then the user units are 1/2 of an inch (i.e., 48 pixels) each, because
-    there are 2 user units in an inch. If the viewbox width is 3 and the width
-    argument is "1yd", the each user unit is 1 foot.
+    If the width and height *are* specified, the user units become whatever they
+    need to be to fit that requirement. For instance, if the viewbox width is 96
+    and the width argument is "1in", then the user units are *still* pixels,
+    because there are 96 pixels in an inch. If the viewbox with is 2 and the
+    width argument is "1in", then the user units are 1/2 of an inch (i.e., 48
+    pixels) each, because there are 2 user units in an inch. If the viewbox
+    width is 3 and the width argument is "1yd", the each user unit is 1 foot.
 
-    To pad around the viewbox, we need to first figure out what the user units are
-    then scale the padding to it will print (or display) correctly.
+    To pad around the viewbox, we need to first figure out what the user units
+    are then scale the padding so it will print (or display) correctly. For
+    instance, if
 
-    Ideally, we know the size of the print or display area from the beginning and
-    build the geometry out at whatever size we want, so no scaling is necessarily
-    required. Even that won't always work, because some software doesn't like "user
-    units" and insists on 'pt' or 'in'. If everything is already in 'pt' or 'in' and
-    you want to keep it that way, just call the function with print_width="pt" or
-    print_height="in". The function will add the unit designators without changing
-    the scale.
+    * the viewbox width is 3;
+    * the width argument is "1yd"; and
+    * the pad argument is "1in"
 
-    Print aspect ratio is ignored. Viewbox aspect ratio is preserved. For instance,
-    If you take a 100x100 unit image then pass pad="0.25in" and print_width="12in",
-    the output image will be 12.25 inches across. Whatever geometry was visible in
-    the original viewbox will be much larger, but the padding will still be 0.25
-    inches. If you want to use padding and need a specific output image size,
-    remember to subtract the padding width from your print_width or print_height.
+    the printed result will be 38" wide. That's 1yd for the width plus 1 inch of
+    padding on each side. The viewbox will have 1/12 of a unit (3 user units
+    over 1 yard = 1 foot per user unit) added on each side.
 
-    Scaling attributes are returns as a dictonary that can be "exploded" into the
-    element constructor, e.g., {"width": "12.25in", "height": "12.25in"}.
+    Ideally, we know the size of the print or display area from the beginning
+    and build the geometry out at whatever size we want, so no scaling is
+    necessarily required. Even that won't always work, because some software
+    doesn't like "user units" and insists on 'pt' or 'in'. If everything is
+    already in 'pt' or 'in' and you want to keep it that way, just call the
+    function with print_width="pt" or print_height="in". The function will add
+    the unit designators without changing the scale.
 
-    * If neighther a print_width nor print_height is specified, no scaling attributes
-    will be returned.
+    Print aspect ratio is ignored. Viewbox aspect ratio is preserved. For
+    instance, If you take a 100x100 unit image then pass pad="0.25in" and
+    print_width="12in", the output image will be 12.5 inches across. Whatever
+    geometry was visible in the original viewbox will be much larger, but the
+    padding will still be 0.25 inches. If you want to use padding and need a
+    specific output image size, remember to subtract the padding width from your
+    print_width or print_height.
 
-    * If either is specified, both a width and height will be returned (even if one
-    argument is None). These will always match the viewbox aspect ratio, so there is
-    no additional information supplied by giving both, but I've had unexpected
-    behavior from pandoc when one was missing.
+    Scaling attributes are returned as a dictonary that can be "exploded" into
+    the element constructor, e.g., {"width": "12.5in", "height": "12.5in"}.
+
+    * If neighther a print_width nor print_height is specified, no scaling
+      attributes will be returned.
+
+    * If either is specified, both a width and height will be returned (even if
+      one argument is None). These will always match the viewbox aspect ratio,
+      so there is no additional information supplied by giving both, but I've
+      had unexpected behavior from pandoc when one was missing.
 
     * If only a unit is given, (e.g., "pt"), the user units (viewbox width and
-    height) will be interpreted as that unit. This is important for InDesign, which
-    may not display in image at all if the width and height are not explicitly "pt".
+      height) will be interpreted as that unit. This is important for InDesign,
+      which may not display in image at all if the width and height are not
+      explicitly "pt".
 
-    * Print ratios are discarded. The viwebox ratio is preserved. For instance, if
-    the viewbox is (0, 0, 16, 9), giving a 16:9 aspect ratio and the print_width and
-    print_height are both 100, giving a 1:1 aspect ratio, the output scaling
-    attributes will be {"width": "100", "height", "56.25"}, preserving viewbox aspect
-    ratio with a "best fit" scaling (i.e, the image is as large as it can be without
-    exceeding the specified print area).
+    * Print ratios are discarded. The viwebox ratio is preserved. For instance,
+      if the viewbox is (0, 0, 16, 9), giving a 16:9 aspect ratio and the
+      print_width and print_height are both 100, giving a 1:1 aspect ratio, the
+      output scaling attributes will be {"width": "100", "height", "56.25"},
+      preserving viewbox aspect ratio with a "best fit" scaling (i.e, the image
+      is as large as it can be without exceeding the specified print area).
 
-    You can pass something impossible like a viewbox width of 1 and a print box of 0.
-    The function will give up, set scaling to 1, and pad the viewbox. This does not
-    try to guard against bad values sent to lxml.
+    You can pass something impossible like a viewbox width of 1 and a print box
+    of 0. The function will give up, set scaling to 1, and pad the viewbox. This
+    does not try to guard against bad values sent to lxml.
+
+    All of the above is important when you want your padding in real-world units
+    (e.g., when you need to guarantee a certain amount of padding above and
+    below an image in a book layout). However, it does add some complexity,
+    because aspect ratio is not maintained when print_width increases. Worse, if
+    there is some geomtry like a background pattern in your padding, then more
+    or less of that pattern will be visible depending on the print_width.
+
+    That's not hard to work around, just change the padding every time you
+    change the width. Or, to make it even simpler, use the dpu argument. The dpu
+    argument will scale the width and the padding together. So, you can produce
+    a 16" x 9" image with viwebox(0, 0, 14, 7), pad_="1in", print_width_="14in"
+    ... then scale the printout with dpu_=2 to get a 32" x 18" image with the
+    same viewbox. This means the padding will be 2" on all sides, but the image
+    will be identical (just twice as large) as the 16" x 9" image.
     """
     pads = expand_pad_arg(pad)
 
@@ -238,6 +268,6 @@ def pad_and_scale(
     # scale pads to viewbox to match input size when later scaled to print area
     padded_viewbox = pad_viewbox(viewbox, _scale_pads(pads, 1 / scale))
     return padded_viewbox, {
-        "width": print_w.get_svg(print_w.native_unit),
-        "height": print_h.get_svg(print_h.native_unit),
+        "width": (print_w * dpu).get_svg(print_w.native_unit),
+        "height": (print_h * dpu).get_svg(print_h.native_unit),
     }
