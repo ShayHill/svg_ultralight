@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Union
 
+from svg_ultralight.string_conversion import format_number
 from svg_ultralight.unit_conversion import Measurement, MeasurementArg
 
 PadArg = Union[float, str, Measurement, Sequence[Union[float, str, Measurement]]]
@@ -244,7 +245,12 @@ def pad_and_scale(
 
     # no print information given, pad and return viewbox
     if print_width is None and print_height is None:
-        return pad_viewbox(viewbox, pads), {}
+        padded = pad_viewbox(viewbox, pads)
+        dims: dict[str, float | str] = {}
+        if dpu != 1:
+            dims["width"] = format_number(padded[2] * dpu)
+            dims["height"] = format_number(padded[3] * dpu)
+        return padded, dims
 
     _, _, viewbox_w, viewbox_h = viewbox
     print_w = Measurement(print_width or 0)

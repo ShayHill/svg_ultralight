@@ -222,3 +222,11 @@ class TestLayout:
         assert padded == (-1.0, -1.0, 12.0, 22.0)
         assert width_attribs == {"width": "24in", "height": "44in"}
 
+    def test_dpu_scales_without_print_args(self):
+        """dpu_ scales output even when no print_width_ or print_height_ are given."""
+        viewbox = (0, 0, 1, 1)
+        padded, width_attribs = layout.pad_and_scale(viewbox, 1, dpu=2)
+        assert padded == (-1, -1, 3, 3)
+        assert width_attribs == {'width': '6', 'height': '6'}
+        
+
