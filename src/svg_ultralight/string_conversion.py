@@ -33,7 +33,10 @@ def format_number(num: float) -> str:
     giving six. Mostly to eliminate exponential notation, but I'm "rstripping" the
     strings to reduce filesize and increase readability
     """
-    return f"{num:0.6f}".rstrip("0").rstrip(".")
+    as_str = f"{num:0.6f}".rstrip("0").rstrip(".")
+    if as_str == "-0":
+        as_str = "0"
+    return as_str
 
 
 def format_numbers(nums: Iterable[float]) -> list[str]:
