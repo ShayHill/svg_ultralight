@@ -22,6 +22,7 @@ from svg_ultralight.inkscape import (
 )
 from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.nsmap import NSMAP
+from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.string_conversion import format_number, format_numbers
 
 __all__ = [
@@ -43,4 +44,5 @@ __all__ = [
     "NSMAP",
     "format_number",
     "format_numbers",
+    "new_svg_root_around_bounds",
 ]

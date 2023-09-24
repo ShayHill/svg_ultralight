@@ -139,6 +139,7 @@ repos:
     - id: ruff
       exclude: "tests"
       args:
+      - --target-version=py39
       - --select=ALL
       - --ignore=ANN101,ANN102,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,D413,D407,D406,S320
       # - --fix
