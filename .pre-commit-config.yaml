@@ -72,7 +72,7 @@ repos:
     args: ["--skip-magic-trailing-comma"]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.10.1
+  rev: v3.13.0
   hooks:
   - args:
     - --py39-plus
@@ -134,7 +134,7 @@ repos:
   # D407 [*] Missing dashed underline after section ("Attributes")
   # D406 [*] Section name should end with a newline ("Attributes")
   # S320 Using `lxml` to parse untrusted data is known to be vulnerable to XML attacks
-  rev: 'v0.0.287'
+  rev: 'v0.0.291'
   hooks:
     - id: ruff
       exclude: "tests"
@@ -145,6 +145,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.326
+  rev: v1.1.327
   hooks:
     - id: pyright
