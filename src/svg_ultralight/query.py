@@ -164,7 +164,7 @@ def pad_text(
     capline_ref = deepcopy(text_elem)
     _ = rmargin_ref.attrib.pop("id", None)
     _ = capline_ref.attrib.pop("id", None)
-    rmargin_ref.attrib["anchor"] = "end"
+    rmargin_ref.attrib["text-anchor"] = "end"
     capline_ref.text = capline_reference_char
     id2bbox = map_ids_to_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
 

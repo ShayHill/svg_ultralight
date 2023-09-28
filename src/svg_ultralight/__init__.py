@@ -22,6 +22,7 @@ from svg_ultralight.inkscape import (
 )
 from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.nsmap import NSMAP
+from svg_ultralight.query import pad_text
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.string_conversion import format_number, format_numbers
 
@@ -35,6 +36,7 @@ __all__ = [
     "update_element",
     "deepcopy_element",
     "new_svg_root",
+    "pad_text",
     "write_svg",
     "write_png_from_svg",
     "write_png",
