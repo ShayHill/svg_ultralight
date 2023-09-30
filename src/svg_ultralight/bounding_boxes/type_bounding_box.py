@@ -88,19 +88,29 @@ class BoundingBox(SupportsBounds):
 
         :return: uniform scale of the bounding box
 
-        self.scale is publicly visible, because it's convenient to fit a (usually
-        text) element somewhere then scale other elements to the same size--even
-        though element width and height may be different. This is a read-only
-        attribute, because writing it would cause too many errors of intuition (would
-        the scaled element stay anchored to x and y?).
-
-        To match the scale of two elements:
-            ``elem_b.width = elem_b.width * elem_a.scale / elem_b.scale``
-
-        This is consistent with setting width any other way: the element will still
-        be anchored at self.x and self.y.
+        Use caution, the scale attribute can cause errors in intuition. Changing
+        width or height will change the scale attribute, but not the x or y values.
+        The scale setter, on the other hand, will work in the tradational manner.
+        I.e., x => x*scale, y => y*scale, x2 => x*scale, y2 => y*scale, width =>
+        width*scale, height => height*scale, scale => scale*scale. This matches how
+        scale works in almost every other context.
         """
         return self._scale
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        """Scale the bounding box by a uniform factor.
+
+        :param value: new scale value
+
+        Don't miss this! You are setting the scale, not scaling the scale! If you
+        have a previously defined scale other than 1, this is probably not what you
+        want. Most of the time, you will want to use the *= operator.
+
+        `scale = 2` -> ignore whatever scale was previously defined and set scale to 2
+        `scale *= 2` -> make it twice as big as it was.
+        """
+        self._scale = value
 
     @property
     def x(self) -> float:

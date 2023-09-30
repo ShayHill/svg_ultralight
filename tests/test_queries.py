@@ -10,6 +10,7 @@ your system.
 import math
 
 import pytest
+from dataclasses import dataclass
 
 from svg_ultralight import new_svg_root
 from svg_ultralight.constructors import new_sub_element
@@ -36,6 +37,92 @@ class TestMergeBoundingBoxes:
         assert merged.height == 20
 
 
+@dataclass
+class MockSupportsBounds:
+    x: float
+    y: float
+    width: float
+    height: float
+
+
+class TestBoundingBox:
+    @pytest.fixture
+    def bounding_box(self):
+        return BoundingBox(0, 0, 100, 200)
+
+    def test_scale(self):
+        bbox = BoundingBox(100, 200, 300, 400)
+        assert bbox.scale == 1.0
+        bbox.scale = 3.0
+        bbox.x = 750
+        bbox.scale = 2.0
+        assert bbox.scale == 2.0
+        assert bbox.x == 500
+        assert bbox.y == 400
+        assert bbox.width == 600.0
+        assert bbox.height == 800.0
+
+    def test_alter_scale(self):
+        bbox = BoundingBox(100, 200, 300, 400)
+        assert bbox.scale == 1.0
+        bbox.scale = 3.0
+        bbox.scale *= 10.0
+        assert bbox.scale == 30.0
+        assert bbox.x == 3000
+        assert bbox.y == 6000
+        assert bbox.width == 9000.0
+        assert bbox.height == 12000.0
+
+    def test_x(self, bounding_box):
+        assert bounding_box.x == 0.0
+        bounding_box.x = 50.0
+        assert bounding_box.x == 50.0
+        assert bounding_box.cx == 100.0
+
+    def test_x2(self, bounding_box):
+        assert bounding_box.x2 == 100.0
+        bounding_box.x2 = 150.0
+        assert bounding_box.x2 == 150.0
+        assert bounding_box.cx == 100.0
+
+    def test_y(self, bounding_box):
+        assert bounding_box.y == 0.0
+        bounding_box.y = 50.0
+        assert bounding_box.y == 50.0
+        assert bounding_box.cy == 150.0
+
+    def test_y2(self, bounding_box):
+        assert bounding_box.y2 == 200.0
+        bounding_box.y2 = 250.0
+        assert bounding_box.y2 == 250.0
+        assert bounding_box.cy == 150.0
+
+    def test_width(self, bounding_box):
+        assert bounding_box.width == 100.0
+        bounding_box.width = 150.0
+        assert bounding_box.width == 150.0
+        assert bounding_box.x2 == 150.0
+
+    def test_height(self, bounding_box):
+        assert bounding_box.height == 200.0
+        bounding_box.height = 250.0
+        assert bounding_box.height == 250.0
+        assert bounding_box.y2 == 250.0
+
+    def test_transform_string(self, bounding_box):
+        transform_string = bounding_box.transform_string
+        assert transform_string == "scale(1) translate(0 0)"
+
+    def test_merge(self):
+        bbox1 = MockSupportsBounds(0, 0, 100, 200)
+        bbox2 = MockSupportsBounds(50, 50, 150, 250)
+        merged_bbox = BoundingBox.merged(bbox1, bbox2)
+        assert merged_bbox.x == 0.0
+        assert merged_bbox.y == 0.0
+        assert merged_bbox.width == 200.0
+        assert merged_bbox.height == 300.0
+
+
 class TestTransformBoundingBoxes:
     def test_transforms_commutative(self):
         """Scale then transform = transform then scale."""
@@ -49,6 +136,20 @@ class TestTransformBoundingBoxes:
         bbox_b.width = 100
 
         assert bbox_a.transform_string == bbox_b.transform_string
+
+    def test_width_does_not_alter_x(self):
+        """Setting width does not change x."""
+        bbox = BoundingBox(-20000, -4, 10, 30)
+        bbox_x = bbox.x
+        bbox.width = 100
+        assert bbox.x == bbox_x
+
+    def test_width_does_not_alter_y(self):
+        """Setting width does not change x."""
+        bbox = BoundingBox(-20000, -4, 10, 30)
+        bbox_x = bbox.x
+        bbox.width = 100
+        assert bbox.x == bbox_x
 
 
 class TestMapIdsToBoundingBoxes:

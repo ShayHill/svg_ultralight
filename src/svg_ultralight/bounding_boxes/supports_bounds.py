@@ -138,3 +138,11 @@ class SupportsBounds(Protocol):
     def scale(self) -> float:
         """Return scale of the object."""
         ...
+
+    @scale.setter
+    def scale(self, value: float):
+        """Return scale of the object.
+
+        :param value: The scale of the object.
+        """
+        ...

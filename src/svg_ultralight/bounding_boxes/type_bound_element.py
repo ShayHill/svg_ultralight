@@ -187,3 +187,11 @@ class BoundElement(SupportsBounds):
         :return: the scale of the bounding box
         """
         return self.bbox.scale
+
+    @scale.setter
+    def scale(self, value: float):
+        """Set the scale of the bounding box.
+
+        :param value: the scale of the bounding box
+        """
+        self.bbox.scale = value

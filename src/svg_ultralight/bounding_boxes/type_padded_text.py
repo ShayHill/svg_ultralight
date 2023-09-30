@@ -405,3 +405,11 @@ class PaddedText(SupportsBounds):
         :return: the scale of the text element
         """
         return self.bbox.scale
+
+    @scale.setter
+    def scale(self, value: float):
+        """Set the scale of the text element.
+
+        :param value: the new scale of the text element
+        """
+        self.bbox.scale = value
