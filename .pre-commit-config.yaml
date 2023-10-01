@@ -146,6 +146,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.327
+  rev: v1.1.329
   hooks:
     - id: pyright
