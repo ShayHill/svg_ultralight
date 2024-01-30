@@ -17,7 +17,14 @@ from svg_ultralight.inkscape import convert_text_to_path
 from svg_ultralight.main import new_svg_root
 from svg_ultralight.nsmap import NSMAP
 
-INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
+INKSCAPE = Path(
+    r"C:\\Program Files\\WindowsApps\\25415Inkscape.Inkscape_1.3.2.0"
+    + "_x64__9waqn51p1ttv2\\VFS\\ProgramFilesX64\\Inkscape\\bin\\inkscape.exe"
+)
+
+if not INKSCAPE.with_suffix(".exe").exists():
+    msg = "Inkscape not found. Please install Inkscape or update the INKSCAPE path var."
+    raise FileNotFoundError(msg)
 
 
 PATH_TAG = str(etree.QName(NSMAP["svg"], "path"))
@@ -47,5 +54,5 @@ class TestTextToPath:
         """Test the convert_text_to_path function."""
         has_text, no_text = text_conversion
         num_text = len(has_text.findall("text"))
-        num_g = len(no_text.findall(G_TAG))
-        assert num_text == num_g
+        num_paths = len(no_text.findall(PATH_TAG))
+        assert num_text == num_paths

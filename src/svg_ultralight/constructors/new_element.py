@@ -20,10 +20,10 @@ from lxml import etree
 from svg_ultralight.string_conversion import set_attributes
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import QName, _Element as EtreeElement  # type: ignore
 
 
-def new_element(tag: str, **attributes: str | float) -> EtreeElement:
+def new_element(tag: str | QName, **attributes: str | float) -> EtreeElement:
     """Create an etree.Element, make every kwarg value a string.
 
     :param tag: element tag
@@ -59,7 +59,7 @@ def new_element(tag: str, **attributes: str | float) -> EtreeElement:
 
 
 def new_sub_element(
-    parent: EtreeElement, tag: str, **attributes: str | float
+    parent: EtreeElement, tag: str | QName, **attributes: str | float
 ) -> EtreeElement:
     """Create an etree.SubElement, make every kwarg value a string.
 
