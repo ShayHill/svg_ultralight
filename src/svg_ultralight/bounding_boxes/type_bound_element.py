@@ -11,7 +11,6 @@ all be updated as the BoundElement instance is updated.
 :created: 2022-12-09
 """
 
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

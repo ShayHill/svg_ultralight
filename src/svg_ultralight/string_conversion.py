@@ -7,6 +7,7 @@ Rounding some numbers to ensure quality svg rendering:
 * Rounding floats to six digits after the decimal
 * Rounding viewBox dimensions to ints
 """
+
 from __future__ import annotations
 
 from enum import Enum

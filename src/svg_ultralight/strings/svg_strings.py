@@ -7,7 +7,6 @@ The `string_conversion` module will format floats or strings. Some other formatt
 make things easier.
 """
 
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -62,7 +62,6 @@ enough to lay out text on a business card.
 :created: 2021-11-28
 """
 
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

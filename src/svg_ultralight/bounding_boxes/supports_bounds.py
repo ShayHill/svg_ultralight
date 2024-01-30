@@ -15,6 +15,7 @@ Attributes:
 :author: Shay Hill
 :created: 2023-02-15
 """
+
 from typing import Protocol
 
 

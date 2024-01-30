@@ -10,6 +10,7 @@ Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
 Inkscape changed their command-line interface with version 1.0. These functions
 should work with all Inkscape versions. Please report any issues.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

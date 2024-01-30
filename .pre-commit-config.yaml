@@ -6,7 +6,7 @@ exclude: "tests"
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.5.0
   hooks:
     - id: check-added-large-files
     - id: check-ast
@@ -25,7 +25,6 @@ repos:
     - id: check-yaml
     - id: debug-statements
     - id: destroyed-symlinks
-    - id: detect-aws-credentials
     - id: detect-private-key
     - id: end-of-file-fixer
     - id: mixed-line-ending
@@ -43,12 +42,12 @@ repos:
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.5.1
+  rev: v1.8.0
   hooks:
   - id: mypy
     name: mypy
     language: python
-    language_version: python 3.11
+    language_version: python 3.12
     types: [python]
     require_serial: true
     verbose: true
@@ -59,20 +58,20 @@ repos:
     # files: ^(src/|tests/)
 
 - repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
   - id: isort
     args: ["--profile", "black", "--filter-files", "--combine-as"]
 
 - repo: https://github.com/psf/black
-  rev: 23.9.1
+  rev: 24.1.1
   hooks:
   - id: black
     language_version: python3.9
     args: ["--skip-magic-trailing-comma"]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.13.0
+  rev: v3.15.0
   hooks:
   - args:
     - --py39-plus
@@ -88,26 +87,27 @@ repos:
 #   hooks:
 #   - id: commitizen
 
-- repo: https://github.com/pre-commit/mirrors-pylint
-  rev: v3.0.0a5
-  hooks:
-  - id: pylint
-    exclude: "tests"
-    name: pylint
-    args:
-    - --good-names=i,j,_,f,x,y,x2,y2,cx,cy,x_,y_,r,g,b,e,get_viewBox_str
-    - --disable=protected-access
-    - --disable=no-member
-    - --disable=import-error
-    - --disable=no-name-in-module
-    - --disable=too-many-arguments
-    - --disable=too-many-instance-attributes
-    - --disable=unnecessary-ellipsis
-    - --load-plugins=pylint.extensions.docparams
-    - --accept-no-param-doc=n
-    - --accept-no-raise-doc=n
-    - --accept-no-return-doc=n
-    - --accept-no-yields-doc=n
+# Pylint is still broken in Python 3.12
+# - repo: https://github.com/pre-commit/mirrors-pylint
+#   rev: v3.0.0a5
+#   hooks:
+#   - id: pylint
+#     exclude: "tests"
+#     name: pylint
+#     args:
+#     - --good-names=i,j,_,f,x,y,x2,y2,cx,cy,x_,y_,r,g,b,e,get_viewBox_str
+#     - --disable=protected-access
+#     - --disable=no-member
+#     - --disable=import-error
+#     - --disable=no-name-in-module
+#     - --disable=too-many-arguments
+#     - --disable=too-many-instance-attributes
+#     - --disable=unnecessary-ellipsis
+#     - --load-plugins=pylint.extensions.docparams
+#     - --accept-no-param-doc=n
+#     - --accept-no-raise-doc=n
+#     - --accept-no-return-doc=n
+#     - --accept-no-yields-doc=n
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   # ignores
@@ -134,7 +134,7 @@ repos:
   # D407 [*] Missing dashed underline after section ("Attributes")
   # D406 [*] Section name should end with a newline ("Attributes")
   # S320 Using `lxml` to parse untrusted data is known to be vulnerable to XML attacks
-  rev: 'v0.0.291'
+  rev: 'v0.1.15'
   hooks:
     - id: ruff
       exclude: "tests"
@@ -146,6 +146,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.329
+  rev: v1.1.349
   hooks:
     - id: pyright

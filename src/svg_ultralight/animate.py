@@ -5,6 +5,7 @@ Requires: pillow, which is an optional project dependency.
 :author: Shay Hill
 :created: 7/26/2020
 """
+
 from __future__ import annotations
 
 try:

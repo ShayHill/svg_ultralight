@@ -3,6 +3,7 @@
 :author: Shay Hill
 :created: 2022-12-09
 """
+
 from __future__ import annotations
 
 import warnings
