@@ -6,10 +6,10 @@ authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["lxml", "pillow", "paragraphs"]
+dependencies = ["lxml", "pillow", "paragraphs", "types-lxml"]
 
 [project.optional-dependencies]
-dev = ["types-lxml", "pytest", "commitizen", "pre-commit", "tox"]
+dev = ["pytest", "commitizen", "pre-commit", "tox"]
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
