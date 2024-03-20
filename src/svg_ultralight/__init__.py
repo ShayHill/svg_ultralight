@@ -26,7 +26,11 @@ from svg_ultralight.metadata import new_metadata
 from svg_ultralight.nsmap import NSMAP, new_qname
 from svg_ultralight.query import pad_text
 from svg_ultralight.root_elements import new_svg_root_around_bounds
-from svg_ultralight.string_conversion import format_number, format_numbers
+from svg_ultralight.string_conversion import (
+    format_number,
+    format_numbers,
+    format_numbers_in_string,
+)
 
 __all__ = [
     "BoundElement",
@@ -37,6 +41,7 @@ __all__ = [
     "deepcopy_element",
     "format_number",
     "format_numbers",
+    "format_numbers_in_string",
     "new_element",
     "new_metadata",
     "new_qname",

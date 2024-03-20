@@ -4,8 +4,6 @@
 :created: 2023-09-23
 """
 
-import pytest
-
 import svg_ultralight.string_conversion as mod
 
 
@@ -58,9 +56,11 @@ class TestFormatAttrDict:
             "d": "M1,0 Q 0,0.333333 1,2z"
         }
 
-    def test_invalid_datastring(self):
-        """Raise ValueError if d value is not a string."""
-        assert pytest.raises(ValueError, mod.format_attr_dict, d=1)
+    def test_format_string(self):
+        """Format floats in a format SVG attribute string."""
+        assert mod.format_attr_dict(
+            transform="translate(1.0, -0) scale(1.0, 1.0)"
+        ) == {"transform": "translate(1, 0) scale(1, 1)"}
 
     def test_trailing_underscore(self):
         """Remove trailing underscore from key."""

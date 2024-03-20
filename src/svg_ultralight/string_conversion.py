@@ -11,6 +11,7 @@ Rounding some numbers to ensure quality svg rendering:
 from __future__ import annotations
 
 import re
+from contextlib import suppress
 from enum import Enum
 from typing import TYPE_CHECKING, cast
 
@@ -71,15 +72,23 @@ def _is_float_or_float_str(data: float | str) -> bool:
         return True
 
 
-def _format_datastring(data: str) -> str:
+def format_numbers_in_string(data: float | str) -> str:
     """Find and format floats in a string.
 
-    :param data: string with floats
+    :param data: string with floats or a float value
     :return: string with floats formatted to limited precision
 
-    Will correctly handle input floats in exponential notation.
+    Works as a more robust version of format_number. Will correctly handle input
+    floats in exponential notation. This should work for and parameter value in an
+    svg except 'text'. The function will fail with input strings like
+    'ice3.14bucket', because 'e3.14' will be identified as a float. SVG param values
+    will not have such strings, but the 'text' attribute could. This function will
+    not handle that case. Do not attempt to reformat 'text' attribute values.
     """
-    words = re.split(r"([^\d.eE-]+)", data)
+    with suppress(ValueError):
+        # try as a regular number to strip spaces from simple float strings
+        return format_number(data)
+    words = re.split(r"([^\d.eE-]+)", str(data))
     words = [format_number(w) if _is_float_or_float_str(w) else w for w in words]
     return "".join(words)
 
@@ -114,15 +123,10 @@ def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
     else:
         key_ = key.rstrip("_").replace("_", "-")
 
-    if key_ == "d":
-        if isinstance(val, str):
-            return key_, _format_datastring(val)
-        msg = f"Expected string for 'd' attribute, got {val} of type {type(val)}"
-        raise ValueError(msg)
+    if key_ == "text":
+        return key_, str(val)
 
-    if _is_float_or_float_str(val) and key_ != "text":
-        return key_, format_number(val)
-    return key_, str(val)
+    return key_, format_numbers_in_string(val)
 
 
 def format_attr_dict(**attributes: str | float) -> dict[str, str]:
