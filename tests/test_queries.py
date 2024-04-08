@@ -28,12 +28,6 @@ if not INKSCAPE.with_suffix(".exe").exists():
 
 
 class TestMergeBoundingBoxes:
-    def test_merge_deprecation_warning(self):
-        bbox_a = BoundingBox(-2, -4, 10, 20)
-        bbox_b = BoundingBox(0, 0, 10, 10)
-        assert pytest.warns(DeprecationWarning, BoundingBox.merge, bbox_a, bbox_b)
-        with pytest.warns(DeprecationWarning):
-            assert bbox_a.merge(bbox_b) == BoundingBox.merged(bbox_a, bbox_b)
 
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)

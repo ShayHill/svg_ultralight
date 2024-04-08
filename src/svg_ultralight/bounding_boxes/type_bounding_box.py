@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import warnings
 from dataclasses import dataclass
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -286,12 +285,6 @@ class BoundingBox(SupportsBounds):
         :return: a bounding box around self and other bounding boxes
         :raises DeprecationWarning:
         """
-        warnings.warn(
-            "Method a.merge(b, c) is deprecated. "
-            + "Use classmethod BoundingBox.merged(a, b, c) instead.",
-            category=DeprecationWarning,
-            stacklevel=1,
-        )
         return BoundingBox.merged(self, *others)
 
     @classmethod
