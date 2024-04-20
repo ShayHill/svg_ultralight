@@ -4,6 +4,8 @@
 :created: 2023-09-23
 """
 
+# pyright: reportPrivateUsage=false
+
 import svg_ultralight.string_conversion as mod
 
 
@@ -25,6 +27,36 @@ class TestFormatNumbers:
     def test_explicit(self):
         """Return list of formatted strings."""
         assert mod.format_numbers([1, 2, 3]) == ["1", "2", "3"]
+
+
+class TestFormatNumbersInString:
+    def test_empty(self):
+        """Return empty string."""
+        assert mod.format_numbers_in_string("") == ""
+
+    def test_no_numbers(self):
+        """Return string with no changes."""
+        assert mod.format_numbers_in_string("hello") == "hello"
+
+    def test_numbers(self):
+        """Return string with numbers formatted."""
+        assert mod.format_numbers_in_string("1.0000000001") == "1"
+
+    def test_skip_text(self):
+        """Skip text."""
+        key = "text"
+        val = "1.000000000000000000"
+        assert mod._fix_key_and_format_val(key, val) == (key, val)
+
+    def test_skip_id(self):
+        """Skip text."""
+        key = "id"
+        val = "1.000000000000000000"
+        assert mod._fix_key_and_format_val(key, val) == (key, val)
+
+    def test_skip_hex_colors(self):
+        """Skip hex colors."""
+        assert mod.format_numbers_in_string("#000000") == "#000000"
 
 
 class TestFormatAttrDict:

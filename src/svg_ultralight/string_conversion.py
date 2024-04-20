@@ -79,15 +79,18 @@ def format_numbers_in_string(data: float | str) -> str:
     :return: string with floats formatted to limited precision
 
     Works as a more robust version of format_number. Will correctly handle input
-    floats in exponential notation. This should work for and parameter value in an
-    svg except 'text'. The function will fail with input strings like
-    'ice3.14bucket', because 'e3.14' will be identified as a float. SVG param values
-    will not have such strings, but the 'text' attribute could. This function will
-    not handle that case. Do not attempt to reformat 'text' attribute values.
+    floats in exponential notation. This should work for any parameter value in an
+    svg except 'text', 'id' and for any other value except hex color codes. The
+    function will fail with input strings like 'ice3.14bucket', because 'e3.14' will
+    be identified as a float. SVG param values will not have such strings, but the
+    'text' attribute could. This function will not handle that case. Do not attempt
+    to reformat 'text' attribute values.
     """
     with suppress(ValueError):
         # try as a regular number to strip spaces from simple float strings
         return format_number(data)
+    if str(data).startswith("#"):
+        return str(data)
     words = re.split(r"([^\d.eE-]+)", str(data))
     words = [format_number(w) if _is_float_or_float_str(w) else w for w in words]
     return "".join(words)
@@ -123,7 +126,7 @@ def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
     else:
         key_ = key.rstrip("_").replace("_", "-")
 
-    if key_ == "text":
+    if key_ in {"id", "text"}:
         return key_, str(val)
 
     return key_, format_numbers_in_string(val)
