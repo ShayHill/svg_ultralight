@@ -20,6 +20,10 @@ build-backend = "setuptools.build_meta"
 addopts = "--doctest-modules"
 
 
+[tool.isort]
+profile = "black"
+
+
 [tool.tox]
 legacy_tox_ini = """
     [tox]
