@@ -8,9 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes import bound_helpers as bound
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.main import new_svg_root
 
 if TYPE_CHECKING:
@@ -64,15 +63,8 @@ def new_svg_root_around_bounds(
     :return: root svg element
     :raise ValueError: if no bounding boxes are found in bounded
     """
-    bboxes = [x for x in bounded if isinstance(x, BoundingBox)]
-    bboxes += [x.bbox for x in bounded if isinstance(x, BoundElement)]
-    bboxes += [x.padded_bbox for x in bounded if isinstance(x, PaddedText)]
-
-    if not bboxes:
-        msg = "no bounding boxes found"
-        raise ValueError(msg)
-
-    viewbox = _viewbox_args_from_bboxes(*bboxes)
+    bbox = bound.new_bbox_union(*bounded)
+    viewbox = _viewbox_args_from_bboxes(bbox)
     return new_svg_root(
         x_=viewbox["x_"],
         y_=viewbox["y_"],

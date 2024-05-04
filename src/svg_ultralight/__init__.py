@@ -4,6 +4,11 @@
 :created: 12/22/2019.
 """
 
+from svg_ultralight.bounding_boxes.bound_helpers import (
+    new_bbox_union,
+    new_bound_union,
+    new_element_union,
+)
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
@@ -27,6 +32,7 @@ from svg_ultralight.nsmap import NSMAP, new_qname
 from svg_ultralight.query import pad_text
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.string_conversion import (
+    format_attr_dict,
     format_number,
     format_numbers,
     format_numbers_in_string,
@@ -39,10 +45,14 @@ __all__ = [
     "PaddedText",
     "SupportsBounds",
     "deepcopy_element",
+    "format_attr_dict",
     "format_number",
     "format_numbers",
     "format_numbers_in_string",
+    "new_bbox_union",
+    "new_bound_union",
     "new_element",
+    "new_element_union",
     "new_metadata",
     "new_qname",
     "new_sub_element",
