@@ -17,10 +17,7 @@ from svg_ultralight import new_svg_root
 from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.query import BoundingBox, map_ids_to_bounding_boxes
 
-INKSCAPE = Path(
-    r"C:\\Program Files\\WindowsApps\\25415Inkscape.Inkscape_1.3.2.0"
-    + "_x64__9waqn51p1ttv2\\VFS\\ProgramFilesX64\\Inkscape\\bin\\inkscape.exe"
-)
+INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
 if not INKSCAPE.with_suffix(".exe").exists():
     msg = "Inkscape not found. Please install Inkscape or update the INKSCAPE path var."
