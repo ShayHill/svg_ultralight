@@ -180,4 +180,4 @@ class TestAlterBoundingBox:
         bbox.y = 200
         bbox.height = 200
         bbox.height = 40
-        assert bbox.transform == (1, 0, 0, 1, 90, 180)
+        assert bbox.transformation == (1, 0, 0, 1, 90, 180)
