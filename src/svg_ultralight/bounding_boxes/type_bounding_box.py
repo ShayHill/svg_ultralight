@@ -10,7 +10,7 @@ import dataclasses
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.string_conversion import format_number
-from svg_ultralight.transformations import mat_apply, mat_dot
+from svg_ultralight.transformations import mat_apply, mat_dot, new_transformation_matrix
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -111,11 +111,7 @@ class BoundingBox(SupportsBounds):
         to pass "by hand". The transformation matrix is the sensible argument to pass
         when applying a transformation from another bounding box instance.
         """
-        transformation = transformation or (1, 0, 0, 1, 0, 0)
-        scale = scale or 1
-        dx = dx or 0
-        dy = dy or 0
-        tmat = mat_dot((scale, 0, 0, scale, dx, dy), transformation)
+        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
         self._transformation = mat_dot(tmat, self.transformation)
 
     @property
@@ -325,3 +321,181 @@ class BoundingBox(SupportsBounds):
         min_y = min(x.y for x in bboxes)
         max_y = max(x.y + x.height for x in bboxes)
         return BoundingBox(min_x, min_y, max_x - min_x, max_y - min_y)
+
+
+class HasBoundingBox(SupportsBounds):
+    """A parent class for BoundElement and others that have a bbox attribute."""
+
+    def __init__(self, bbox: BoundingBox) -> None:
+        """Initialize the HasBoundingBox instance."""
+        self.bbox = bbox
+
+    @property
+    def transformation(self) -> _Matrix:
+        """The transformation matrix of the bounding box."""
+        return self.bbox.transformation
+
+    def transform(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+    ):
+        """Transform the element and bounding box.
+
+        :param transformation: a 6-tuple transformation matrix
+        :param scale: a scaling factor
+        :param dx: the x translation
+        :param dy: the y translation
+        """
+        self.bbox.transform(transformation, scale=scale, dx=dx, dy=dy)
+
+    @property
+    def scale(self) -> float:
+        """The scale of the bounding box.
+
+        :return: the scale of the bounding box
+        """
+        return self.transformation[0]
+
+    @scale.setter
+    def scale(self, value: float):
+        """Set the scale of the bounding box.
+
+        :param value: the scale of the bounding box
+        """
+        self.transform(scale=value / self.scale)
+
+    @property
+    def x(self) -> float:
+        """The x coordinate of the left edge of the bounding box.
+
+        :return: the x coordinate of the left edge of the bounding box
+        """
+        return self.bbox.x
+
+    @x.setter
+    def x(self, value: float):
+        """Set the x coordinate of the left edge of the bounding box.
+
+        :param value: the new x coordinate of the left edge of the bounding box
+        """
+        self.transform(dx=value - self.x)
+
+    @property
+    def x2(self) -> float:
+        """The x coordinate of the right edge of the bounding box.
+
+        :return: the x coordinate of the right edge of the bounding box
+        """
+        return self.bbox.x2
+
+    @x2.setter
+    def x2(self, value: float):
+        """Set the x coordinate of the right edge of the bounding box.
+
+        :param value: the new x coordinate of the right edge of the bounding box
+        """
+        self.x += value - self.x2
+
+    @property
+    def cx(self) -> float:
+        """The x coordinate of the center of the bounding box.
+
+        :return: the x coordinate of the center of the bounding box
+        """
+        return self.bbox.cx
+
+    @cx.setter
+    def cx(self, value: float):
+        """Set the x coordinate of the center of the bounding box.
+
+        :param value: the new x coordinate of the center of the bounding box
+        """
+        self.x += value - self.cx
+
+    @property
+    def y(self) -> float:
+        """The y coordinate of the top edge of the bounding box.
+
+        :return: the y coordinate of the top edge of the bounding box
+        """
+        return self.bbox.y
+
+    @y.setter
+    def y(self, value: float):
+        """Set the y coordinate of the top edge of the bounding box.
+
+        :param value: the new y coordinate of the top edge of the bounding box
+        """
+        self.transform(dy=value - self.y)
+
+    @property
+    def y2(self) -> float:
+        """The y coordinate of the bottom edge of the bounding box.
+
+        :return: the y coordinate of the bottom edge of the bounding box
+        """
+        return self.bbox.y2
+
+    @y2.setter
+    def y2(self, value: float):
+        """Set the y coordinate of the bottom edge of the bounding box.
+
+        :param value: the new y coordinate of the bottom edge of the bounding box
+        """
+        self.y += value - self.y2
+
+    @property
+    def cy(self) -> float:
+        """The y coordinate of the center of the bounding box.
+
+        :return: the y coordinate of the center of the bounding box
+        """
+        return self.bbox.cy
+
+    @cy.setter
+    def cy(self, value: float):
+        """Set the y coordinate of the center of the bounding box.
+
+        :param value: the new y coordinate of the center of the bounding box
+        """
+        self.y += value - self.cy
+
+    @property
+    def width(self) -> float:
+        """The width of the bounding box.
+
+        :return: the width of the bounding box
+        """
+        return self.bbox.width
+
+    @width.setter
+    def width(self, value: float):
+        """Set the width of the bounding box.
+
+        :param value: the new width of the bounding box
+        """
+        current_x = self.x
+        current_y = self.y
+        self.scale *= value / self.width
+        self.x = current_x
+        self.y = current_y
+
+    @property
+    def height(self) -> float:
+        """The height of the bounding box.
+
+        :return: the height of the bounding box
+        """
+        return self.bbox.height
+
+    @height.setter
+    def height(self, value: float):
+        """Set the height of the bounding box.
+
+        :param value: the new height of the bounding box
+        """
+        self.width *= value / self.height
