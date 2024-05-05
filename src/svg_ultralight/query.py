@@ -118,7 +118,8 @@ def map_ids_to_bounding_boxes(
 
     id2bbox: dict[str, BoundingBox] = {}
     for id_, *bounds in (x.split(",") for x in bb_strings):
-        id2bbox[id_] = BoundingBox(*(float(x) for x in bounds))
+        x, y, width, height = (float(x) for x in bounds)
+        id2bbox[id_] = BoundingBox(x, y, width, height)
     return id2bbox
 
 

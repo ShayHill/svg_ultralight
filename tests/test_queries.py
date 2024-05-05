@@ -7,15 +7,14 @@ A quick test. Won't be able to run it till you change INKSCAPE to the correct pa
 your system.
 """
 
-import math
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
-from svg_ultralight import new_svg_root
+from svg_ultralight import BoundingBox, new_svg_root
 from svg_ultralight.constructors import new_sub_element
-from svg_ultralight.query import BoundingBox, map_ids_to_bounding_boxes
+from svg_ultralight.query import map_ids_to_bounding_boxes
 
 INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
@@ -25,7 +24,6 @@ if not INKSCAPE.with_suffix(".exe").exists():
 
 
 class TestMergeBoundingBoxes:
-
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
@@ -72,45 +70,45 @@ class TestBoundingBox:
         assert bbox.width == 9000.0
         assert bbox.height == 12000.0
 
-    def test_x(self, bounding_box):
+    def test_x(self, bounding_box: BoundingBox):
         assert bounding_box.x == 0.0
         bounding_box.x = 50.0
         assert bounding_box.x == 50.0
         assert bounding_box.cx == 100.0
 
-    def test_x2(self, bounding_box):
+    def test_x2(self, bounding_box: BoundingBox):
         assert bounding_box.x2 == 100.0
         bounding_box.x2 = 150.0
         assert bounding_box.x2 == 150.0
         assert bounding_box.cx == 100.0
 
-    def test_y(self, bounding_box):
+    def test_y(self, bounding_box: BoundingBox):
         assert bounding_box.y == 0.0
         bounding_box.y = 50.0
         assert bounding_box.y == 50.0
         assert bounding_box.cy == 150.0
 
-    def test_y2(self, bounding_box):
+    def test_y2(self, bounding_box: BoundingBox):
         assert bounding_box.y2 == 200.0
         bounding_box.y2 = 250.0
         assert bounding_box.y2 == 250.0
         assert bounding_box.cy == 150.0
 
-    def test_width(self, bounding_box):
+    def test_width(self, bounding_box: BoundingBox):
         assert bounding_box.width == 100.0
         bounding_box.width = 150.0
         assert bounding_box.width == 150.0
         assert bounding_box.x2 == 150.0
 
-    def test_height(self, bounding_box):
+    def test_height(self, bounding_box: BoundingBox):
         assert bounding_box.height == 200.0
         bounding_box.height = 250.0
         assert bounding_box.height == 250.0
         assert bounding_box.y2 == 250.0
 
-    def test_transform_string(self, bounding_box):
+    def test_transform_string(self, bounding_box: BoundingBox):
         transform_string = bounding_box.transform_string
-        assert transform_string == "scale(1) translate(0 0)"
+        assert transform_string == "matrix(1 0 0 1 0 0)"
 
     def test_merge(self):
         bbox1 = MockSupportsBounds(0, 0, 100, 200)
@@ -182,6 +180,4 @@ class TestAlterBoundingBox:
         bbox.y = 200
         bbox.height = 200
         bbox.height = 40
-        assert math.isclose(bbox.scale, 1)
-        assert math.isclose(bbox._translation_x, 90)  # type: ignore
-        assert math.isclose(bbox._translation_y, 180)  # type: ignore
+        assert bbox.transform == (1, 0, 0, 1, 90, 180)

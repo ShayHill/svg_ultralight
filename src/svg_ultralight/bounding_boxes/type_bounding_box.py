@@ -6,13 +6,51 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import dataclasses
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.string_conversion import format_number
 
+Matrix = tuple[float, float, float, float, float, float]
 
-@dataclass
+
+def mat_dot(mat1: Matrix, mat2: Matrix) -> Matrix:
+    """Matrix multiplication for svg-style matrices.
+
+    :param mat1: transformation matrix (sx, 0, 0, sy, tx, ty)
+    :param mat2: transformation matrix (sx, 0, 0, sy, tx, ty)
+
+    Svg uses an unusual matrix format. For 3x3 transformation matrix
+
+    [[00, 01, 02],
+     [10, 11, 12],
+     [20, 21, 22]]
+
+    The svg matrix is
+    (00, 10, 01, 11, 02, 12)
+
+    Values 10 and 01 are only used for skewing, which is not supported by a bounding
+    box, but they're here if this function is used in other ways.
+    """
+    aa = sum(mat1[x] * mat2[y] for x, y in ((0, 0), (2, 1)))
+    bb = sum(mat1[x] * mat2[y] for x, y in ((1, 0), (3, 1)))
+    cc = sum(mat1[x] * mat2[y] for x, y in ((0, 2), (2, 3)))
+    dd = sum(mat1[x] * mat2[y] for x, y in ((1, 2), (3, 3)))
+    ee = sum(mat1[x] * mat2[y] for x, y in ((0, 4), (2, 5))) + mat1[4]
+    ff = sum(mat1[x] * mat2[y] for x, y in ((1, 4), (3, 5))) + mat1[5]
+    return (aa, bb, cc, dd, ee, ff)
+
+
+def mat_apply(mat1: Matrix, mat2: tuple[float, float]) -> tuple[float, float]:
+    """Apply an svg-style transformation matrix to a point.
+
+    :param mat1: transformation matrix (sx, 0, 0, sy, tx, ty)
+    :param mat2: point (x, y)
+    """
+    return mat1[0] * mat2[0] + mat1[4], mat1[3] * mat2[1] + mat1[5]
+
+
+@dataclasses.dataclass
 class BoundingBox(SupportsBounds):
     """Mutable bounding box object for svg_ultralight.
 
@@ -21,14 +59,12 @@ class BoundingBox(SupportsBounds):
     :param width: width of the bounding box
     :param height: height of the bounding box
 
-    The below optional parameters, in addition to the required parameters, capture
-    the entire state of a BoundingBox instance.  They could be used to make a copy or
+    The below optional parameter, in addition to the required parameters, captures
+    the entire state of a BoundingBox instance. It could be used to make a copy or
     to initialize a transformed box with the same transform_string as another box.
-    Under most circumstances, they will not be used.
+    Under most circumstances, it will not be used.
 
-    :param scale: scale of the bounding box
-    :param translation_x: x translation of the bounding box
-    :param translation_y: y translation of the bounding box
+    :param _transform: transformation matrix
 
     Functions that return a bounding box will return a BoundingBox instance. This
     instance can be transformed (uniform scale and translate only). Transformations
@@ -37,8 +73,8 @@ class BoundingBox(SupportsBounds):
     Define the bbox with x=, y=, width=, height=
 
     Transform the BoundingBox by setting these variables. Each time you set x, cx,
-    x2, y, cy, y2, width, or height, private transformation values (_scale,
-    _transform_x, and _transform_y) will be updated.
+    x2, y, cy, y2, width, or height, private transformation value _transform will be
+    updated.
 
     The ultimate transformation can be accessed through ``.transformation_string``.
     So the workflow will look like :
@@ -78,13 +114,19 @@ class BoundingBox(SupportsBounds):
     _y: float
     _width: float
     _height: float
-    _scale: float = 1.0
-    _translation_x: float = 0.0
-    _translation_y: float = 0.0
+    _transform: Matrix = (1, 0, 0, 1, 0, 0)
+
+    @property
+    def transform(self) -> Matrix:
+        """Get read only tranformation matrix.
+
+        :return: transformation matrix of the bounding box
+        """
+        return self._transform
 
     @property
     def scale(self) -> float:
-        """Read-only scale.
+        """Get scale of the bounding box.
 
         :return: uniform scale of the bounding box
 
@@ -95,7 +137,7 @@ class BoundingBox(SupportsBounds):
         width*scale, height => height*scale, scale => scale*scale. This matches how
         scale works in almost every other context.
         """
-        return self._scale
+        return self._transform[0]
 
     @scale.setter
     def scale(self, value: float) -> None:
@@ -110,7 +152,7 @@ class BoundingBox(SupportsBounds):
         `scale = 2` -> ignore whatever scale was previously defined and set scale to 2
         `scale *= 2` -> make it twice as big as it was.
         """
-        self._scale = value
+        self._add_transform(value / self.scale, 0, 0)
 
     @property
     def x(self) -> float:
@@ -118,7 +160,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _x value transformed by scale and translation
         """
-        return (self._translation_x + self._x) * self._scale
+        return mat_apply(self._transform, (self._x, 0))[0]
 
     @x.setter
     def x(self, value: float) -> None:
@@ -142,7 +184,7 @@ class BoundingBox(SupportsBounds):
 
         :param value: new center x value after transformation
         """
-        self._add_transform(1, value - self.cx, 0)
+        self.x += value - self.cx
 
     @property
     def x2(self) -> float:
@@ -158,7 +200,7 @@ class BoundingBox(SupportsBounds):
 
         :param value: new x2 value after transformation
         """
-        self._add_transform(1, value - self.x2, 0)
+        self.x += value - self.x2
 
     @property
     def y(self) -> float:
@@ -166,7 +208,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _y value transformed by scale and translation
         """
-        return (self._translation_y + self._y) * self._scale
+        return mat_apply(self._transform, (0, self._y))[1]
 
     @y.setter
     def y(self, value: float) -> None:
@@ -190,7 +232,7 @@ class BoundingBox(SupportsBounds):
 
         :param value: new center y value after transformation
         """
-        self._add_transform(1, 0, value - self.cy)
+        self.y += value - self.cy
 
     @property
     def y2(self) -> float:
@@ -206,7 +248,7 @@ class BoundingBox(SupportsBounds):
 
         :param value: new y2 value after transformation
         """
-        self.y = value - self.height
+        self.y += value - self.y2
 
     @property
     def width(self) -> float:
@@ -214,7 +256,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _width value transformed by scale
         """
-        return self._width * self._scale
+        return self._width * self.scale
 
     @width.setter
     def width(self, value: float) -> None:
@@ -227,7 +269,7 @@ class BoundingBox(SupportsBounds):
         """
         current_x = self.x
         current_y = self.y
-        self._scale *= value / self.width
+        self.scale *= value / self.width
         self.x = current_x
         self.y = current_y
 
@@ -237,7 +279,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _height value transformed by scale
         """
-        return self._height * self._scale
+        return self._height * self.scale
 
     @height.setter
     def height(self, value: float) -> None:
@@ -250,18 +292,15 @@ class BoundingBox(SupportsBounds):
         """
         self.width = value * self.width / self.height
 
-    def _add_transform(self, scale: float, translation_x: float, translation_y: float):
+    def _add_transform(self, scale: float, dx: float, dy: float):
         """Transform the bounding box by updating the transformation attributes.
 
         :param scale: scale factor
-        :param translation_x: x translation
-        :param translation_y: y translation
-
-        Transformation attributes are _translation_x, _translation_y, and _scale
+        :param dx: x translation
+        :param dy: y translation
         """
-        self._translation_x += translation_x / self._scale
-        self._translation_y += translation_y / self._scale
-        self._scale *= scale
+        tmat = (scale, 0, 0, scale, dx, dy)
+        self._transform = mat_dot(tmat, self._transform)
 
     @property
     def transform_string(self) -> str:
@@ -272,11 +311,7 @@ class BoundingBox(SupportsBounds):
         Use with
         ``update_element(elem, transform=bbox.transform_string)``
         """
-        scale, trans_x, trans_y = (
-            format_number(x)
-            for x in (self._scale, self._translation_x, self._translation_y)
-        )
-        return f"scale({scale}) translate({trans_x} {trans_y})"
+        return f"matrix({' '.join(map(format_number, self._transform))})"
 
     def merge(self, *others: BoundingBox) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
