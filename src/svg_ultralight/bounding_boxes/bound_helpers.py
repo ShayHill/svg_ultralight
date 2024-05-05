@@ -18,6 +18,8 @@ from svg_ultralight.constructors import new_element
 if TYPE_CHECKING:
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 
+_Matrix = tuple[float, float, float, float, float, float]
+
 
 def new_element_union(
     *elems: EtreeElement | SupportsBounds, **attributes: float | str

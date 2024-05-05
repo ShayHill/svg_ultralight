@@ -11,10 +11,10 @@ import dataclasses
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.string_conversion import format_number
 
-Matrix = tuple[float, float, float, float, float, float]
+_Matrix = tuple[float, float, float, float, float, float]
 
 
-def mat_dot(mat1: Matrix, mat2: Matrix) -> Matrix:
+def mat_dot(mat1: _Matrix, mat2: _Matrix) -> _Matrix:
     """Matrix multiplication for svg-style matrices.
 
     :param mat1: transformation matrix (sx, 0, 0, sy, tx, ty)
@@ -43,7 +43,7 @@ def mat_dot(mat1: Matrix, mat2: Matrix) -> Matrix:
     return (aa, bb, cc, dd, ee, ff)
 
 
-def mat_apply(mat1: Matrix, mat2: tuple[float, float]) -> tuple[float, float]:
+def mat_apply(mat1: _Matrix, mat2: tuple[float, float]) -> tuple[float, float]:
     """Apply an svg-style transformation matrix to a point.
 
     :param mat1: transformation matrix (sx, 0, 0, sy, tx, ty)
@@ -116,15 +116,23 @@ class BoundingBox(SupportsBounds):
     _y: float
     _width: float
     _height: float
-    transformation: Matrix = (1, 0, 0, 1, 0, 0)
+    _transformation: _Matrix = (1, 0, 0, 1, 0, 0)
+
+    @property
+    def transformation(self) -> _Matrix:
+        """Return transformation matrix.
+
+        :return: transformation matrix
+        """
+        return self._transformation
 
     def transform(
         self,
-        transformation: Matrix = (1, 0, 0, 1, 0, 0),
+        transformation: _Matrix | None = None,
         *,
-        scale: float = 1,
-        dx: float = 0,
-        dy: float = 0,
+        scale: float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
     ):
         """Transform the bounding box by updating the transformation attribute.
 
@@ -140,8 +148,12 @@ class BoundingBox(SupportsBounds):
         to pass "by hand". The transformation matrix is the sensible argument to pass
         when applying a transformation from another bounding box instance.
         """
+        transformation = transformation or (1, 0, 0, 1, 0, 0)
+        scale = scale or 1
+        dx = dx or 0
+        dy = dy or 0
         tmat = mat_dot((scale, 0, 0, scale, dx, dy), transformation)
-        self.transformation = mat_dot(tmat, self.transformation)
+        self._transformation = mat_dot(tmat, self.transformation)
 
     @property
     def scale(self) -> float:
