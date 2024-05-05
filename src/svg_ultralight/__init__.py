@@ -10,7 +10,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     new_element_union,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
-from svg_ultralight.bounding_boxes.type_bound_confederation import BoundConfederation
+from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
@@ -41,7 +41,7 @@ from svg_ultralight.string_conversion import (
 from svg_ultralight.transformations import transform_element
 
 __all__ = [
-    "BoundConfederation",
+    "BoundCollection",
     "BoundElement",
     "BoundingBox",
     "NSMAP",

@@ -9,7 +9,7 @@ import math
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_bound_confederation import BoundConfederation
+from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 import copy
 from svg_ultralight.constructors import new_element
 
@@ -155,14 +155,14 @@ class TestPaddedText:
         assert math.isclose(bound_element.height, 252.76)
         assert bound_element.y2 == 203.0
 
-class TestBoundConfederation:
+class TestBoundCollection:
 
     @pytest.fixture
-    def bound_confederation(self) -> BoundConfederation:
+    def bound_collection(self) -> BoundCollection:
         elem = new_element("rect", x=0, y=0, width=100, height=200)
         bbox = BoundingBox(0, 0, 100, 200)
         blem = PaddedText(elem, bbox, 1, 2, 3, 4)
-        return BoundConfederation(blem, copy.deepcopy(elem))
+        return BoundCollection(blem, copy.deepcopy(elem))
 
     def test_blem_and_elem(self):
         """Test that bound element and unbound element transforms are the same."""
@@ -170,11 +170,11 @@ class TestBoundConfederation:
         bbox = BoundingBox(0, 0, 100, 200)
         blem = BoundElement(rect, bbox)
         elem = copy.deepcopy(rect)
-        bound_confederation = BoundConfederation(blem, elem)
-        bound_confederation.x = -4
-        bound_confederation.scale = 10
-        bound_confederation.width = 60
-        bound_confederation.cy = -40
+        bound_collection = BoundCollection(blem, elem)
+        bound_collection.x = -4
+        bound_collection.scale = 10
+        bound_collection.width = 60
+        bound_collection.cy = -40
         blem_trans = blem.elem.attrib["transform"]
         elem_trans = elem.attrib["transform"]
         assert blem_trans == elem_trans

@@ -12,18 +12,18 @@ from typing import TYPE_CHECKING
 from lxml.etree import _Element as EtreeElement  # type: ignore
 
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_union
-from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
 if TYPE_CHECKING:
+    from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
     from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
 _Matrix = tuple[float, float, float, float, float, float]
 
 
 @dataclasses.dataclass
-class BoundConfederation(HasBoundingBox):
+class BoundCollection(HasBoundingBox):
     """A class to hold a list of bound elements and transform them together.
 
     This will transform the individual elements in place.
@@ -33,7 +33,7 @@ class BoundConfederation(HasBoundingBox):
     bbox: BoundingBox = dataclasses.field(init=False)
 
     def __init__(self, *blems: SupportsBounds | EtreeElement) -> None:
-        """Initialize the bound confederation.
+        """Initialize the bound collection.
 
         :param blems: bound elements to be transformed together
         """
