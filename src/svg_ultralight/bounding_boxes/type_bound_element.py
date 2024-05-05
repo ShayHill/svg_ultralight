@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
     from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
+_Matrix = tuple[float, float, float, float, float, float]
+
 
 class BoundElement(SupportsBounds):
     """An element with a bounding box.
@@ -42,6 +44,29 @@ class BoundElement(SupportsBounds):
 
     def _update_elem(self):
         self.elem.attrib["transform"] = self.bbox.transform_string
+
+    @property
+    def transformation(self) -> _Matrix:
+        """The transformation matrix of the bounding box."""
+        return self.bbox.transformation
+
+    def transform(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+    ):
+        """Transform the element and bounding box.
+
+        :param transformation: a 6-tuple transformation matrix
+        :param scale: a scaling factor
+        :param dx: the x translation
+        :param dy: the y translation
+        """
+        self.bbox.transform(transformation, scale=scale, dx=dx, dy=dy)
+        self._update_elem()
 
     @property
     def x(self) -> float:
