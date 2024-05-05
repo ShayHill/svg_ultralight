@@ -77,6 +77,25 @@ def get_transform_matrix(elem: EtreeElement) -> _Matrix:
     raise ValueError(msg)
 
 
+def new_transformation_matrix(
+    transformation: _Matrix | None = None,
+    *,
+    scale: float | None = None,
+    dx: float | None = None,
+    dy: float | None = None,
+) -> _Matrix:
+    """Create a new transformation matrix.
+
+    This takes the standard arguments in the BoundingBox classes and returns an
+    svg-style transformation matrix.
+    """
+    transformation = transformation or (1, 0, 0, 1, 0, 0)
+    scale = scale or 1
+    dx = dx or 0
+    dy = dy or 0
+    return mat_dot((scale, 0, 0, scale, dx, dy), transformation)
+
+
 def transform_element(elem: EtreeElement, matrix: _Matrix) -> EtreeElement:
     """Apply a transformation matrix to an svg element.
 
