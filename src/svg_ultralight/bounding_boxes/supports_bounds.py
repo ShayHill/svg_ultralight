@@ -16,13 +16,19 @@ Attributes:
 :created: 2023-02-15
 """
 
+from __future__ import annotations
+
 from typing import Protocol
+
+_Matrix = tuple[float, float, float, float, float, float]
 
 
 class SupportsBounds(Protocol):
     """Protocol for objects that can have bounds.
 
     Attributes:
+        transformation (_Matrix): An svg-style transformation matrix.
+        transform (method): Apply a transformation to the object.
         x (float): The minimum x coordinate.
         x2 (float): The maximum x coordinate.
         cx (float): The center x coordinate.
@@ -38,6 +44,22 @@ class SupportsBounds(Protocol):
     scale would modify the x and y coordinates. If you want to scale an object,
     set width and height.
     """
+
+    @property
+    def transformation(self) -> _Matrix:
+        """Return an svg-style transformation matrix."""
+        ...
+
+    def transform(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+    ):
+        """Apply a transformation to the object."""
+        ...
 
     @property
     def x(self) -> float:

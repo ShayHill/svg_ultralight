@@ -72,6 +72,8 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 if TYPE_CHECKING:
     from lxml.etree import _Element as EtreeElement  # type: ignore
 
+_Matrix = tuple[float, float, float, float, float, float]
+
 
 class PaddedText(SupportsBounds):
     """A line of text with a bounding box and padding."""
@@ -116,10 +118,31 @@ class PaddedText(SupportsBounds):
             self.lmargin, self.capline, self.padded_width, self.padded_height
         )
 
-    def _update(self, attrib: str, value: float) -> None:
-        """Update bbox attribute and keep elem synced."""
-        setattr(self.bbox, attrib, value)
+    @property
+    def transformation(self) -> _Matrix:
+        """The transformation matrix of the bounding box."""
+        return self.bbox.transformation
+
+    def _update_elem(self):
         self.elem.attrib["transform"] = self.bbox.transform_string
+
+    def transform(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+    ):
+        """Transform the element and bounding box.
+
+        :param transformation: a 6-tuple transformation matrix
+        :param scale: a scaling factor
+        :param dx: the x translation
+        :param dy: the y translation
+        """
+        self.bbox.transform(transformation, scale=scale, dx=dx, dy=dy)
+        self._update_elem()
 
     @property
     def tpad(self) -> float:
@@ -167,7 +190,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The left margin of this line of text.
         """
-        self._update("x", value + self.lpad)
+        self.transform(dx=value + self.lpad - self.bbox.x)
 
     @property
     def rmargin(self) -> float:
@@ -183,7 +206,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The right margin of this line of text.
         """
-        self._update("x2", value - self.rpad)
+        self.transform(dx=value - self.rpad - self.bbox.x2)
 
     @property
     def capline(self) -> float:
@@ -199,7 +222,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The top of this line of text.
         """
-        self._update("y", value + self.tpad)
+        self.transform(dy=value + self.tpad - self.bbox.y)
 
     @property
     def baseline(self) -> float:
@@ -215,7 +238,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The bottom of this line of text.
         """
-        self._update("y2", value - self.bpad)
+        self.transform(dy=value - self.bpad - self.bbox.y2)
 
     @property
     def padded_width(self) -> float:
@@ -239,8 +262,9 @@ class PaddedText(SupportsBounds):
         *and* y2) when scaling.
         """
         baseline = self.baseline
-        self._update("width", width - self.lpad - self.rpad)
+        self.bbox.width = width - self.lpad - self.rpad
         self.baseline = baseline
+        self._update_elem()
 
     @property
     def padded_height(self) -> float:
