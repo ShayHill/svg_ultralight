@@ -34,7 +34,7 @@ def write_gif(
     :param loop: how many times to loop gif. 0 -> forever
     :effects: write file to gif
     """
-    images = [Image.open(x) for x in pngs]
-    images[0].save(
+    images = [Image.open(x) for x in pngs]  # type: ignore
+    images[0].save(  # type: ignore
         gif, save_all=True, append_images=images[1:], duration=duration, loop=loop
     )
