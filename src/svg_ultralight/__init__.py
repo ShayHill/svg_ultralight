@@ -38,7 +38,12 @@ from svg_ultralight.string_conversion import (
     format_numbers,
     format_numbers_in_string,
 )
-from svg_ultralight.transformations import transform_element
+from svg_ultralight.transformations import (
+    mat_apply,
+    mat_dot,
+    mat_invert,
+    transform_element,
+)
 
 __all__ = [
     "BoundCollection",
@@ -52,6 +57,9 @@ __all__ = [
     "format_number",
     "format_numbers",
     "format_numbers_in_string",
+    "mat_apply",
+    "mat_dot",
+    "mat_invert",
     "new_bbox_union",
     "new_bound_union",
     "new_element",

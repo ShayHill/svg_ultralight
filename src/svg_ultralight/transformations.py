@@ -59,6 +59,20 @@ def mat_apply(mat1: _Matrix, mat2: tuple[float, float]) -> tuple[float, float]:
     return mat1[0] * mat2[0] + mat1[4], mat1[3] * mat2[1] + mat1[5]
 
 
+def mat_invert(tmat: _Matrix) -> _Matrix:
+    """Invert a 2D transformation matrix in svg format."""
+    a, b, c, d, e, f = tmat
+    det = a * d - b * c
+    return (
+        d / det,
+        -b / det,
+        -c / det,
+        a / det,
+        (c * f - d * e) / det,
+        (b * e - a * f) / det,
+    )
+
+
 def get_transform_matrix(elem: EtreeElement) -> _Matrix:
     """Get the transformation matrix from an svg element.
 
