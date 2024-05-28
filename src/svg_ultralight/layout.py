@@ -99,7 +99,7 @@ def _infer_scale(
     * print_h == 0 / viewbox_h > 0
 
     The print area is invalid, but there is special handling for this. Interpret
-    viewbox units as print_w.native_unit and determe print area from viewbox area 1
+    viewbox units as print_w.native_unit and determine print area from viewbox area 1
     to 1.
 
         >>> _infer_scale(Measurement("in"), Measurement("in"), 1, 2)
