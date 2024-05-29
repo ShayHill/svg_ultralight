@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 
 from svg_ultralight import BoundingBox, new_svg_root
-from svg_ultralight.constructors import new_sub_element
-from svg_ultralight.query import map_ids_to_bounding_boxes
+from svg_ultralight.constructors import new_element, new_sub_element
+from svg_ultralight.query import map_ids_to_bounding_boxes, pad_text
 
 INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
@@ -181,3 +181,15 @@ class TestAlterBoundingBox:
         bbox.height = 200
         bbox.height = 40
         assert bbox.transformation == (1, 0, 0, 1, 90, 180)
+
+
+class TestPadText:
+    def test_tspans(self) -> None:
+        """Text in tspan are padded the same as text in text."""
+        no_tspan = new_element("text", font_size=100, text="typography")
+        in_tspan = new_element("text")
+        _ = new_sub_element(in_tspan, "tspan", font_size=100, text="typography")
+        padded_with = pad_text(INKSCAPE, no_tspan)
+        padded_without = pad_text(INKSCAPE, in_tspan)
+        assert padded_with.bbox == padded_without.bbox
+        assert padded_with.padded_bbox == padded_without.padded_bbox

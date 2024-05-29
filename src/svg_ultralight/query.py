@@ -146,6 +146,19 @@ def get_bounding_box(
     return tuple(bboxes)
 
 
+def _replace_text(text_elem: EtreeElement, new_text: str) -> None:
+    """Replace the text in a text element.
+
+    :param text_elem: an etree element with a text tag
+    :param new_text: the new text to insert
+
+    If the text element has tspans, replace each tspan.text with new_text.
+    """
+    text_elem.text = new_text
+    for sub_elem in text_elem:
+        sub_elem.text = new_text
+
+
 def pad_text(
     inkscape: str | Path, text_elem: EtreeElement, capline_reference_char: str = "M"
 ) -> PaddedText:
@@ -166,7 +179,7 @@ def pad_text(
     _ = rmargin_ref.attrib.pop("id", None)
     _ = capline_ref.attrib.pop("id", None)
     rmargin_ref.attrib["text-anchor"] = "end"
-    capline_ref.text = capline_reference_char
+    _replace_text(capline_ref, capline_reference_char)
     id2bbox = map_ids_to_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
 
     bbox = id2bbox[text_elem.attrib["id"]]
