@@ -20,6 +20,7 @@ from svg_ultralight.constructors.new_element import (
     new_sub_element,
     update_element,
 )
+from svg_ultralight.import_svg import import_svg
 from svg_ultralight.inkscape import (
     write_pdf,
     write_pdf_from_svg,
@@ -57,6 +58,7 @@ __all__ = [
     "format_number",
     "format_numbers",
     "format_numbers_in_string",
+    "import_svg",
     "mat_apply",
     "mat_dot",
     "mat_invert",
