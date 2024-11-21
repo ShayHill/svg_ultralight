@@ -67,7 +67,7 @@ def _envelop_copies(*elem_args: EtreeElement) -> EtreeElement:
     :return: an etree element enveloping copies of elem_args with all views normalized
     """
     envelope = new_svg_root(0, 0, 1, 1, id_=f"envelope_{uuid.uuid4()}")
-    envelope.extend(deepcopy(e) for e in elem_args)
+    envelope.extend([deepcopy(e) for e in elem_args])
     _normalize_views(envelope)
     return envelope
 

@@ -65,8 +65,8 @@ def _wrap_bag(title: str) -> EtreeElement:
     """
     items = title.split(",")
     agent = new_element(new_qname("rdf", "Bag"))
-    for title in items:
-        _ = new_sub_element(agent, new_qname("rdf", "li"), text=title)
+    for title_item in items:
+        _ = new_sub_element(agent, new_qname("rdf", "li"), text=title_item)
     return agent
 
 
