@@ -7,6 +7,7 @@
 from svg_ultralight.transformations import mat_dot, mat_apply, mat_invert
 import random
 import math
+from contextlib import suppress
 
 
 class TestMat:
@@ -29,6 +30,7 @@ class TestMat:
                 random.randint(-10, 10),
                 random.randint(-10, 10),
             )
-            result = mat_dot(tmat, mat_invert(tmat))
-            for x, y in zip(result, identity):
-                assert math.isclose(x, y, abs_tol=0.0001)
+            with suppress(ValueError):
+                result = mat_dot(tmat, mat_invert(tmat))
+                for x, y in zip(result, identity):
+                    assert math.isclose(x, y, abs_tol=0.0001)

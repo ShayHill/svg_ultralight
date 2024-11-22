@@ -63,6 +63,9 @@ def mat_invert(tmat: _Matrix) -> _Matrix:
     """Invert a 2D transformation matrix in svg format."""
     a, b, c, d, e, f = tmat
     det = a * d - b * c
+    if det == 0:
+        msg = "Matrix is not invertible"
+        raise ValueError(msg)
     return (
         d / det,
         -b / det,
