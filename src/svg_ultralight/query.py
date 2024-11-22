@@ -11,22 +11,34 @@ business card). Getting bounding boxes from Inkscape is not exceptionally fast.
 
 from __future__ import annotations
 
+import hashlib
 import os
+import pickle
 import re
 import uuid
+from contextlib import suppress
 from copy import deepcopy
+from pathlib import Path
 from subprocess import PIPE, Popen
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryFile
 from typing import TYPE_CHECKING
+from warnings import warn
+
+from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.main import new_svg_root, write_svg
 
 if TYPE_CHECKING:
-    from pathlib import Path
 
     from lxml.etree import _Element as EtreeElement  # type: ignore
+
+
+with TemporaryFile() as f:
+    _CACHE_DIR = Path(f.name).parent / "svg_ultralight_cache"
+
+_CACHE_DIR.mkdir(exist_ok=True)
 
 
 def _fill_ids(*elem_args: EtreeElement) -> None:
@@ -66,7 +78,7 @@ def _envelop_copies(*elem_args: EtreeElement) -> EtreeElement:
     :param elem_args: one or more etree elements
     :return: an etree element enveloping copies of elem_args with all views normalized
     """
-    envelope = new_svg_root(0, 0, 1, 1, id_=f"envelope_{uuid.uuid4()}")
+    envelope = new_svg_root(0, 0, 1, 1)
     envelope.extend([deepcopy(e) for e in elem_args])
     _normalize_views(envelope)
     return envelope
@@ -106,6 +118,8 @@ def map_ids_to_bounding_boxes(
     a (0, 0, 1, 1) root. This will put the boxes where you'd expect them to be, no
     matter what root you use.
     """
+    if not elem_args:
+        return {}
     _fill_ids(*elem_args)
     envelope = _envelop_copies(*elem_args)
 
@@ -123,27 +137,82 @@ def map_ids_to_bounding_boxes(
     return id2bbox
 
 
-def get_bounding_box(
+def _hash_elem(elem: EtreeElement) -> str:
+    """Hash an EtreeElement.
+
+    Will match identical (excepting id) elements.
+    """
+    elem_copy = deepcopy(elem)
+    with suppress(KeyError):
+        _ = elem_copy.attrib.pop("id")
+    hash_object = hashlib.sha256(etree.tostring(elem_copy))
+    return hash_object.hexdigest()
+
+
+def _try_bbox_cache(elem_hash: str) -> BoundingBox | None:
+    """Try to load a cached bounding box."""
+    cache_path = _CACHE_DIR / elem_hash
+    if not cache_path.exists():
+        return None
+    try:
+        with cache_path.open("rb") as f:
+            return pickle.load(f)
+    except (EOFError, pickle.UnpicklingError) as e:
+        msg = f"Error loading cache file {cache_path}: {e}"
+        warn(msg)
+    except Exception as e:
+        msg = f"Unexpected error loading cache file {cache_path}: {e}"
+        warn(msg)
+    return None
+
+
+def get_bounding_boxes(
     inkscape: str | Path, *elem_args: EtreeElement
-) -> BoundingBox | tuple[BoundingBox, ...]:
+) -> tuple[BoundingBox, ...]:
     r"""Get bounding box around a single element (or multiple elements).
 
     :param inkscape: path to an inkscape executable on your local file system
         IMPORTANT: path cannot end with ``.exe``.
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
     :param elem_args: xml elements
-    :return: a BoundingBox instance around a single elem or a tuple of BoundingBox
-        instances if multiple elem_args are passed.
+    :return: a BoundingBox instance around a each elem_arg
 
     This will work most of the time, but if you're missing an nsmap, you'll need to
     create an entire xml file with a custom nsmap (using
     `svg_ultralight.new_svg_root`) then call `map_ids_to_bounding_boxes` directly.
     """
-    id2bbox = map_ids_to_bounding_boxes(inkscape, *elem_args)
-    bboxes = [id2bbox[x.get("id", "")] for x in elem_args]
-    if len(bboxes) == 1:
-        return bboxes[0]
-    return tuple(bboxes)
+    elem2hash = {elem: _hash_elem(elem) for elem in elem_args}
+    cached = [_try_bbox_cache(h) for h in elem2hash.values()]
+    if None not in cached:
+        return tuple(filter(None, cached))
+
+    hash2bbox = {h: c for h, c in zip(elem2hash.values(), cached) if c is not None}
+    remainder = [e for e, c in zip(elem_args, cached) if c is None]
+    id2bbox = map_ids_to_bounding_boxes(inkscape, *remainder)
+    for elem in remainder:
+        hash_ = elem2hash[elem]
+        hash2bbox[hash_] = id2bbox[elem.attrib["id"]]
+        with (_CACHE_DIR / hash_).open("wb") as f:
+            pickle.dump(hash2bbox[hash_], f)
+    return tuple(hash2bbox[h] for h in elem2hash.values())
+
+
+def get_bounding_box(inkscape: str | Path, elem: EtreeElement) -> BoundingBox:
+    r"""Get bounding box around a single element.
+
+    :param inkscape: path to an inkscape executable on your local file system
+        IMPORTANT: path cannot end with ``.exe``.
+        Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
+    :param elem: xml element
+    :return: a BoundingBox instance around a single elem
+    """
+    return get_bounding_boxes(inkscape, elem)[0]
+
+
+def clear_svg_ultralight_cache() -> None:
+    """Clear all cached bounding boxes."""
+    for cache_file in _CACHE_DIR.glob("*"):
+        cache_file.unlink()
 
 
 def pad_text(
@@ -167,11 +236,9 @@ def pad_text(
     _ = capline_ref.attrib.pop("id", None)
     rmargin_ref.attrib["text-anchor"] = "end"
     capline_ref.text = capline_reference_char
-    id2bbox = map_ids_to_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
 
-    bbox = id2bbox[text_elem.attrib["id"]]
-    rmargin_bbox = id2bbox[rmargin_ref.attrib["id"]]
-    capline_bbox = id2bbox[capline_ref.attrib["id"]]
+    bboxes = get_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
+    bbox, rmargin_bbox, capline_bbox = bboxes
 
     tpad = bbox.y - capline_bbox.y
     rpad = -rmargin_bbox.x2

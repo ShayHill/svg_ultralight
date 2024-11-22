@@ -30,7 +30,12 @@ from svg_ultralight.inkscape import (
 from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.metadata import new_metadata
 from svg_ultralight.nsmap import NSMAP, new_qname
-from svg_ultralight.query import pad_text
+from svg_ultralight.query import (
+    get_bounding_box,
+    get_bounding_boxes,
+    pad_text,
+    clear_svg_ultralight_cache,
+)
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.string_conversion import (
     format_attr_dict,
@@ -52,11 +57,14 @@ __all__ = [
     "NSMAP",
     "PaddedText",
     "SupportsBounds",
+    "clear_svg_ultralight_cache",
     "deepcopy_element",
     "format_attr_dict",
     "format_number",
     "format_numbers",
     "format_numbers_in_string",
+    "get_bounding_box",
+    "get_bounding_boxes",
     "mat_apply",
     "mat_dot",
     "mat_invert",

@@ -14,7 +14,7 @@ import pytest
 
 from svg_ultralight import BoundingBox, new_svg_root
 from svg_ultralight.constructors import new_sub_element
-from svg_ultralight.query import map_ids_to_bounding_boxes
+from svg_ultralight.query import map_ids_to_bounding_boxes, get_bounding_boxes, get_bounding_box
 
 INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
@@ -171,6 +171,53 @@ class TestMapIdsToBoundingBoxes:
         assert rect2.get("id") in result
         assert rect3.get("id") in result
 
+    def test_get_bboxes_explicit(self) -> None:
+        """Returns a dict with an entry for each element plus an envelope entry."""
+        xml = new_svg_root(10, 20, 160, 19, id="svg1")
+        rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
+        rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
+        rect3 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
+        rect4 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
+
+        result = get_bounding_boxes(INKSCAPE, xml, rect1, rect2, rect3, rect4)
+        assert result[0] == BoundingBox(
+            _x=0.0,
+            _y=0.0,
+            _width=16.0,
+            _height=32.0,
+            _transformation=(1, 0, 0, 1, 0, 0),
+        )
+        assert result[1] == BoundingBox(
+            _x=0.0, _y=0.0, _width=16.0, _height=9.0, _transformation=(1, 0, 0, 1, 0, 0)
+        )
+        assert result[2] == BoundingBox(
+            _x=0.0, _y=0.0, _width=8.0, _height=32.0, _transformation=(1, 0, 0, 1, 0, 0)
+        )
+        assert result[3] == BoundingBox(
+            _x=0.0,
+            _y=0.0,
+            _width=12.0,
+            _height=18.0,
+            _transformation=(1, 0, 0, 1, 0, 0),
+        )
+        assert result[4] == BoundingBox(
+            _x=0.0,
+            _y=0.0,
+            _width=12.0,
+            _height=18.0,
+            _transformation=(1, 0, 0, 1, 0, 0),
+        )
+
+    def test_get_bbox_vs_boxes(self) -> None:
+        """Multiple calls to get_bounding_box are equivalent to a single call."""
+        xml = new_svg_root(10, 20, 160, 19, id="svg1")
+        rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
+        rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
+        rect3 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
+        rect4 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
+        elems = (xml, rect1, rect2, rect3, rect4)
+        result = get_bounding_boxes(INKSCAPE, *elems)
+        assert result == tuple(get_bounding_box(INKSCAPE, e) for e in elems)
 
 class TestAlterBoundingBox:
     def test_reverse_width(self) -> None:
