@@ -43,7 +43,10 @@ def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
         return expand_pad_arg([pad])
     as_ms = [m if isinstance(m, Measurement) else Measurement(m) for m in pad]
     as_units = [m.value for m in as_ms]
-    as_units = [as_units[i % len(as_units)] for i in range(4)]
+    if len(as_units) == 3:
+        as_units = [*as_units, as_units[1]]
+    else:
+        as_units = [as_units[i % len(as_units)] for i in range(4)]
     return as_units[0], as_units[1], as_units[2], as_units[3]
 
 

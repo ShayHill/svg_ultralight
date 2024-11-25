@@ -15,7 +15,6 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     cut_bbox,
     bbox_dict,
     new_bbox_rect,
-    _expand_pad,
 )
 import copy
 from svg_ultralight.constructors import new_element

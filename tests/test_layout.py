@@ -123,6 +123,27 @@ class TestMeasurement:
         assert (Measurement((1, unit)) / 4).value == Measurement((1 / 4, unit)).value
 
 
+class TestExpandPadArg:
+    def test_expand_val(self):
+        """Test that a single value is expanded to a 4-tuple."""
+        assert layout.expand_pad_arg(1) == (1, 1, 1, 1)
+
+    def test_expand_1tuple(self):
+        """Test that a single value is expanded to a 4-tuple."""
+        assert layout.expand_pad_arg(1) == (1, 1, 1, 1)
+
+    def test_expand_2tuple(self):
+        """Test that a single value is expanded to a 4-tuple."""
+        assert layout.expand_pad_arg((1, 2)) == (1, 2, 1, 2)
+
+    def test_expand_3tuple(self):
+        """Test that a single value is expanded to a 4-tuple per css rules."""
+        assert layout.expand_pad_arg((1, 2, 3)) == (1, 2, 3, 2)
+
+    def test_expand_4tuple(self):
+        """Test that a single value is expanded to a 4-tuple per css rules."""
+        assert layout.expand_pad_arg((1, 2, 3, 4)) == (1, 2, 3, 4)
+
 class TestLayout:
     def test_standard(self):
         """No print dimensions give expanded pad argument
