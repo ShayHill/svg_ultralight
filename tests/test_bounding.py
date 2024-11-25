@@ -10,8 +10,16 @@ from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
+from svg_ultralight.bounding_boxes.bound_helpers import (
+    pad_bbox,
+    cut_bbox,
+    bbox_dict,
+    new_bbox_rect,
+    _expand_pad,
+)
 import copy
 from svg_ultralight.constructors import new_element
+
 
 class TestBoundElement:
     @pytest.fixture
@@ -84,7 +92,6 @@ class TestBoundElement:
         assert bound_element.y2 == 250.0
 
 
-
 class TestPaddedText:
     @pytest.fixture
     def bound_element(self) -> PaddedText:
@@ -155,6 +162,7 @@ class TestPaddedText:
         assert math.isclose(bound_element.height, 252.76)
         assert bound_element.y2 == 203.0
 
+
 class TestBoundCollection:
 
     @pytest.fixture
@@ -178,3 +186,63 @@ class TestBoundCollection:
         blem_trans = blem.elem.attrib["transform"]
         elem_trans = elem.attrib["transform"]
         assert blem_trans == elem_trans
+
+
+class TestBoundHelpers:
+    def test_pad_bbox(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        padded = pad_bbox(bbox, 1)
+        assert padded.x == -1
+        assert padded.y == -1
+        assert padded.width == 6
+        assert padded.height == 6
+
+    def test_pad_bbox_t1(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        padded = pad_bbox(bbox, (1,))
+        assert padded.x == -1
+        assert padded.y == -1
+        assert padded.width == 6
+        assert padded.height == 6
+
+    def test_pad_bbox_t2(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        padded = pad_bbox(bbox, (1, 2))
+        assert padded.x == -2
+        assert padded.y == -1
+        assert padded.width == 8
+        assert padded.height == 6
+
+    def test_pad_bbox_t3(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        padded = pad_bbox(bbox, (1, 2, 3))
+        assert padded.x == -2
+        assert padded.y == -1
+        assert padded.width == 8
+        assert padded.height == 8
+
+    def test_pad_bbox_t4(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        padded = pad_bbox(bbox, (1, 2, 3, 4))
+        assert padded.x == -4
+        assert padded.y == -1
+        assert padded.width == 10
+        assert padded.height == 8
+
+    def test_cut_bbox(self):
+        bbox = BoundingBox(0, 0, 4, 4)
+        cut = cut_bbox(bbox, x=1)
+        assert cut.x == 1
+        assert cut.y == 0
+        assert cut.width == 3
+        assert cut.height == 4
+
+    def test_bbox_dict(self):
+        bbox = BoundingBox(0, 1, 2, 3)
+        assert bbox_dict(bbox) == {"x": 0, "y": 1, "width": 2, "height": 3}
+
+    def test_new_bbox_rect(self):
+        bbox = BoundingBox(0, 1, 2, 3)
+        elem = new_bbox_rect(bbox)
+        assert elem.attrib == {"x": "0", "y": "1", "width": "2", "height": "3"}
+

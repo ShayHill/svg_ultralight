@@ -95,3 +95,77 @@ def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:
     group = new_element_union(*blems)
     bbox = new_bbox_union(*blems)
     return BoundElement(group, bbox)
+
+
+def _expand_pad(pad: float | tuple[float, ...]) -> tuple[float, float, float, float]:
+    """Expand a float pad argument into a 4-tuple."""
+    if isinstance(pad, (int, float)):
+        return pad, pad, pad, pad
+    if len(pad) == 1:
+        return pad[0], pad[0], pad[0], pad[0]
+    if len(pad) == 2:
+        return pad[0], pad[1], pad[0], pad[1]
+    if len(pad) == 3:
+        return pad[0], pad[1], pad[2], pad[1]
+    return pad[0], pad[1], pad[2], pad[3]
+
+
+def cut_bbox(
+    bbox: SupportsBounds,
+    *,
+    x: float | None = None,
+    y: float | None = None,
+    x2: float | None = None,
+    y2: float | None = None,
+) -> BoundingBox:
+    """Return a new bounding box with updated limits.
+
+    :param bbox: the original bounding box or bounded element.
+    :param x: the new x-coordinate.
+    :param y: the new y-coordinate.
+    :param x2: the new x2-coordinate.
+    :param y2: the new y2-coordinate.
+    :return: a new bounding box with the updated limits.
+    """
+    x = bbox.x if x is None else x
+    y = bbox.y if y is None else y
+    x2 = bbox.x2 if x2 is None else x2
+    y2 = bbox.y2 if y2 is None else y2
+    width = x2 - x
+    height = y2 - y
+    return BoundingBox(x, y, width, height)
+
+
+def pad_bbox(bbox: SupportsBounds, pad: float | tuple[float, ...]) -> BoundingBox:
+    """Return a new bounding box with padding.
+
+    :param bbox: the original bounding box or bounded element.
+    :param pad: the padding to apply.
+        If a single number, the same padding will be applied to all sides.
+        If a tuple, will be applied per css rules.
+        len = 1 : 0, 0, 0, 0
+        len = 2 : 0, 1, 0, 1
+        len = 3 : 0, 1, 2, 1
+        len = 4 : 0, 1, 2, 3
+    :return: a new bounding box with padding applied.
+    """
+    t, r, b, l = _expand_pad(pad)
+    return cut_bbox(bbox, x=bbox.x - l, y=bbox.y - t, x2=bbox.x2 + r, y2=bbox.y2 + b)
+
+
+def bbox_dict(bbox: SupportsBounds) -> dict[str, float]:
+    """Return a dictionary representation of a bounding box.
+
+    :param bbox: the bounding box or bound element from which to extract dimensions.
+    :return: a dictionary with keys x, y, width, and height.
+    """
+    return {"x": bbox.x, "y": bbox.y, "width": bbox.width, "height": bbox.height}
+
+
+def new_bbox_rect(bbox: BoundingBox, **kwargs: float | str) -> EtreeElement:
+    """Return a new rect element with the same dimensions as the bounding box.
+
+    :param bbox: the bounding box or bound element from which to extract dimensions.
+    :param kwargs: additional attributes for the rect element.
+    """
+    return new_element("rect", **bbox_dict(bbox), **kwargs)

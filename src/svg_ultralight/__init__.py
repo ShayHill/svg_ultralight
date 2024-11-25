@@ -8,6 +8,10 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     new_bbox_union,
     new_bound_union,
     new_element_union,
+    cut_bbox,
+    pad_bbox,
+    bbox_dict,
+    new_bbox_rect,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
@@ -57,7 +61,9 @@ __all__ = [
     "NSMAP",
     "PaddedText",
     "SupportsBounds",
+    "bbox_dict",
     "clear_svg_ultralight_cache",
+    "cut_bbox",
     "deepcopy_element",
     "format_attr_dict",
     "format_number",
@@ -68,6 +74,7 @@ __all__ = [
     "mat_apply",
     "mat_dot",
     "mat_invert",
+    "new_bbox_rect",
     "new_bbox_union",
     "new_bound_union",
     "new_element",
@@ -77,6 +84,7 @@ __all__ = [
     "new_sub_element",
     "new_svg_root",
     "new_svg_root_around_bounds",
+    "pad_bbox",
     "pad_text",
     "transform_element",
     "update_element",
