@@ -20,7 +20,8 @@ from lxml import etree
 from svg_ultralight.string_conversion import set_attributes
 
 if TYPE_CHECKING:
-    from lxml.etree import QName, _Element as EtreeElement  # type: ignore
+    from lxml.etree import QName
+    from lxml.etree import _Element as EtreeElement  # type: ignore
 
 
 def new_element(tag: str | QName, **attributes: str | float) -> EtreeElement:

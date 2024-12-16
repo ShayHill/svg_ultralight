@@ -11,4 +11,4 @@ from svg_ultralight.constructors.new_element import (
     update_element,
 )
 
-__all__ = ["new_element", "new_sub_element", "update_element", "deepcopy_element"]
+__all__ = ["deepcopy_element", "new_element", "new_sub_element", "update_element"]

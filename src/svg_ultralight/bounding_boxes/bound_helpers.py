@@ -149,8 +149,10 @@ def pad_bbox(bbox: SupportsBounds, pad: float | tuple[float, ...]) -> BoundingBo
         len = 4 : 0, 1, 2, 3
     :return: a new bounding box with padding applied.
     """
-    t, r, b, l = _expand_pad(pad)
-    return cut_bbox(bbox, x=bbox.x - l, y=bbox.y - t, x2=bbox.x2 + r, y2=bbox.y2 + b)
+    top, right, bottom, left = _expand_pad(pad)
+    return cut_bbox(
+        bbox, x=bbox.x - left, y=bbox.y - top, x2=bbox.x2 + right, y2=bbox.y2 + bottom
+    )
 
 
 def bbox_dict(bbox: SupportsBounds) -> dict[str, float]:

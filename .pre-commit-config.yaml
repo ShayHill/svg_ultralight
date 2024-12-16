@@ -57,19 +57,6 @@ repos:
     # - --ignore-missing-imports
     # files: ^(src/|tests/)
 
-- repo: https://github.com/PyCQA/isort
-  rev: 5.13.2
-  hooks:
-  - id: isort
-    args: ["--profile", "black", "--filter-files", "--combine-as"]
-
-- repo: https://github.com/psf/black
-  rev: 24.10.0
-  hooks:
-  - id: black
-    language_version: python3.9
-    args: ["--skip-magic-trailing-comma"]
-
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.19.0
   hooks:
@@ -84,8 +71,6 @@ repos:
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   # ignores
-  # ANN101 Missing type annotation for self in method
-  # ANN102 Missing type annotation for cls in classmethod
   # ANN201 Missing return type annotation for public function
   # ANN202 Missing return type annotation for private function (wants -> None everywhere)
   # B905 zip() without an explicit strict= parameter
@@ -110,18 +95,24 @@ repos:
   # S301 don't use pickle
   # B028 wants explicit stacklevel on warn
   # BLE001 Use of `except Exception:` detected
-  rev: 'v0.7.4'
+  rev: 'v0.8.3'
   hooks:
     - id: ruff
+      name: "ruff-lint"
       exclude: "tests"
       args:
       - --target-version=py39
       - --select=ALL
-      - --ignore=ANN101,ANN102,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,D413,D407,D406,S320,S301,B028,BLE001
-      # - --fix
+      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,D413,D407,D406,S320,S301,B028,BLE001
+      - --fix
+      - --fixable=RUF022
+    - id: ruff
+      args: ["check", "--select", "I", "--fix"]
+    - id: ruff-format
+      name: "ruff-format"
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.389
+  rev: v1.1.390
   hooks:
     - id: pyright
