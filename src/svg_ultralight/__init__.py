@@ -12,6 +12,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     new_bound_union,
     new_element_union,
     pad_bbox,
+    parse_bound_element,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
@@ -86,6 +87,7 @@ __all__ = [
     "new_svg_root_around_bounds",
     "pad_bbox",
     "pad_text",
+    "parse_bound_element",
     "transform_element",
     "update_element",
     "write_pdf",
