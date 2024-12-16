@@ -1,21 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="-3 -3 128 128">
-  <defs>
-    <clipPath id="clip">
-      <path d="M0,122L0,103.7L40.666667,73.2L81.333333,79.3L99.556877,49.231152L122,12.2L122,122Z"/>
-    </clipPath>
-    <mask id="mask">
-      <g>
-        <rect x="0" y="0" width="122" height="122" fill="#FFFFFF"/>
-        <path d="M0,91.45Q0,91.2 0.2,91.05L37.845867,62.8156Q38.013194,62.690105 38.220037,62.721131L75.903051,68.373583Q76.232274,68.422967 76.40482,68.138266L90.745748,44.475734Q91.004899,44.048135 90.5773,43.788984L78.917555,36.722472Q78.176932,36.273609 78.935969,35.856642L121.240962,12.616967Q122,12.2 121.981585,13.06583L120.955238,61.322866Q120.936823,62.188695 120.1962,61.739833L108.536455,54.67332Q108.108856,54.41417 107.849705,54.841768L86.606939,89.892332Q86.434393,90.177033 86.10517,90.12765L43.526984,83.740922Q43.32014,83.709895 43.152813,83.83539L0.8,115.6Q0,116.2 0,115.2Z" fill="#000000" stroke="#000000" stroke-width="3.1"/>
-      </g>
-    </mask>
-  </defs>
-  <g clip-path="url(#clip)" mask="url(#mask)">
-    <rect x="0" y="0" width="23.6" height="122" fill="orange"/>
-    <rect x="24.6" y="0" width="23.6" height="122" fill="orange"/>
-    <rect x="49.2" y="0" width="23.6" height="122" fill="orange"/>
-    <rect x="73.8" y="0" width="23.6" height="122" fill="orange"/>
-    <rect x="98.4" y="0" width="23.6" height="122" fill="orange"/>
-  </g>
-  <path d="M0,91.45Q0,91.2 0.2,91.05L37.845867,62.8156Q38.013194,62.690105 38.220037,62.721131L75.903051,68.373583Q76.232274,68.422967 76.40482,68.138266L90.745748,44.475734Q91.004899,44.048135 90.5773,43.788984L78.917555,36.722472Q78.176932,36.273609 78.935969,35.856642L121.240962,12.616967Q122,12.2 121.981585,13.06583L120.955238,61.322866Q120.936823,62.188695 120.1962,61.739833L108.536455,54.67332Q108.108856,54.41417 107.849705,54.841768L86.606939,89.892332Q86.434393,90.177033 86.10517,90.12765L43.526984,83.740922Q43.32014,83.709895 43.152813,83.83539L0.8,115.6Q0,116.2 0,115.2Z" fill="#00bfff" stroke="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 10 10">
+  <rect x="0" y="0" width="10" height="10"/>
 </svg>

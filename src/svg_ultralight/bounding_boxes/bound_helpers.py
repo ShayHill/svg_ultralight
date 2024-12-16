@@ -16,7 +16,10 @@ from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 
 if TYPE_CHECKING:
+    import os
+
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
+from lxml import etree
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -171,3 +174,34 @@ def new_bbox_rect(bbox: BoundingBox, **kwargs: float | str) -> EtreeElement:
     :param kwargs: additional attributes for the rect element.
     """
     return new_element("rect", **bbox_dict(bbox), **kwargs)
+
+
+def _get_view_box(elem: EtreeElement) -> tuple[float, float, float, float]:
+    """Return the view box of an element as a tuple of floats.
+
+    :param elem: the element from which to extract the view box.
+    :return: a tuple of floats representing the view box.
+
+    This will work on svg files created by this library and some others. Not all svg
+    files have a viewBox attribute.
+    """
+    view_box = elem.get("viewBox")
+    if view_box is None:
+        msg = "Element does not have a viewBox attribute."
+        raise ValueError(msg)
+    x, y, width, height = map(float, view_box.split())
+    return x, y, width, height
+
+
+def parse_bound_element(svg_fil: str | os.PathLike[str]) -> BoundElement:
+    """Import an element as a BoundElement.
+
+    :param elem: the element to import.
+    :return: a BoundElement instance.
+    """
+    tree = etree.parse(svg_fil)
+    root = tree.getroot()
+    elem = new_element("g")
+    elem.extend(list(root))
+    bbox = BoundingBox(*_get_view_box(root))
+    return BoundElement(elem, bbox)

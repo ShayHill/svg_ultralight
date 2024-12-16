@@ -6,13 +6,16 @@
 
 import pytest
 import math
+from conftest import TEST_RESOURCES
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from lxml import etree
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.bound_helpers import (
     pad_bbox,
     cut_bbox,
+    parse_bound_element,
     bbox_dict,
     new_bbox_rect,
 )
@@ -244,4 +247,9 @@ class TestBoundHelpers:
         bbox = BoundingBox(0, 1, 2, 3)
         elem = new_bbox_rect(bbox)
         assert elem.attrib == {"x": "0", "y": "1", "width": "2", "height": "3"}
+
+def test_import_bound_element():
+    blem = parse_bound_element(TEST_RESOURCES / "arrow.svg")
+    assert blem.bbox == BoundingBox(_x=0, _y=0, _width=10, _height=10, _transformation=(1, 0, 0, 1, 0, 0))
+    assert etree.tostring(blem.elem) == b'<g><ns0:rect xmlns:ns0="http://www.w3.org/2000/svg"' + b' x="0" y="0" width="10" height="10"/>\n</g>'
 

@@ -18,6 +18,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
+pythonpath = ["tests"]
+log_cli = 1
 
 
 [tool.isort]
