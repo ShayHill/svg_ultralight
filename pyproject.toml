@@ -36,6 +36,8 @@ legacy_tox_ini = """
     commands = pytest tests
 """
 
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
