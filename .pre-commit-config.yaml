@@ -58,7 +58,7 @@ repos:
     # files: ^(src/|tests/)
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.0
+  rev: v3.19.1
   hooks:
   - args:
     - --py39-plus
@@ -110,6 +110,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.390
+  rev: v1.1.391
   hooks:
     - id: pyright
