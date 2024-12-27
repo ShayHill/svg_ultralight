@@ -42,12 +42,12 @@ repos:
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.13.0
+  rev: v1.14.0
   hooks:
   - id: mypy
     name: mypy
     language: python
-    language_version: python 3.12
+    language_version: python 3.11
     types: [python]
     require_serial: true
     verbose: true
@@ -92,7 +92,7 @@ repos:
   # S301 don't use pickle
   # B028 wants explicit stacklevel on warn
   # BLE001 Use of `except Exception:` detected
-  rev: 'v0.8.3'
+  rev: 'v0.8.4'
   hooks:
     - id: ruff
       name: "ruff-lint"
