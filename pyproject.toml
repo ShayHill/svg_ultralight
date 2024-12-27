@@ -10,6 +10,7 @@ dependencies = ["lxml", "pillow", "paragraphs", "types-lxml"]
 
 [project.optional-dependencies]
 dev = ["pytest", "commitizen", "pre-commit", "tox"]
+images = ["pillow"]
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
