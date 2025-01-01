@@ -17,13 +17,34 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
+_MAX_8BIT = 255
+_BIG_INT = 2**32 - 1
+
+
+def _float_to_8bit_int(clipped_float: float) -> int:
+    """Convert a float between 0 and 255 to an int between 0 and 255.
+
+    :param float_: a float in the closed interval [0 .. 255]. Values outside this
+        range will be clipped.
+    :return: an int in the closed interval [0 .. 255]
+
+    Convert color floats [0 .. 255] to ints [0 .. 255] without rounding, which "short
+    changes" 0 and 255.
+    """
+    clipped_float = min(_MAX_8BIT, max(0, clipped_float))
+    if clipped_float % 1:
+        high_int = int(clipped_float / _MAX_8BIT * _BIG_INT)
+        return high_int >> 24
+    return int(clipped_float)
+
+
 def svg_color_tuple(rgb_floats: tuple[float, float, float]) -> str:
     """Turn an rgb tuple (0-255, 0-255, 0-255) into an svg color definition.
 
     :param rgb_floats: (0-255, 0-255, 0-255)
     :return: "rgb(128,128,128)"
     """
-    r, g, b = (round(x) for x in rgb_floats)
+    r, g, b = map(_float_to_8bit_int, rgb_floats)
     return f"rgb({r},{g},{b})"
 
 
