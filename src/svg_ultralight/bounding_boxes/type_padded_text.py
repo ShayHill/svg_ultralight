@@ -70,7 +70,9 @@ from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 _Matrix = tuple[float, float, float, float, float, float]
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
-from lxml.etree import _Element as EtreeElement  # type: ignore
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_union
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox

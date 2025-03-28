@@ -12,7 +12,7 @@ from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
-from lxml.etree import _Element as EtreeElement  # type: ignore
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 
 class TestNewSvgRootAroundBounds:

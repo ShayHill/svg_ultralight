@@ -13,6 +13,7 @@ should work with all Inkscape versions. Please report any issues.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import IO, TYPE_CHECKING
 
@@ -23,8 +24,15 @@ from svg_ultralight.layout import pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import get_viewBox_str, svg_tostring
 
+if sys.version_info >= (3, 10):
+    from typing import TypeGuard
+else:
+    from typing_extensions import TypeGuard
+
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.layout import PadArg
 
@@ -38,7 +46,7 @@ def _is_four_floats(objs: tuple[object, ...]) -> bool:
     return len(objs) == 4 and all(isinstance(x, (float, int)) for x in objs)
 
 
-def _is_io_bytes(obj: object) -> bool:
+def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
     """Determine if an object is file-like.
 
     :param obj: object
@@ -172,8 +180,8 @@ def write_svg(
     svg_contents = svg_tostring(root, **tostring_kwargs)
 
     if _is_io_bytes(svg):
-        _ = svg.write(svg_contents)  # type: ignore
-        return svg.name  # type: ignore
+        _ = svg.write(svg_contents)
+        return svg.name
     if isinstance(svg, (Path, str)):
         with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)

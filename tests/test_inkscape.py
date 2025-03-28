@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # type: ignore
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.inkscape import convert_text_to_path

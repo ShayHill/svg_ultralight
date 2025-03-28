@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # type: ignore
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight import NSMAP
 

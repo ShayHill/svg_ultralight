@@ -31,7 +31,9 @@ from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.main import new_svg_root, write_svg
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 
 with TemporaryFile() as f:

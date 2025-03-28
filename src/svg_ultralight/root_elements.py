@@ -13,7 +13,9 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.main import new_svg_root
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
     from svg_ultralight.layout import PadArg

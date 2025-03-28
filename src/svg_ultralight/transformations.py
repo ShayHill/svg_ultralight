@@ -13,7 +13,9 @@ from typing import TYPE_CHECKING, cast
 from svg_ultralight.string_conversion import format_number
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 
 _RE_MATRIX = re.compile(r"matrix\(([^)]+)\)")

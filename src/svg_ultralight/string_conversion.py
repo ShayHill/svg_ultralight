@@ -22,7 +22,9 @@ from svg_ultralight.nsmap import NSMAP
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from lxml.etree import _Element as EtreeElement  # type: ignore
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 
 def format_number(num: float | str) -> str:
