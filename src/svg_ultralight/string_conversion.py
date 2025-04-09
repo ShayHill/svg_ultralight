@@ -188,7 +188,7 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
             value = tostring_kwargs.get(arg_name, default.value)
             tostring_kwargs[arg_name] = value
     as_bytes = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)  # type: ignore
-    return cast(bytes, as_bytes)
+    return cast("bytes", as_bytes)
 
 
 def get_viewBox_str(

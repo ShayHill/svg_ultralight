@@ -42,7 +42,7 @@ repos:
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.14.0
+  rev: v1.15.0
   hooks:
   - id: mypy
     name: mypy
@@ -92,7 +92,7 @@ repos:
   # S301 don't use pickle
   # B028 wants explicit stacklevel on warn
   # BLE001 Use of `except Exception:` detected
-  rev: 'v0.8.4'
+  rev: 'v0.11.4'
   hooks:
     - id: ruff
       name: "ruff-lint"
@@ -110,6 +110,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.391
+  rev: v1.1.398
   hooks:
     - id: pyright

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     )
 
 
-_RE_MATRIX = re.compile(r"matrix\(([^)]+)\)")
+RE_MATRIX = re.compile(r"matrix\(([^)]+)\)")
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -88,7 +88,7 @@ def get_transform_matrix(elem: EtreeElement) -> _Matrix:
         return (1, 0, 0, 1, 0, 0)
     values_str = ""
     with suppress(AttributeError):
-        values_str = cast(re.Match[str], _RE_MATRIX.match(transform)).group(1)
+        values_str = cast("re.Match[str]", RE_MATRIX.match(transform)).group(1)
     with suppress(ValueError):
         aa, bb, cc, dd, ee, ff = (float(val) for val in values_str.split())
         return (aa, bb, cc, dd, ee, ff)
