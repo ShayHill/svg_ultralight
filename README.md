@@ -167,7 +167,7 @@ Another way to add params through the new_element name / float translator. Again
 
 ## Extras:
 
-### query.map_ids_to_bounding_boxes
+### query.map_elems_to_bounding_boxes
 
 Python cannot parse an svg file. Python can *create* an svg file, and Inkscape can parse (and inspect) it. Inkscape has a command-line interface capable of reading an svg file and returning some limited information. This is the only way I know for a Python program to:
 
@@ -177,7 +177,7 @@ Python cannot parse an svg file. Python can *create* an svg file, and Inkscape c
 
 This would be necessary for, e.g., algorithmically fitting text in a box.
 
-    from svg_ultralight.queries import map_ids_to_bounding_boxes
+    from svg_ultralight.queries import map_elems_to_bounding_boxes
 
 You can get a tiny bit more sophisticated with Inkscape bounding-box queries, but not much. This will give you pretty much all you can get out of it.
 

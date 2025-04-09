@@ -14,7 +14,7 @@ import pytest
 
 from svg_ultralight import BoundingBox, new_svg_root
 from svg_ultralight.constructors import new_sub_element
-from svg_ultralight.query import map_ids_to_bounding_boxes, get_bounding_boxes, get_bounding_box
+from svg_ultralight.query import map_elems_to_bounding_boxes, get_bounding_boxes, get_bounding_box
 
 INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
@@ -153,23 +153,24 @@ class TestMapIdsToBoundingBoxes:
     def test_gets_bboxes(self) -> None:
         """Run with a temporary file."""
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
-        _ = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
-        _ = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
-        result = map_ids_to_bounding_boxes(INKSCAPE, xml)
-        assert result["rect1"] == BoundingBox(0.0, 0.0, 16.0, 9.0)
-        assert result["rect2"] == BoundingBox(0.0, 0.0, 8.0, 32.0)
+        rect1 = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
+        rect2 = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
+        result = map_elems_to_bounding_boxes(INKSCAPE, xml)
+        assert result[rect1] == BoundingBox(0.0, 0.0, 16.0, 9.0)
+        assert result[rect2] == BoundingBox(0.0, 0.0, 8.0, 32.0)
 
-    def test_adds_missing_ids(self) -> None:
-        """Returns a dict with an entry for each element plus an envelope entry."""
+    def test_removes_temp_ids(self) -> None:
+        """Removes temporary IDs created during bounding box mapping."""
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
         rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
         rect3 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
-        result = map_ids_to_bounding_boxes(INKSCAPE, xml)
-        assert xml.get("id") in result
-        assert rect1.get("id") in result
-        assert rect2.get("id") in result
-        assert rect3.get("id") in result
+        result = map_elems_to_bounding_boxes(INKSCAPE, xml)
+        for elem in (xml, rect1, rect2, rect3):
+            assert elem in result
+        assert xml.attrib.get("id") == "svg1"
+        for elem in (rect1, rect2, rect3):
+            assert "id" not in elem.attrib
 
     def test_get_bboxes_explicit(self) -> None:
         """Returns a dict with an entry for each element plus an envelope entry."""
