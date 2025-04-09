@@ -122,7 +122,9 @@ def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
     popular one will be 'class') can be passed with a trailing underscore (e.g.,
     class_='body_text').
     """
-    if ":" in key:
+    if "http:" in key or "https:" in key:
+        key_ = key
+    elif ":" in key:
         namespace, tag = key.split(":")
         key_ = str(etree.QName(NSMAP[namespace], tag))
     else:
