@@ -58,7 +58,7 @@ repos:
     # files: ^(src/|tests/)
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.19.1
+  rev: v3.20.0
   hooks:
   - args:
     - --py39-plus
@@ -92,7 +92,7 @@ repos:
   # S301 don't use pickle
   # B028 wants explicit stacklevel on warn
   # BLE001 Use of `except Exception:` detected
-  rev: 'v0.11.4'
+  rev: 'v0.11.11'
   hooks:
     - id: ruff
       name: "ruff-lint"
@@ -110,6 +110,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.398
+  rev: v1.1.401
   hooks:
     - id: pyright
