@@ -16,7 +16,7 @@ class TestMat:
         assert mat_dot((1, 2, 3, 4, 5, 6), (7, 8, 9, 1, 2, 1)) == expect
 
     def test_apply(self):
-        expect = (12, 38)
+        expect = (36, 52)
         assert mat_apply((1, 2, 3, 4, 5, 6), (7, 8)) == expect
 
     def test_invert(self):

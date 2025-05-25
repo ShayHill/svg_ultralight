@@ -52,13 +52,19 @@ def mat_dot(mat1: _Matrix, mat2: _Matrix) -> _Matrix:
     return (aa, bb, cc, dd, ee, ff)
 
 
-def mat_apply(mat1: _Matrix, mat2: tuple[float, float]) -> tuple[float, float]:
+def mat_apply(matrix: _Matrix, point: tuple[float, float]) -> tuple[float, float]:
     """Apply an svg-style transformation matrix to a point.
 
-    :param mat1: transformation matrix (sx, 0, 0, sy, tx, ty)
+    :param mat1: transformation matrix (a, b, c, d, e, f) describing a 3x3 matrix
+        with an implied third row of (0, 0, 1)
+        [[a, c, e], [b, d, f], [0, 0, 1]]
     :param mat2: point (x, y)
     """
-    return mat1[0] * mat2[0] + mat1[4], mat1[3] * mat2[1] + mat1[5]
+    a, b, c, d, e, f = matrix
+    x, y = point
+    result_x = a * x + c * y + e
+    result_y = b * x + d * y + f
+    return result_x, result_y
 
 
 def mat_invert(tmat: _Matrix) -> _Matrix:
