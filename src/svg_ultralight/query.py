@@ -63,7 +63,7 @@ def _fill_ids(*elem_args: EtreeElement) -> None:
 
 
 def _normalize_views(elem: EtreeElement) -> None:
-    """Create a square viewbox for any element with an svg tag.
+    """Create a square viewBox for any element with an svg tag.
 
     :param elem: an etree element
 
@@ -110,51 +110,61 @@ def map_elems_to_bounding_boxes(
         IMPORTANT: path cannot end with ``.exe``.
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
     :param elem_args: xml element (written to a temporary file then queried)
-    :return: svg elements (and a bounding box for the entire svg file as ``svg``)
-        mapped to BoundingBox(x, y, width, height)
-    :effects: temporarily adds an id attribute if any ids are missing. Non-unique ids
-        will break this function.
+    :return: input svg elements and any descendents of those elements mapped
+        `BoundingBox(x, y, width, height)`
+        So return dict keys are the input elements themselves with one exception: a
+        string key, "svg", is mapped to a bounding box around all input elements.
+    :effects: temporarily adds an id attribute if any ids are missing. These are
+        removed if the function completes. Existing, non-unique ids will break this
+        function.
 
-    Bounding boxes are relative to svg viewbox. If viewbox x == -10,
+    Bounding boxes are relative to svg viewBox. If, for instance, viewBox x == -10,
     all bounding-box x values will be offset -10. So, everything is wrapped in a root
-    element with a "normalized" viewbox, (viewbox=(0, 0, 1, 1)) then any child root
-    elements ("child root elements" sounds wrong, but it works) viewboxes are
-    normalized as well. This works even with a root element around a root element, so
-    input elem_args can be root elements or "normal" elements like "rect", "circle",
-    or "text" or a mixture of both.
+    element, `envelope` with a "normalized" viewBox, `viewBox=(0, 0, 1, 1)`. That
+    way, any child root elements ("child root elements" sounds wrong, but it works)
+    viewBoxes are normalized as well. This works even with a root element around a
+    root element, so input elem_args can be root elements or "normal" elements like
+    "rect", "circle", or "text" or a mixture of both. Bounding boxes output here will
+    work as expected in any viewBox.
 
     The ``inkscape --query-all svg`` call will return a tuple:
 
     (b'svg1,x,y,width,height\\r\\elem1,x,y,width,height\\r\\n', None)
     where x, y, width, and height are strings of numbers.
 
-    This calls the command and formats the output into a dictionary.
-
-    Scaling arguments ("width", "height") to new_svg_root transform the bounding
-    boxes in non-useful ways.  This copies all elements except the root element in to
-    a (0, 0, 1, 1) root. This will put the boxes where you'd expect them to be, no
-    matter what root you use.
+    This calls the command and formats the output into a dictionary. There is a
+    little extra complexity to handle cases with duplicate elements. Inkscape will
+    map bounding boxes to element ids *if* those ids are unique. If Inkscape
+    encounters a duplicate ID, Inkscape will map the bounding box of that element to
+    a string like "rect1". If you pass unequal elements with the same id, I can't
+    help you, but you might pass the same element multiple times. If you do this,
+    Inkscape will find a bounding box for each occurrence, map the first occurrence
+    to the id, then map subsequent occurrences to a string like "rect1". This
+    function will handle that.
     """
     if not elem_args:
         return {}
     _fill_ids(*elem_args)
-    envelope = _envelop_copies(*elem_args)
 
+    envelope = _envelop_copies(*elem_args)
     with NamedTemporaryFile(mode="wb", delete=False, suffix=".svg") as svg_file:
         svg = write_svg(svg_file, envelope)
     with Popen(f'"{inkscape}" --query-all {svg}', stdout=PIPE) as bb_process:
         bb_data = str(bb_process.communicate()[0])[2:-1]
     os.unlink(svg_file.name)
+
     bb_strings = re.split(r"[\\r]*\\n", bb_data)[:-1]
     id2bbox = dict(map(_split_bb_string, bb_strings))
 
     elem2bbox: dict[EtreeElement | Literal["svg"], BoundingBox] = {}
     for elem in _iter_elems(*elem_args):
-        elem2bbox[elem] = id2bbox.pop(elem.attrib["id"])
-        if elem.attrib["id"].startswith(_TEMP_ID_PREFIX):
+        elem_id = elem.attrib.get("id")
+        if not (elem_id):  # id removed in a previous loop
+            continue
+        elem2bbox[elem] = id2bbox[elem_id]
+        if elem_id.startswith(_TEMP_ID_PREFIX):
             del elem.attrib["id"]
-    ((_, scene_bbox),) = id2bbox.items()
-    elem2bbox["svg"] = scene_bbox
+    elem2bbox["svg"] = BoundingBox.merged(*id2bbox.values())
     return elem2bbox
 
 

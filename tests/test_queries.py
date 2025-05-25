@@ -149,7 +149,7 @@ class TestTransformBoundingBoxes:
         assert bbox.x == bbox_x
 
 
-class TestMapIdsToBoundingBoxes:
+class TestMapElemsToBoundingBoxes:
     def test_gets_bboxes(self) -> None:
         """Run with a temporary file."""
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
