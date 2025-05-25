@@ -81,6 +81,40 @@ class BoundingBox(SupportsBounds):
     _height: float
     _transformation: _Matrix = (1, 0, 0, 1, 0, 0)
 
+    def _get_input_corners(
+        self,
+    ) -> tuple[
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+    ]:
+        """Get the input corners of the bounding box.
+
+        :return: four corners counter-clockwise starting at top left
+        """
+        x2 = self._x + self._width
+        y2 = self._y + self._height
+        return (self._x, self._y), (x2, self._y), (x2, y2), (self._x, y2)
+
+    def _get_transformed_corners(
+        self,
+    ) -> tuple[
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+    ]:
+        """Get the transformed corners of the bounding box.
+
+        :return: four corners counter-clockwise starting at top left, transformed by
+            self._transformation
+        """
+        c0, c1, c2, c3 = (
+            mat_apply(self._transformation, c) for c in self._get_input_corners()
+        )
+        return c0, c1, c2, c3
+
     @property
     def transformation(self) -> _Matrix:
         """Return transformation matrix.
@@ -150,7 +184,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _x value transformed by scale and translation
         """
-        return mat_apply(self.transformation, (self._x, 0))[0]
+        return min(x for x, _ in self._get_transformed_corners())
 
     @x.setter
     def x(self, value: float) -> None:
@@ -182,7 +216,7 @@ class BoundingBox(SupportsBounds):
 
         :return: transformed x + transformed width
         """
-        return self.x + self.width
+        return max(x for x, _ in self._get_transformed_corners())
 
     @x2.setter
     def x2(self, value: float) -> None:
@@ -198,7 +232,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _y value transformed by scale and translation
         """
-        return mat_apply(self.transformation, (0, self._y))[1]
+        return min(y for _, y in self._get_transformed_corners())
 
     @y.setter
     def y(self, value: float) -> None:
@@ -230,7 +264,7 @@ class BoundingBox(SupportsBounds):
 
         :return: transformed y + transformed height
         """
-        return self.y + self.height
+        return max(y for _, y in self._get_transformed_corners())
 
     @y2.setter
     def y2(self, value: float) -> None:
@@ -246,7 +280,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _width value transformed by scale
         """
-        return self._width * self.scale
+        return self.x2 - self.x
 
     @width.setter
     def width(self, value: float) -> None:
@@ -269,7 +303,7 @@ class BoundingBox(SupportsBounds):
 
         :return: internal _height value transformed by scale
         """
-        return self._height * self.scale
+        return self.y2 - self.y
 
     @height.setter
     def height(self, value: float) -> None:
