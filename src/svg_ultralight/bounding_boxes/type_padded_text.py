@@ -122,7 +122,6 @@ class PaddedText(BoundElement):
             self.y,
             self.width,
             self.height,
-            self.unpadded_bbox.transformation,
         )
 
     @bbox.setter
@@ -208,7 +207,12 @@ class PaddedText(BoundElement):
         *and* y2) when scaling.
         """
         y2 = self.y2
-        self.unpadded_bbox.width = value - self.lpad - self.rpad
+
+        no_margins_old = self.unpadded_bbox.width
+        no_margins_new = value - self.lpad - self.rpad
+        scale = no_margins_new / no_margins_old
+        self.transform(scale=(scale, scale))
+
         self.y2 = y2
 
     @property
@@ -226,7 +230,10 @@ class PaddedText(BoundElement):
         :param height: The new height of this line of text.
         :effects: the text_element bounding box is scaled to height - tpad - bpad.
         """
-        self.width *= value / self.height
+        y2 = self.y2
+        scale = value / self.height
+        self.transform(scale=(scale, scale))
+        self.y2 = y2
 
     @property
     def x(self) -> float:
@@ -243,6 +250,22 @@ class PaddedText(BoundElement):
         :param value: The left margin of this line of text.
         """
         self.transform(dx=value + self.lpad - self.unpadded_bbox.x)
+
+    @property
+    def cx(self) -> float:
+        """The horizontal center of this line of text.
+
+        :return: The horizontal center of this line of text.
+        """
+        return self.x + self.width / 2
+
+    @cx.setter
+    def cx(self, value: float) -> None:
+        """Set the horizontal center of this line of text.
+
+        :param value: The horizontal center of this line of text.
+        """
+        self.x += value - self.cx
 
     @property
     def x2(self) -> float:
@@ -275,6 +298,22 @@ class PaddedText(BoundElement):
         :param value: The top of this line of text.
         """
         self.transform(dy=value + self.tpad - self.unpadded_bbox.y)
+
+    @property
+    def cy(self) -> float:
+        """The horizontal center of this line of text.
+
+        :return: The horizontal center of this line of text.
+        """
+        return self.y + self.height / 2
+
+    @cy.setter
+    def cy(self, value: float) -> None:
+        """Set the horizontal center of this line of text.
+
+        :param value: The horizontal center of this line of text.
+        """
+        self.y += value - self.cy
 
     @property
     def y2(self) -> float:

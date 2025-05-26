@@ -150,10 +150,11 @@ class TestPaddedText:
         assert bound_element.x2 == 146.0
 
     def test_height(self, bound_element: PaddedText):
+        y2 = bound_element.y2
         assert bound_element.height == 204.0
         bound_element.height = 250.0
-        assert math.isclose(bound_element.height, 252.76)
-        assert bound_element.y2 == 203.0
+        assert math.isclose(bound_element.height, 250)
+        assert math.isclose(bound_element.y2, y2)
 
     def test_aliases(self, bound_element: PaddedText):
         assert bound_element.lmargin == bound_element.x
