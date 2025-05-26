@@ -59,21 +59,11 @@ class HasBoundingBox(SupportsBounds):
         )
         return c0, c1, c2, c3
 
-    def _scale_scale_by_uniform_scalar(self, scalar: float) -> None:
-        """Scale the bounding box uniformly by a factor.
-
-        :param scale: scale factor
-        Unlike self.scale, this does not set the scale, but scales the scale. So if
-        the current scale is (2, 6), and you call this with a scalar of 2, the new
-        scale will be (4, 12).
-        """
-        self.transform(scale=(scalar, scalar))
-
     def transform(
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: tuple[float, float] | None = None,
+        scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
@@ -241,7 +231,7 @@ class HasBoundingBox(SupportsBounds):
         """
         current_x = self.x
         current_y = self.y
-        self._scale_scale_by_uniform_scalar(value / self.width)
+        self.transform(scale=value / self.width)
         self.x = current_x
         self.y = current_y
 

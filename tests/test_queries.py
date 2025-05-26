@@ -63,7 +63,7 @@ class TestBoundingBox:
         bbox = BoundingBox(100, 200, 300, 400)
         assert bbox.scale == (1.0, 1.0)
         bbox.scale = (3.0, 3.0)
-        bbox._scale_scale_by_uniform_scalar(10.0)
+        bbox.transform(scale=(10.0, 10.0))
         assert bbox.scale == (30.0, 30.0)
         assert bbox.x == 3000
         assert bbox.y == 6000

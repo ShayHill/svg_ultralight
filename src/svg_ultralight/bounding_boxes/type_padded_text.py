@@ -138,7 +138,7 @@ class PaddedText(BoundElement):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: tuple[float, float] | None = None,
+        scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
