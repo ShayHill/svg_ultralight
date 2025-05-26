@@ -1,6 +1,6 @@
 [project]
 name = "svg-ultralight"
-version = "0.39.0"
+version = "0.39.1"
 description = "a sensible way to create svg files with Python"
 authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 license = { text = "MIT" }
@@ -42,7 +42,7 @@ convention = "pep257"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.39.0"
+version = "0.39.1"
 tag_format = "$version"
 version_files = ["pyproject.toml:^version"]
 annotated_tag = true
