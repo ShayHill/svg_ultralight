@@ -34,11 +34,11 @@ class TestBoundElement:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
-        assert blem.scale == 1.0
-        blem.scale = 3.0
+        assert blem.scale == (1.0, 1.0)
+        blem.scale = (3.0, 3.0)
         blem.x = 750
-        blem.scale = 2.0
-        assert blem.scale == 2.0
+        blem.scale = (2.0, 2.0)
+        assert blem.scale == (2.0, 2.0)
         assert blem.x == 500
         assert blem.y == 400
         assert blem.width == 600.0
@@ -48,10 +48,10 @@ class TestBoundElement:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
-        assert blem.scale == 1.0
-        blem.scale = 3.0
-        blem.scale *= 10.0
-        assert blem.scale == 30.0
+        assert blem.scale == (1.0, 1.0)
+        blem.scale = (3.0, 3.0)
+        blem.transform(scale=(10.0, 10.0))
+        assert blem.scale == (30.0, 30.0)
         assert blem.x == 3000
         assert blem.y == 6000
         assert blem.width == 9000.0
@@ -105,11 +105,11 @@ class TestPaddedText:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
-        assert blem.scale == 1.0
-        blem.scale = 3.0
+        assert blem.scale == (1.0, 1.0)
+        blem.scale = (3.0, 3.0)
         blem.x = 750
-        blem.scale = 2.0
-        assert blem.scale == 2.0
+        blem.scale = (2.0, 2.0)
+        assert blem.scale == (2.0, 2.0)
         assert blem.x == 500
         assert blem.y == 400
         assert blem.width == 600.0
@@ -119,10 +119,10 @@ class TestPaddedText:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
-        assert blem.scale == 1.0
-        blem.scale = 3.0
-        blem.scale *= 10.0
-        assert blem.scale == 30.0
+        assert blem.scale == (1.0, 1.0)
+        blem.scale = (3.0, 3.0)
+        blem.transform(scale=(10.0, 10.0))
+        assert blem.scale == (30.0, 30.0)
         assert blem.x == 3000
         assert blem.y == 6000
         assert blem.width == 9000.0
@@ -182,7 +182,7 @@ class TestBoundCollection:
         elem = copy.deepcopy(rect)
         bound_collection = BoundCollection(blem, elem)
         bound_collection.x = -4
-        bound_collection.scale = 10
+        bound_collection.scale = (10.0, 10.0)
         bound_collection.width = 60
         bound_collection.cy = -40
         blem_trans = blem.elem.attrib["transform"]

@@ -37,7 +37,7 @@ class SupportsBounds(Protocol):
         cy (float): The center y coordinate.
         width (float): The width of the object.
         height(float): The height of the object.
-        scale (float): The scale of the object.
+        scale ((float, float)): The x and yx and y scale of the object.
 
     There is no setter for scale. Scale is a function of width and height.
     Setting scale would be ambiguous. because the typical implementation of
@@ -54,7 +54,7 @@ class SupportsBounds(Protocol):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: float | None = None,
+        scale: tuple[float, float] | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
@@ -158,12 +158,12 @@ class SupportsBounds(Protocol):
         """
 
     @property
-    def scale(self) -> float:
+    def scale(self) -> tuple[float, float]:
         """Return scale of the object."""
         ...
 
     @scale.setter
-    def scale(self, value: float):
+    def scale(self, value: tuple[float, float]):
         """Return scale of the object.
 
         :param value: The scale of the object.

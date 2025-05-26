@@ -132,7 +132,7 @@ class PaddedText(SupportsBounds):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: float | None = None,
+        scale: tuple[float, float] | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
@@ -152,7 +152,7 @@ class PaddedText(SupportsBounds):
 
         :return: The scaled top padding of this line of text.
         """
-        return self.base_tpad * self.bbox.scale
+        return self.base_tpad * self.bbox.scale[1]
 
     @tpad.setter
     def tpad(self, value: float) -> None:
@@ -160,7 +160,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The new top padding.
         """
-        self.base_tpad = value / self.bbox.scale
+        self.base_tpad = value / self.bbox.scale[1]
 
     @property
     def bpad(self) -> float:
@@ -168,7 +168,7 @@ class PaddedText(SupportsBounds):
 
         :return: The scaled bottom padding of this line of text.
         """
-        return self.base_bpad * self.bbox.scale
+        return self.base_bpad * self.bbox.scale[1]
 
     @bpad.setter
     def bpad(self, value: float) -> None:
@@ -176,7 +176,7 @@ class PaddedText(SupportsBounds):
 
         :param value: The new bottom padding.
         """
-        self.base_bpad = value / self.bbox.scale
+        self.base_bpad = value / self.bbox.scale[1]
 
     @property
     def lmargin(self) -> float:
@@ -424,7 +424,7 @@ class PaddedText(SupportsBounds):
         self.capline = value - self.padded_height / 2
 
     @property
-    def scale(self) -> float:
+    def scale(self) -> tuple[float, float]:
         """The scale of the text element.
 
         :return: the scale of the text element
@@ -432,7 +432,7 @@ class PaddedText(SupportsBounds):
         return self.bbox.scale
 
     @scale.setter
-    def scale(self, value: float):
+    def scale(self, value: tuple[float, float]):
         """Set the scale of the text element.
 
         :param value: the new scale of the text element

@@ -44,7 +44,7 @@ class BoundCollection(HasBoundingBox):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: float | None = None,
+        scale: tuple[float, float] | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):

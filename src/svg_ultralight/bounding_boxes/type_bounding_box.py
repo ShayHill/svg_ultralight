@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import dataclasses
+import math
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.string_conversion import format_number
@@ -115,6 +116,16 @@ class BoundingBox(SupportsBounds):
         )
         return c0, c1, c2, c3
 
+    def _scale_scale_by_uniform_scalar(self, scalar: float) -> None:
+        """Scale the bounding box uniformly by a factor.
+
+        :param scale: scale factor
+        Unlike self.scale, this does not set the scale, but scales the scale. So if
+        the current scale is (2, 6), and you call this with a scalar of 2, the new
+        scale will be (4, 12).
+        """
+        self.transform(scale=(scalar, scalar))
+
     @property
     def transformation(self) -> _Matrix:
         """Return transformation matrix.
@@ -127,7 +138,7 @@ class BoundingBox(SupportsBounds):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: float | None = None,
+        scale: tuple[float, float] | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
@@ -149,7 +160,7 @@ class BoundingBox(SupportsBounds):
         self._transformation = mat_dot(tmat, self.transformation)
 
     @property
-    def scale(self) -> float:
+    def scale(self) -> tuple[float, float]:
         """Get scale of the bounding box.
 
         :return: uniform scale of the bounding box
@@ -161,10 +172,11 @@ class BoundingBox(SupportsBounds):
         width*scale, height => height*scale, scale => scale*scale. This matches how
         scale works in almost every other context.
         """
-        return self.transformation[0]
+        xx, xy, yx, yy, *_ = self.transformation
+        return math.sqrt(xx * xx + xy * xy), math.sqrt(yx * yx + yy * yy)
 
     @scale.setter
-    def scale(self, value: float) -> None:
+    def scale(self, value: tuple[float, float]) -> None:
         """Scale the bounding box by a uniform factor.
 
         :param value: new scale value
@@ -176,7 +188,8 @@ class BoundingBox(SupportsBounds):
         `scale = 2` -> ignore whatever scale was previously defined and set scale to 2
         `scale *= 2` -> make it twice as big as it was.
         """
-        self.transform(scale=value / self.scale)
+        new_scale = value[0] / self.scale[0], value[1] / self.scale[1]
+        self.transform(scale=new_scale)
 
     @property
     def x(self) -> float:
@@ -293,7 +306,7 @@ class BoundingBox(SupportsBounds):
         """
         current_x = self.x
         current_y = self.y
-        self.scale *= value / self.width
+        self._scale_scale_by_uniform_scalar(value / self.width)
         self.x = current_x
         self.y = current_y
 
@@ -373,7 +386,7 @@ class HasBoundingBox(SupportsBounds):
         self,
         transformation: _Matrix | None = None,
         *,
-        scale: float | None = None,
+        scale: tuple[float, float] | None = None,
         dx: float | None = None,
         dy: float | None = None,
     ):
@@ -387,20 +400,21 @@ class HasBoundingBox(SupportsBounds):
         self.bbox.transform(transformation, scale=scale, dx=dx, dy=dy)
 
     @property
-    def scale(self) -> float:
+    def scale(self) -> tuple[float, float]:
         """The scale of the bounding box.
 
         :return: the scale of the bounding box
         """
-        return self.transformation[0]
+        xx, xy, yx, yy, *_ = self.bbox.transformation
+        return math.sqrt(xx * xx + xy * xy), math.sqrt(yx * yx + yy * yy)
 
     @scale.setter
-    def scale(self, value: float):
+    def scale(self, value: tuple[float, float]):
         """Set the scale of the bounding box.
 
         :param value: the scale of the bounding box
         """
-        self.transform(scale=value / self.scale)
+        self.transform(scale=(value[0] / self.scale[0], value[1] / self.scale[1]))
 
     @property
     def x(self) -> float:
@@ -514,7 +528,7 @@ class HasBoundingBox(SupportsBounds):
         """
         current_x = self.x
         current_y = self.y
-        self.scale *= value / self.width
+        self.transform(scale=(value / self.width, value / self.width))
         self.x = current_x
         self.y = current_y
 

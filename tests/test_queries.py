@@ -49,11 +49,11 @@ class TestBoundingBox:
 
     def test_scale(self):
         bbox = BoundingBox(100, 200, 300, 400)
-        assert bbox.scale == 1.0
-        bbox.scale = 3.0
+        assert bbox.scale == (1.0, 1.0)
+        bbox.scale = (3.0, 3.0)
         bbox.x = 750
-        bbox.scale = 2.0
-        assert bbox.scale == 2.0
+        bbox.scale = (2.0, 2.0)
+        assert bbox.scale == (2.0, 2.0)
         assert bbox.x == 500
         assert bbox.y == 400
         assert bbox.width == 600.0
@@ -61,10 +61,10 @@ class TestBoundingBox:
 
     def test_alter_scale(self):
         bbox = BoundingBox(100, 200, 300, 400)
-        assert bbox.scale == 1.0
-        bbox.scale = 3.0
-        bbox.scale *= 10.0
-        assert bbox.scale == 30.0
+        assert bbox.scale == (1.0, 1.0)
+        bbox.scale = (3.0, 3.0)
+        bbox._scale_scale_by_uniform_scalar(10.0)
+        assert bbox.scale == (30.0, 30.0)
         assert bbox.x == 3000
         assert bbox.y == 6000
         assert bbox.width == 9000.0

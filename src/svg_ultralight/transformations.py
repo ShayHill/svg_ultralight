@@ -105,7 +105,7 @@ def get_transform_matrix(elem: EtreeElement) -> _Matrix:
 def new_transformation_matrix(
     transformation: _Matrix | None = None,
     *,
-    scale: float | None = None,
+    scale: tuple[float, float] | None = None,
     dx: float | None = None,
     dy: float | None = None,
 ) -> _Matrix:
@@ -115,10 +115,10 @@ def new_transformation_matrix(
     svg-style transformation matrix.
     """
     transformation = transformation or (1, 0, 0, 1, 0, 0)
-    scale = scale or 1
+    scale = scale or (1, 1)
     dx = dx or 0
     dy = dy or 0
-    return mat_dot((scale, 0, 0, scale, dx, dy), transformation)
+    return mat_dot((scale[0], 0, 0, scale[1], dx, dy), transformation)
 
 
 def transform_element(elem: EtreeElement, matrix: _Matrix) -> EtreeElement:
