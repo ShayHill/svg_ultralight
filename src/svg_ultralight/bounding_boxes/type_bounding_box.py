@@ -16,93 +16,12 @@ from svg_ultralight.transformations import mat_apply, mat_dot, new_transformatio
 _Matrix = tuple[float, float, float, float, float, float]
 
 
-@dataclasses.dataclass
-class BoundingBox(SupportsBounds):
-    """Mutable bounding box object for svg_ultralight.
+class HasBoundingBox(SupportsBounds):
+    """A parent class for BoundElement and others that have a bbox attribute."""
 
-    :param x: left x value
-    :param y: top y value
-    :param width: width of the bounding box
-    :param height: height of the bounding box
-
-    The below optional parameter, in addition to the required parameters, captures
-    the entire state of a BoundingBox instance. It could be used to make a copy or
-    to initialize a transformed box with the same transform_string as another box.
-    Under most circumstances, it will not be used.
-
-    :param _transformation: transformation matrix
-
-    Functions that return a bounding box will return a BoundingBox instance. This
-    instance can be transformed (uniform scale and translate only). Transformations
-    will be combined and scored to be passed to new_element as a transform value.
-
-    Define the bbox with x=, y=, width=, height=
-
-    Transform the BoundingBox by setting these variables. Each time you set x, cx,
-    x2, y, cy, y2, width, or height, private transformation value _transformation
-    will be updated.
-
-    The ultimate transformation can be accessed through ``.transform_string``.
-    So the workflow will look like :
-
-        1. Get the bounding box of an svg element
-        2. Update the bounding box x, y, width, and height
-        3. Transform the original svg element with
-            update_element(elem, transform=bbox.transform_string)
-        4. The transformed element will lie in the transformed BoundingBox
-
-    In addition to x, y, width, and height, x2 and y2 can be set to establish the
-    right x value or bottom y value.
-
-    The point of all of this is to simplify stacking and aligning elements. To stack:
-
-        ```
-        elem_a = new_element(*args)
-        bbox_a = get_bounding_box(elem_a)
-
-        elem_b = new_element(*args)
-        bbox_b = get_bounding_box(elem_b)
-
-        # align at same x
-        bbox_b.x = bbox_a.x
-
-        # make the same width
-        bbox_b.width = bbox_a.width
-
-        # stack a on top of b
-        bbox_a.y2 = bbox_b.y
-
-        update_element(elem_a, transform=bbox_a.transform_string)
-        update_element(elem_b, transform=bbox_b.transform_string)
-    """
-
-    _x: float = dataclasses.field(init=False)
-    _y: float = dataclasses.field(init=False)
-    _width: float = dataclasses.field(init=False)
-    _height: float = dataclasses.field(init=False)
-    _transformation: _Matrix = dataclasses.field(init=False)
-
-    def __init__(
-        self,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-        transformation: _Matrix = (1, 0, 0, 1, 0, 0),
-    ) -> None:
-        """Initialize a BoundingBox instance.
-
-        :param x: left x value
-        :param y: top y value
-        :param width: width of the bounding box
-        :param height: height of the bounding box
-        """
-        self._x = x
-        self._y = y
-        self._width = width
-        self._height = height
-        self._transformation = transformation
-        self.bbox = self
+    def __init__(self, bbox: BoundingBox) -> None:
+        """Initialize the HasBoundingBox instance."""
+        self.bbox = bbox
 
     def _get_input_corners(
         self,
@@ -116,9 +35,11 @@ class BoundingBox(SupportsBounds):
 
         :return: four corners counter-clockwise starting at top left
         """
-        x2 = self._x + self._width
-        y2 = self._y + self._height
-        return (self._x, self._y), (x2, self._y), (x2, y2), (self._x, y2)
+        x = self.bbox.base_x
+        y = self.bbox.base_y
+        x2 = x + self.bbox.base_width
+        y2 = y + self.bbox.base_height
+        return (x, y), (x2, y), (x2, y2), (x, y2)
 
     def _get_transformed_corners(
         self,
@@ -131,10 +52,10 @@ class BoundingBox(SupportsBounds):
         """Get the transformed corners of the bounding box.
 
         :return: four corners counter-clockwise starting at top left, transformed by
-            self._transformation
+            self.transformation
         """
         c0, c1, c2, c3 = (
-            mat_apply(self._transformation, c) for c in self._get_input_corners()
+            mat_apply(self.bbox.transformation, c) for c in self._get_input_corners()
         )
         return c0, c1, c2, c3
 
@@ -147,14 +68,6 @@ class BoundingBox(SupportsBounds):
         scale will be (4, 12).
         """
         self.transform(scale=(scalar, scalar))
-
-    @property
-    def transformation(self) -> _Matrix:
-        """Return transformation matrix.
-
-        :return: transformation matrix
-        """
-        return self._transformation
 
     def transform(
         self,
@@ -179,7 +92,7 @@ class BoundingBox(SupportsBounds):
         when applying a transformation from another bounding box instance.
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        self._transformation = mat_dot(tmat, self.transformation)
+        self.bbox.transformation = mat_dot(tmat, self.bbox.transformation)
 
     @property
     def scale(self) -> tuple[float, float]:
@@ -194,7 +107,7 @@ class BoundingBox(SupportsBounds):
         width*scale, height => height*scale, scale => scale*scale. This matches how
         scale works in almost every other context.
         """
-        xx, xy, yx, yy, *_ = self.transformation
+        xx, xy, yx, yy, *_ = self.bbox.transformation
         return math.sqrt(xx * xx + xy * xy), math.sqrt(yx * yx + yy * yy)
 
     @scale.setter
@@ -222,10 +135,10 @@ class BoundingBox(SupportsBounds):
         return min(x for x, _ in self._get_transformed_corners())
 
     @x.setter
-    def x(self, value: float) -> None:
-        """Update transformation values (do not alter self._x).
+    def x(self, value: float):
+        """Set the x coordinate of the left edge of the bounding box.
 
-        :param value: new x value after transformation
+        :param value: the new x coordinate of the left edge of the bounding box
         """
         self.transform(dx=value - self.x)
 
@@ -360,7 +273,96 @@ class BoundingBox(SupportsBounds):
         Use with
         ``update_element(elem, transform=bbox.transform_string)``
         """
-        return f"matrix({' '.join(map(format_number, self.transformation))})"
+        return f"matrix({' '.join(map(format_number, self.bbox.transformation))})"
+
+
+@dataclasses.dataclass
+class BoundingBox(HasBoundingBox):
+    """Mutable bounding box object for svg_ultralight.
+
+    :param x: left x value
+    :param y: top y value
+    :param width: width of the bounding box
+    :param height: height of the bounding box
+
+    The below optional parameter, in addition to the required parameters, captures
+    the entire state of a BoundingBox instance. It could be used to make a copy or
+    to initialize a transformed box with the same transform_string as another box.
+    Under most circumstances, it will not be used.
+
+    :param transformation: transformation matrix
+
+    Functions that return a bounding box will return a BoundingBox instance. This
+    instance can be transformed (uniform scale and translate only). Transformations
+    will be combined and scored to be passed to new_element as a transform value.
+
+    Define the bbox with x=, y=, width=, height=
+
+    Transform the BoundingBox by setting these variables. Each time you set x, cx,
+    x2, y, cy, y2, width, or height, private transformation value transformation
+    will be updated.
+
+    The ultimate transformation can be accessed through ``.transform_string``.
+    So the workflow will look like :
+
+        1. Get the bounding box of an svg element
+        2. Update the bounding box x, y, width, and height
+        3. Transform the original svg element with
+            update_element(elem, transform=bbox.transform_string)
+        4. The transformed element will lie in the transformed BoundingBox
+
+    In addition to x, y, width, and height, x2 and y2 can be set to establish the
+    right x value or bottom y value.
+
+    The point of all of this is to simplify stacking and aligning elements. To stack:
+
+        ```
+        elem_a = new_element(*args)
+        bbox_a = get_bounding_box(elem_a)
+
+        elem_b = new_element(*args)
+        bbox_b = get_bounding_box(elem_b)
+
+        # align at same x
+        bbox_b.x = bbox_a.x
+
+        # make the same width
+        bbox_b.width = bbox_a.width
+
+        # stack a on top of b
+        bbox_a.y2 = bbox_b.y
+
+        update_element(elem_a, transform=bbox_a.transform_string)
+        update_element(elem_b, transform=bbox_b.transform_string)
+    """
+
+    base_x: float = dataclasses.field(init=False)
+    base_y: float = dataclasses.field(init=False)
+    base_width: float = dataclasses.field(init=False)
+    base_height: float = dataclasses.field(init=False)
+    transformation: _Matrix = dataclasses.field(init=False)
+
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        transformation: _Matrix = (1, 0, 0, 1, 0, 0),
+    ) -> None:
+        """Initialize a BoundingBox instance.
+
+        :param x: left x value
+        :param y: top y value
+        :param width: width of the bounding box
+        :param height: height of the bounding box
+        """
+        self.base_x = x
+        self.base_y = y
+        self.base_width = width
+        self.base_height = height
+        self.transformation = transformation
+        self.bbox = self
 
     def merge(self, *others: BoundingBox) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
@@ -390,182 +392,3 @@ class BoundingBox(SupportsBounds):
         min_y = min(x.y for x in bboxes)
         max_y = max(x.y + x.height for x in bboxes)
         return BoundingBox(min_x, min_y, max_x - min_x, max_y - min_y)
-
-
-class HasBoundingBox(SupportsBounds):
-    """A parent class for BoundElement and others that have a bbox attribute."""
-
-    def __init__(self, bbox: BoundingBox) -> None:
-        """Initialize the HasBoundingBox instance."""
-        self.bbox = bbox
-
-    @property
-    def transformation(self) -> _Matrix:
-        """The transformation matrix of the bounding box."""
-        return self.bbox.transformation
-
-    def transform(
-        self,
-        transformation: _Matrix | None = None,
-        *,
-        scale: tuple[float, float] | None = None,
-        dx: float | None = None,
-        dy: float | None = None,
-    ):
-        """Transform the element and bounding box.
-
-        :param transformation: a 6-tuple transformation matrix
-        :param scale: a scaling factor
-        :param dx: the x translation
-        :param dy: the y translation
-        """
-        self.bbox.transform(transformation, scale=scale, dx=dx, dy=dy)
-
-    @property
-    def scale(self) -> tuple[float, float]:
-        """The scale of the bounding box.
-
-        :return: the scale of the bounding box
-        """
-        xx, xy, yx, yy, *_ = self.bbox.transformation
-        return math.sqrt(xx * xx + xy * xy), math.sqrt(yx * yx + yy * yy)
-
-    @scale.setter
-    def scale(self, value: tuple[float, float]):
-        """Set the scale of the bounding box.
-
-        :param value: the scale of the bounding box
-        """
-        self.transform(scale=(value[0] / self.scale[0], value[1] / self.scale[1]))
-
-    @property
-    def x(self) -> float:
-        """The x coordinate of the left edge of the bounding box.
-
-        :return: the x coordinate of the left edge of the bounding box
-        """
-        return self.bbox.x
-
-    @x.setter
-    def x(self, value: float):
-        """Set the x coordinate of the left edge of the bounding box.
-
-        :param value: the new x coordinate of the left edge of the bounding box
-        """
-        self.transform(dx=value - self.x)
-
-    @property
-    def x2(self) -> float:
-        """The x coordinate of the right edge of the bounding box.
-
-        :return: the x coordinate of the right edge of the bounding box
-        """
-        return self.bbox.x2
-
-    @x2.setter
-    def x2(self, value: float):
-        """Set the x coordinate of the right edge of the bounding box.
-
-        :param value: the new x coordinate of the right edge of the bounding box
-        """
-        self.x += value - self.x2
-
-    @property
-    def cx(self) -> float:
-        """The x coordinate of the center of the bounding box.
-
-        :return: the x coordinate of the center of the bounding box
-        """
-        return self.bbox.cx
-
-    @cx.setter
-    def cx(self, value: float):
-        """Set the x coordinate of the center of the bounding box.
-
-        :param value: the new x coordinate of the center of the bounding box
-        """
-        self.x += value - self.cx
-
-    @property
-    def y(self) -> float:
-        """The y coordinate of the top edge of the bounding box.
-
-        :return: the y coordinate of the top edge of the bounding box
-        """
-        return self.bbox.y
-
-    @y.setter
-    def y(self, value: float):
-        """Set the y coordinate of the top edge of the bounding box.
-
-        :param value: the new y coordinate of the top edge of the bounding box
-        """
-        self.transform(dy=value - self.y)
-
-    @property
-    def y2(self) -> float:
-        """The y coordinate of the bottom edge of the bounding box.
-
-        :return: the y coordinate of the bottom edge of the bounding box
-        """
-        return self.bbox.y2
-
-    @y2.setter
-    def y2(self, value: float):
-        """Set the y coordinate of the bottom edge of the bounding box.
-
-        :param value: the new y coordinate of the bottom edge of the bounding box
-        """
-        self.y += value - self.y2
-
-    @property
-    def cy(self) -> float:
-        """The y coordinate of the center of the bounding box.
-
-        :return: the y coordinate of the center of the bounding box
-        """
-        return self.bbox.cy
-
-    @cy.setter
-    def cy(self, value: float):
-        """Set the y coordinate of the center of the bounding box.
-
-        :param value: the new y coordinate of the center of the bounding box
-        """
-        self.y += value - self.cy
-
-    @property
-    def width(self) -> float:
-        """The width of the bounding box.
-
-        :return: the width of the bounding box
-        """
-        return self.bbox.width
-
-    @width.setter
-    def width(self, value: float):
-        """Set the width of the bounding box.
-
-        :param value: the new width of the bounding box
-        """
-        current_x = self.x
-        current_y = self.y
-        self.transform(scale=(value / self.width, value / self.width))
-        self.x = current_x
-        self.y = current_y
-
-    @property
-    def height(self) -> float:
-        """The height of the bounding box.
-
-        :return: the height of the bounding box
-        """
-        return self.bbox.height
-
-    @height.setter
-    def height(self, value: float):
-        """Set the height of the bounding box.
-
-        :param value: the new height of the bounding box
-        """
-        self.width *= value / self.height

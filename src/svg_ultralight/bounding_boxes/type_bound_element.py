@@ -45,9 +45,6 @@ class BoundElement(HasBoundingBox):
         self.elem = element
         self.bbox = bounding_box
 
-    def _update_elem(self):
-        self.elem.attrib["transform"] = self.bbox.transform_string
-
     def transform(
         self,
         transformation: _Matrix | None = None,

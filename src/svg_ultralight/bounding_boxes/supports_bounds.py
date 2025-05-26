@@ -45,11 +45,6 @@ class SupportsBounds(Protocol):
     set width and height.
     """
 
-    @property
-    def transformation(self) -> _Matrix:
-        """Return an svg-style transformation matrix."""
-        ...
-
     def transform(
         self,
         transformation: _Matrix | None = None,
