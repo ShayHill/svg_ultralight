@@ -144,11 +144,11 @@ def pad_and_scale(
     """Expand and scale the pad argument. If necessary, scale image.
 
     :param viewbox: viewbox to pad (x, y, width height)
-    :param pad: padding to add around image, in user units or inches. if a
+    :param pad: padding to add around image, in user units or inches. If a
         sequence, it should be (top, right, bottom, left). if a single float or
-        string, it will be applied to all sides. if two floats, top and bottom
-        then left and right. if three floats, top, left and right, then bottom.
-        if four floats, top, right, bottom, left.
+        string, it will be applied to all sides. If two floats, top and bottom
+        then left and right. If three floats, top, left and right, then bottom.
+        If four floats, top, right, bottom, left.
     :param print_width: width of print area, in user units (float), a string
         with a unit specifier (e.g., "452mm"), or just a unit specifier (e.g.,
         "pt")
@@ -169,7 +169,7 @@ def pad_and_scale(
     If the width and height *are* specified, the user units become whatever they
     need to be to fit that requirement. For instance, if the viewbox width is 96
     and the width argument is "1in", then the user units are *still* pixels,
-    because there are 96 pixels in an inch. If the viewbox with is 2 and the
+    because there are 96 pixels in an inch. If the viewbox width is 2 and the
     width argument is "1in", then the user units are 1/2 of an inch (i.e., 48
     pixels) each, because there are 2 user units in an inch. If the viewbox
     width is 3 and the width argument is "1yd", the each user unit is 1 foot.
@@ -195,17 +195,26 @@ def pad_and_scale(
     the unit designators without changing the scale.
 
     Print aspect ratio is ignored. Viewbox aspect ratio is preserved. For
-    instance, If you take a 100x100 unit image then pass pad="0.25in" and
-    print_width="12in", the output image will be 12.5 inches across. Whatever
-    geometry was visible in the original viewbox will be much larger, but the
-    padding will still be 0.25 inches. If you want to use padding and need a
-    specific output image size, remember to subtract the padding width from your
-    print_width or print_height.
+    instance, if you created two images
+
+    * x_=0, y_=0, width_=1, height_=2, pad_="0.25in", print_width_="6in"
+
+    * x_=0, y_=0, width_=1, height_=2, pad_="0.25in", print_width_="12in"
+
+    ... (note that the images only vary in print_width_), the first image would be
+    rendered at 6.5x12.5 inches and the second at 12.5x24.5 inches. The visible
+    content in the viewbox would be exactly twice as wide in the larger image, but
+    the padding would remain 0.25 in both images. Despite setting `print_width_` to
+    exactly 6 or 12 inches, you would not get an image exactly 6 or 12 inches wide.
+    Despite a viewbox aspect ratio of 1:2, you would not get an output image of
+    exactly 1:2. If you want to use padding and need a specific output image size or
+    aspect ratio, remember to subtract the padding width from your print_width or
+    print_height.
 
     Scaling attributes are returned as a dictonary that can be "exploded" into
     the element constructor, e.g., {"width": "12.5in", "height": "12.5in"}.
 
-    * If neighther a print_width nor print_height is specified, no scaling
+    * If neither a print_width nor print_height is specified, no scaling
       attributes will be returned.
 
     * If either is specified, both a width and height will be returned (even if
@@ -242,7 +251,7 @@ def pad_and_scale(
     a 16" x 9" image with viwebox(0, 0, 14, 7), pad_="1in", print_width_="14in"
     ... then scale the printout with dpu_=2 to get a 32" x 18" image with the
     same viewbox. This means the padding will be 2" on all sides, but the image
-    will be identical (just twice as large) as the 16" x 9" image.
+    will be identical (just twice as wide and twice as high) as the 16" x 9" image.
     """
     pads = expand_pad_arg(pad)
 
