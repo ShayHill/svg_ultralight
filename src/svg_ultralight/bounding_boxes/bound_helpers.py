@@ -10,8 +10,9 @@ from typing import TYPE_CHECKING
 
 from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
+from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
-from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 
@@ -66,15 +67,7 @@ def new_bbox_union(*blems: SupportsBounds | EtreeElement) -> BoundingBox:
 
     Will used the padded_box attribute of PaddedText instances.
     """
-    bboxes: list[BoundingBox] = []
-    for blem in blems:
-        if isinstance(blem, BoundingBox):
-            bboxes.append(blem)
-        elif isinstance(blem, BoundElement):
-            bboxes.append(blem.bbox)
-        elif isinstance(blem, PaddedText):
-            bboxes.append(blem.padded_bbox)
-
+    bboxes = [x.bbox for x in blems if isinstance(x, HasBoundingBox)]
     if not bboxes:
         msg = (
             "Cannot find any bounding boxes to union. "
