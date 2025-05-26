@@ -182,31 +182,31 @@ class TestMapElemsToBoundingBoxes:
 
         result = get_bounding_boxes(INKSCAPE, xml, rect1, rect2, rect3, rect4)
         assert result[0] == BoundingBox(
-            _x=0.0,
-            _y=0.0,
-            _width=16.0,
-            _height=32.0,
-            _transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0,
+            y=0.0,
+            width=16.0,
+            height=32.0,
+            transformation=(1, 0, 0, 1, 0, 0),
         )
         assert result[1] == BoundingBox(
-            _x=0.0, _y=0.0, _width=16.0, _height=9.0, _transformation=(1, 0, 0, 1, 0, 0)
+            x=0.0, y=0.0, width=16.0, height=9.0, transformation=(1, 0, 0, 1, 0, 0)
         )
         assert result[2] == BoundingBox(
-            _x=0.0, _y=0.0, _width=8.0, _height=32.0, _transformation=(1, 0, 0, 1, 0, 0)
+            x=0.0, y=0.0, width=8.0, height=32.0, transformation=(1, 0, 0, 1, 0, 0)
         )
         assert result[3] == BoundingBox(
-            _x=0.0,
-            _y=0.0,
-            _width=12.0,
-            _height=18.0,
-            _transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0,
+            y=0.0,
+            width=12.0,
+            height=18.0,
+            transformation=(1, 0, 0, 1, 0, 0),
         )
         assert result[4] == BoundingBox(
-            _x=0.0,
-            _y=0.0,
-            _width=12.0,
-            _height=18.0,
-            _transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0,
+            y=0.0,
+            width=12.0,
+            height=18.0,
+            transformation=(1, 0, 0, 1, 0, 0),
         )
 
     def test_get_bbox_vs_boxes(self) -> None:

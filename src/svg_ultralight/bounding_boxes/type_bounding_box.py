@@ -76,11 +76,33 @@ class BoundingBox(SupportsBounds):
         update_element(elem_b, transform=bbox_b.transform_string)
     """
 
-    _x: float
-    _y: float
-    _width: float
-    _height: float
-    _transformation: _Matrix = (1, 0, 0, 1, 0, 0)
+    _x: float = dataclasses.field(init=False)
+    _y: float = dataclasses.field(init=False)
+    _width: float = dataclasses.field(init=False)
+    _height: float = dataclasses.field(init=False)
+    _transformation: _Matrix = dataclasses.field(init=False)
+
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        transformation: _Matrix = (1, 0, 0, 1, 0, 0),
+    ) -> None:
+        """Initialize a BoundingBox instance.
+
+        :param x: left x value
+        :param y: top y value
+        :param width: width of the bounding box
+        :param height: height of the bounding box
+        """
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+        self._transformation = transformation
+        self.bbox = self
 
     def _get_input_corners(
         self,

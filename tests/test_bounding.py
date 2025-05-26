@@ -250,6 +250,6 @@ class TestBoundHelpers:
 
 def test_import_bound_element():
     blem = parse_bound_element(TEST_RESOURCES / "arrow.svg")
-    assert blem.bbox == BoundingBox(_x=0, _y=0, _width=10, _height=10, _transformation=(1, 0, 0, 1, 0, 0))
+    assert blem.bbox == BoundingBox(x=0, y=0, width=10, height=10, transformation=(1, 0, 0, 1, 0, 0))
     assert etree.tostring(blem.elem) == b'<g><ns0:rect xmlns:ns0="http://www.w3.org/2000/svg"' + b' x="0" y="0" width="10" height="10"/>\n</g>'
 
