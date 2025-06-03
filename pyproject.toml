@@ -6,8 +6,14 @@ authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["lxml", "pillow", "paragraphs", "types-lxml", "typing-extensions"]
-
+dependencies = [
+    "fonttools",
+    "lxml",
+    "paragraphs",
+    "pillow",
+    "types-lxml",
+    "typing-extensions",
+]
 [project.optional-dependencies]
 dev = ["pytest", "commitizen", "pre-commit", "tox"]
 images = ["pillow"]
