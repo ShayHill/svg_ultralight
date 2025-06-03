@@ -92,6 +92,7 @@ repos:
   # S301 don't use pickle
   # B028 wants explicit stacklevel on warn
   # BLE001 Use of `except Exception:` detected
+  # ANN401 Any type disallowed
   rev: 'v0.11.11'
   hooks:
     - id: ruff
@@ -100,7 +101,7 @@ repos:
       args:
       - --target-version=py39
       - --select=ALL
-      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,S320,S301,B028,BLE001
+      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,S320,S301,B028,BLE001,ANN401
       - --fix
       - --fixable=RUF022
     - id: ruff
