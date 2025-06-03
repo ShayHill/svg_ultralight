@@ -5,11 +5,11 @@
 
 Rounding some numbers to ensure quality svg rendering:
 * Rounding floats to six digits after the decimal
-* Rounding viewBox dimensions to ints
 """
 
 from __future__ import annotations
 
+import binascii
 import re
 from contextlib import suppress
 from enum import Enum
@@ -216,3 +216,71 @@ def get_viewBox_str(
         format_number(x) for x in (x - pad_l, y - pad_t, width + pad_h, height + pad_v)
     ]
     return " ".join(dims)
+
+
+# ===================================================================================
+#   Encode and decode arbitrary strings to / from valid CSS class names.
+# ===================================================================================
+
+
+# insert his before any class name that would otherwise start with a digit
+_NAME_PREFIX = "__"
+
+_DELIMITED_HEX = re.compile(r"_[0-9a-fA-F]{2,8}_")
+
+
+def _encode_class_name_invalid_char_to_hex(char: str) -> str:
+    """Encode any invalid single char to a hex representation prefixed with '_x'.
+
+    :param char: The character to encode.
+    :return: A string in the format '_x' followed by the hex value of the character.
+
+    Return valid css-class-name characters unchanged. Encode others. Exception: This
+    function encodes `_`, which *are* valid CSS class characters, in order to reserve
+    underscores for `_` hex delimiters and `__` -name prefixes.
+    """
+    if re.match(r"[a-zA-Z0-9-]", char):
+        return char
+    hex_ = binascii.hexlify(char.encode("utf-8")).decode("ascii")
+    return f"_{hex_}_"
+
+
+def encode_to_css_class_name(text: str) -> str:
+    """Convert text to a valid CSS class name in a reversible way.
+
+    :param text: The text to convert.
+    :return: A valid CSS class name derived from the text. The intended use is to pass
+        a font filename, so the filename can be decoded from the contents of an SVG
+        file and each css class created from a font file will, if the style is not
+        altered, have a unique class name.
+
+    Non-ascii characters like `é` will be encoded as hex, even if they are, by
+    documentation, valid CSS class characters. The class name will be ascii only.
+    """
+    css_class = "".join(_encode_class_name_invalid_char_to_hex(c) for c in text)
+    # add a prefix if the name starts with a digit or is empty
+    if not css_class or not re.match(r"^[a-zA-Z_]", css_class):
+        css_class = _NAME_PREFIX + css_class
+    return css_class
+
+
+def decode_from_css_class_name(css_class: str) -> str:
+    """Reverse the conversion from `filename_to_css_class`.
+
+    :param css_class: The CSS class name to convert back to text. This will not
+        be meaningful if the class name was not created by encode_css_class_name. If
+        you use another string, there is a potential for a hex decoding error.
+    :return: The original filename passed to `filename_to_css_class`.
+    """
+    css_class = css_class.removeprefix(_NAME_PREFIX)
+
+    result = ""
+    while css_class:
+        if match := _DELIMITED_HEX.match(css_class):
+            hex_str = match.group(0)[1:-1]
+            result += binascii.unhexlify(hex_str).decode("utf-8")
+            css_class = css_class[len(match.group(0)) :]
+        else:
+            result += css_class[0]
+            css_class = css_class[1:]
+    return result

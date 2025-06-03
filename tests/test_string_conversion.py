@@ -5,6 +5,9 @@
 """
 
 # pyright: reportPrivateUsage=false
+import random
+import string
+import pytest
 
 import svg_ultralight.string_conversion as mod
 
@@ -90,9 +93,9 @@ class TestFormatAttrDict:
 
     def test_format_string(self):
         """Format floats in a format SVG attribute string."""
-        assert mod.format_attr_dict(
-            transform="translate(1.0, -0) scale(1.0, 1.0)"
-        ) == {"transform": "translate(1, 0) scale(1, 1)"}
+        assert mod.format_attr_dict(transform="translate(1.0, -0) scale(1.0, 1.0)") == {
+            "transform": "translate(1, 0) scale(1, 1)"
+        }
 
     def test_trailing_underscore(self):
         """Remove trailing underscore from key."""
@@ -101,3 +104,37 @@ class TestFormatAttrDict:
     def test_replace_underscore(self):
         """Replace underscore with hyphen."""
         assert mod.format_attr_dict(x_y=1) == {"x-y": "1"}
+
+
+def _generate_random_utf8_string():
+    length = random.randint(11, 99)
+    additional_chars = "éçüäößñáàâêëíìîïóòôõúùûñãõåøæœçÿžčšćđž"
+    characters = (
+        string.ascii_letters
+        + string.digits
+        + string.punctuation
+        + string.whitespace
+        + additional_chars
+    )
+    random_string = "".join(random.choice(characters) for _ in range(length))
+    return random_string
+
+@pytest.fixture(params=range(100))
+def random_utf8_string(request: pytest.FixtureRequest) -> str:
+    _ = request.param
+    return _generate_random_utf8_string()
+
+
+class TestEncodeCssClassName:
+    def test_encode_decode(self, random_utf8_string: str):
+        """Encode - decode will return the original string."""
+        encoded = mod.encode_to_css_class_name(random_utf8_string)
+        decoded = mod.decode_from_css_class_name(encoded)
+        assert decoded == random_utf8_string, (
+            f"Decoded string '{decoded}' does not match original '{random_utf8_string}'"
+        )
+
+    def test_encode_valid(self, random_utf8_string: str):
+        """All encoded strings will be ascii, _, and -."""
+        encoded = mod.encode_to_css_class_name(random_utf8_string)
+        assert all(c.isascii() or c in {'_', '-'} for c in encoded)
