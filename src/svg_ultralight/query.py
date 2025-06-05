@@ -28,6 +28,7 @@ from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.font_tools.font_css import add_svg_font_class
 from svg_ultralight.main import new_svg_root, write_svg
 
 if TYPE_CHECKING:
@@ -161,7 +162,9 @@ def map_elems_to_bounding_boxes(
         elem_id = elem.attrib.get("id")
         if not (elem_id):  # id removed in a previous loop
             continue
-        elem2bbox[elem] = id2bbox[elem_id]
+        with suppress(KeyError):
+            # some elems like <style> don't have a bounding box
+            elem2bbox[elem] = id2bbox[elem_id]
         if elem_id.startswith(_TEMP_ID_PREFIX):
             del elem.attrib["id"]
     elem2bbox["svg"] = BoundingBox.merged(*id2bbox.values())
@@ -247,7 +250,11 @@ def clear_svg_ultralight_cache() -> None:
 
 
 def pad_text(
-    inkscape: str | Path, text_elem: EtreeElement, capline_reference_char: str = "M"
+    inkscape: str | Path,
+    text_elem: EtreeElement,
+    y_bounds_reference: str = "M",
+    *,
+    font: str | os.PathLike[str] | None = None,
 ) -> PaddedText:
     r"""Create a PaddedText instance from a text element.
 
@@ -255,20 +262,38 @@ def pad_text(
         IMPORTANT: path cannot end with ``.exe``.
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
     :param text_elem: an etree element with a text tag
-    :param capline_reference_char: a character to use to determine the baseline and
-        capline. The default "M" is a good choice, but you might need something else
-        if using a weird font, or if you'd like to use the x-height instead of the
-        capline.
+    :param y_bounds_reference: an optional string to use to determine the ascent and
+        capline of the font. The default "M" is a good choice, which will result in
+        the output bounding box`s beind centered between the baseline and the
+        capline. You might need something else if using a weird font, or if you'd
+        like to center based on the x-height instead of the capline. You could use
+        "{g" to get very close to the actual ascent and descent of the font.
+    :param font: optionally add a path to a font file to use for the text element.
+        This is going to conflict with any font-family, font-style, or other
+        font-related attributes *except* font-size. You likely want to use
+        `font_tools.new_padded_text` if you're going to pass a font path, but you can
+        use it here to compare results between `pad_text` and `new_padded_text`.
     :return: a PaddedText instance
     """
-    rmargin_ref = deepcopy(text_elem)
-    capline_ref = deepcopy(text_elem)
-    _ = rmargin_ref.attrib.pop("id", None)
-    _ = capline_ref.attrib.pop("id", None)
-    rmargin_ref.attrib["text-anchor"] = "end"
-    capline_ref.text = capline_reference_char
+    root = new_svg_root()
+    text_ref = deepcopy(text_elem)
+    _ = text_ref.attrib.pop("id", None)
+    if font:
+        class_name = add_svg_font_class(root, font)
+        text_ref.set("class", class_name)
 
-    bboxes = get_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
+    rmargin_ref = deepcopy(text_ref)
+    capline_ref = deepcopy(text_ref)
+    rmargin_ref.attrib["text-anchor"] = "end"
+    capline_ref.text = y_bounds_reference
+
+    refs: list[EtreeElement] = []
+    for ref in (text_ref, rmargin_ref, capline_ref):
+        root_ = deepcopy(root)
+        root_.append(ref)
+        refs.append(root_)
+
+    bboxes = get_bounding_boxes(inkscape, *refs)
     bbox, rmargin_bbox, capline_bbox = bboxes
 
     tpad = bbox.y - capline_bbox.y
