@@ -28,7 +28,8 @@ from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.font_tools.font_css import add_svg_font_class
+from svg_ultralight.constructors import update_element
+from svg_ultralight.font_tools.font_info import get_svg_font_attributes
 from svg_ultralight.main import new_svg_root, write_svg
 
 if TYPE_CHECKING:
@@ -103,7 +104,7 @@ def _split_bb_string(bb_string: str) -> tuple[str, BoundingBox]:
 
 
 def map_elems_to_bounding_boxes(
-    inkscape: str | Path, *elem_args: EtreeElement
+    inkscape: str | os.PathLike[str], *elem_args: EtreeElement
 ) -> dict[EtreeElement | Literal["svg"], BoundingBox]:
     r"""Query an svg file for bounding-box dimensions.
 
@@ -201,7 +202,7 @@ def _try_bbox_cache(elem_hash: str) -> BoundingBox | None:
 
 
 def get_bounding_boxes(
-    inkscape: str | Path, *elem_args: EtreeElement
+    inkscape: str | os.PathLike[str], *elem_args: EtreeElement
 ) -> tuple[BoundingBox, ...]:
     r"""Get bounding box around a single element (or multiple elements).
 
@@ -231,7 +232,9 @@ def get_bounding_boxes(
     return tuple(hash2bbox[h] for h in elem2hash.values())
 
 
-def get_bounding_box(inkscape: str | Path, elem: EtreeElement) -> BoundingBox:
+def get_bounding_box(
+    inkscape: str | os.PathLike[str], elem: EtreeElement
+) -> BoundingBox:
     r"""Get bounding box around a single element.
 
     :param inkscape: path to an inkscape executable on your local file system
@@ -249,10 +252,13 @@ def clear_svg_ultralight_cache() -> None:
         cache_file.unlink()
 
 
+DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
+
+
 def pad_text(
-    inkscape: str | Path,
+    inkscape: str | os.PathLike[str],
     text_elem: EtreeElement,
-    y_bounds_reference: str = "M",
+    y_bounds_reference: str = DEFAULT_Y_BOUNDS_REFERENCE,
     *,
     font: str | os.PathLike[str] | None = None,
 ) -> PaddedText:
@@ -263,11 +269,11 @@ def pad_text(
         Use something like ``"C:\\Program Files\\Inkscape\\inkscape"``
     :param text_elem: an etree element with a text tag
     :param y_bounds_reference: an optional string to use to determine the ascent and
-        capline of the font. The default "M" is a good choice, which will result in
-        the output bounding box`s beind centered between the baseline and the
-        capline. You might need something else if using a weird font, or if you'd
-        like to center based on the x-height instead of the capline. You could use
-        "{g" to get very close to the actual ascent and descent of the font.
+        capline of the font. The default is a good choice, which approaches or even
+        meets the ascent of descent of most fonts without using utf-8 characters. You
+        might want to use a letter like "M" or even "x" if you are using an all-caps
+        string and want to center between the capline and baseline or if you'd like
+        to center between the baseline and x-line.
     :param font: optionally add a path to a font file to use for the text element.
         This is going to conflict with any font-family, font-style, or other
         font-related attributes *except* font-size. You likely want to use
@@ -275,25 +281,16 @@ def pad_text(
         use it here to compare results between `pad_text` and `new_padded_text`.
     :return: a PaddedText instance
     """
-    root = new_svg_root()
-    text_ref = deepcopy(text_elem)
-    _ = text_ref.attrib.pop("id", None)
-    if font:
-        class_name = add_svg_font_class(root, font)
-        text_ref.set("class", class_name)
-
-    rmargin_ref = deepcopy(text_ref)
-    capline_ref = deepcopy(text_ref)
+    if font is not None:
+        _ = update_element(text_elem, **get_svg_font_attributes(font))
+    rmargin_ref = deepcopy(text_elem)
+    capline_ref = deepcopy(text_elem)
+    _ = rmargin_ref.attrib.pop("id", None)
+    _ = capline_ref.attrib.pop("id", None)
     rmargin_ref.attrib["text-anchor"] = "end"
     capline_ref.text = y_bounds_reference
 
-    refs: list[EtreeElement] = []
-    for ref in (text_ref, rmargin_ref, capline_ref):
-        root_ = deepcopy(root)
-        root_.append(ref)
-        refs.append(root_)
-
-    bboxes = get_bounding_boxes(inkscape, *refs)
+    bboxes = get_bounding_boxes(inkscape, text_elem, rmargin_ref, capline_ref)
     bbox, rmargin_bbox, capline_bbox = bboxes
 
     tpad = bbox.y - capline_bbox.y
