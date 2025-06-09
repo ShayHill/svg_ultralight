@@ -30,6 +30,7 @@ from svg_ultralight.constructors.new_element import (
     new_sub_element,
     update_element,
 )
+from svg_ultralight.font_tools.comp_results import check_font_tools_alignment
 from svg_ultralight.inkscape import (
     write_pdf,
     write_pdf_from_svg,
@@ -67,6 +68,7 @@ __all__ = [
     "PaddedText",
     "SupportsBounds",
     "bbox_dict",
+    "check_font_tools_alignment",
     "clear_svg_ultralight_cache",
     "cut_bbox",
     "deepcopy_element",

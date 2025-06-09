@@ -17,7 +17,6 @@ Three variants:
 from __future__ import annotations
 
 from copy import deepcopy
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
@@ -29,7 +28,6 @@ from svg_ultralight.font_tools.font_info import (
 from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import (
-    encode_to_css_class_name,
     format_attr_dict,
     format_number,
 )
@@ -123,8 +121,8 @@ def pad_text_ft(
     :return: a PaddedText instance with a line_gap defined.
     """
     attributes_ = format_attr_dict(**attributes)
+    attributes_.update(get_svg_font_attributes(font))
     attributes_["font-size"] = attributes_.get("font-size", format_number(font_size))
-    attributes_["class"] = encode_to_css_class_name(Path(font).name)
 
     elem = new_element("text", text=text, **attributes_)
     info = get_padded_text_info(

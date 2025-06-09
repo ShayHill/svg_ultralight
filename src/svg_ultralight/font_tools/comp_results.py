@@ -24,16 +24,16 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from svg_ultralight import new_bbox_rect, new_svg_root_around_bounds, pad_bbox
+from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_rect, pad_bbox
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     DEFAULT_Y_BOUNDS_REFERENCE,
     pad_text,
     pad_text_ft,
 )
 from svg_ultralight.constructors import new_element
-from svg_ultralight.font_tools.font_css import add_svg_font_class
 from svg_ultralight.font_tools.font_info import get_svg_font_attributes
 from svg_ultralight.main import write_svg
+from svg_ultralight.root_elements import new_svg_root_around_bounds
 
 if TYPE_CHECKING:
     import os
@@ -214,7 +214,6 @@ def draw_comparison(
     )
 
     root = new_svg_root_around_bounds(pad_bbox(padded_pt.bbox, 10))
-    _ = add_svg_font_class(root, font)
     root.append(
         new_bbox_rect(
             padded_pt.unpadded_bbox, fill="none", stroke_width=0.07, stroke="red"
