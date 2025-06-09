@@ -14,7 +14,11 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     pad_bbox,
     parse_bound_element,
 )
-from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text, pad_text_ft
+from svg_ultralight.bounding_boxes.padded_text_initializers import (
+    pad_text,
+    pad_text_ft,
+    pad_text_mix,
+)
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
@@ -87,8 +91,8 @@ __all__ = [
     "new_svg_root_around_bounds",
     "pad_bbox",
     "pad_text",
-    "pad_text",
     "pad_text_ft",
+    "pad_text_mix",
     "parse_bound_element",
     "transform_element",
     "update_element",

@@ -37,7 +37,7 @@ DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 def pad_text(
     inkscape: str | os.PathLike[str],
     text_elem: EtreeElement,
-    y_bounds_reference: str = DEFAULT_Y_BOUNDS_REFERENCE,
+    y_bounds_reference: str | None = None,
     *,
     font: str | os.PathLike[str] | None = None,
 ) -> PaddedText:
@@ -60,6 +60,8 @@ def pad_text(
         use it here to compare results between `pad_text` and `new_padded_text`.
     :return: a PaddedText instance
     """
+    if y_bounds_reference is None:
+        y_bounds_reference = DEFAULT_Y_BOUNDS_REFERENCE
     if font is not None:
         _ = update_element(text_elem, **get_svg_font_attributes(font))
     if "font-size" not in text_elem.attrib:
@@ -119,3 +121,56 @@ def pad_text_ft(
         font, text, font_size, ascent, descent, y_bounds_reference=y_bounds_reference
     )
     return PaddedText(elem, info.bbox, *info.padding, info.line_gap)
+
+
+def pad_text_mix(
+    inkscape: str | os.PathLike[str],
+    font: str | os.PathLike[str],
+    text: str,
+    font_size: float = DEFAULT_FONT_SIZE,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    **attributes: str | float,
+) -> PaddedText:
+    """Use Inkscape text bounds and fill missing with fontTools.
+
+    :param font: path to a font file.
+    :param text: the text of the text element.
+    :param font_size: the font size to use.
+    :param ascent: the ascent of the font. If not provided, it will be calculated
+        from the font file.
+    :param descent: the descent of the font. If not provided, it will be calculated
+        from the font file.
+    :param y_bounds_reference: optional character or string to use as a reference
+        for the ascent and descent. If provided, the ascent and descent will be the y
+        extents of the capline reference. This argument is provided to mimic the
+        behavior of the query module's `pad_text` function. `pad_text` does no
+        inspect font files and relies on Inkscape to measure reference characters.
+    :param attributes: additional attributes to set on the text element. There is a
+        chance these will cause the font element to exceed the BoundingBox of the
+        PaddedText instance.
+    :return: a PaddedText instance with a line_gap defined.
+    """
+    elem = new_element("text", text=text, **attributes)
+    padded_inkscape = pad_text(inkscape, elem, y_bounds_reference, font=font)
+    padded_fonttools = pad_text_ft(
+        font,
+        text,
+        font_size,
+        ascent,
+        descent,
+        y_bounds_reference=y_bounds_reference,
+        **attributes,
+    )
+    bbox = padded_inkscape.unpadded_bbox
+    rpad = padded_inkscape.rpad
+    lpad = padded_inkscape.lpad
+    if y_bounds_reference is None:
+        tpad = padded_fonttools.tpad
+        bpad = padded_fonttools.bpad
+    else:
+        tpad = padded_inkscape.tpad
+        bpad = padded_inkscape.bpad
+    return PaddedText(elem, bbox, tpad, rpad, bpad, lpad, padded_fonttools.line_gap)
