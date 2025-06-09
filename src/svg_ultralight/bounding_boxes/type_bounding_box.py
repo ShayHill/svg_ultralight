@@ -41,6 +41,18 @@ class HasBoundingBox(SupportsBounds):
         y2 = y + self.bbox.base_height
         return (x, y), (x2, y), (x2, y2), (x, y2)
 
+    def values(self) -> tuple[float, float, float, float]:
+        """Get the values of the bounding box.
+
+        :return: x, y, width, height of the bounding box
+        """
+        return (
+            self.bbox.x,
+            self.bbox.y,
+            self.bbox.width,
+            self.bbox.height,
+        )
+
     def _get_transformed_corners(
         self,
     ) -> tuple[
