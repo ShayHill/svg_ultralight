@@ -19,6 +19,9 @@ class TestPadText:
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
+        if not INKSCAPE.exists():
+            msg = "Inkscape executable does not exist on system."
+            pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
         no_font = pad_text(INKSCAPE, test_elem)
         with_font = pad_text(INKSCAPE, test_elem, font=font)
@@ -26,6 +29,9 @@ class TestPadText:
 
     def test_pad_text_line_gap(self) -> None:
         """A PaddedText instance created by pad_text has no line gap by default."""
+        if not INKSCAPE.exists():
+            msg = "Inkscape executable does not exist on system."
+            pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
         padded = pad_text(INKSCAPE, test_elem)
         with pytest.raises(AttributeError):
@@ -33,6 +39,9 @@ class TestPadText:
 
     def test_pad_text_set_line_gap(self) -> None:
         """A PaddedText instance created by pad_text has a line_gap if set."""
+        if not INKSCAPE.exists():
+            msg = "Inkscape executable does not exist on system."
+            pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
         padded = pad_text(INKSCAPE, test_elem)
         padded.line_gap = 5
@@ -40,12 +49,18 @@ class TestPadText:
 
     def test_pad_text_no_leading(self) -> None:
         """A PaddedText instance created by pad_text has no leading by default."""
+        if not INKSCAPE.exists():
+            msg = "Inkscape executable does not exist on system."
+            pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
         padded = pad_text(INKSCAPE, test_elem)
         with pytest.raises(AttributeError):
             _ = padded.leading
 
     def test_pad_text_set_leading_by_setting_line_gap(self) -> None:
+        if not INKSCAPE.exists():
+            msg = "Inkscape executable does not exist on system."
+            pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
         padded = pad_text(INKSCAPE, test_elem)
         padded.line_gap = 5
