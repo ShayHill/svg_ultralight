@@ -42,7 +42,7 @@ def write_png_from_svg(
 ) -> str:
     """Convert an svg file to a png.
 
-    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param inkscape: path to inkscape executable
     :param svg: path to svg file
     :param png: optional path to png output file
     :return: png filename
@@ -53,6 +53,7 @@ def write_png_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
+    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
     png = str(Path(svg).with_suffix(".png")) if png is None else str(png)
 
     # inkscape versions >= 1.0
@@ -78,7 +79,7 @@ def write_png(
 ) -> str:
     """Create a png file without writing an intermediate svg file.
 
-    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param inkscape: path to inkscape executable
     :param png: path to output png file
     :param root: root node of your svg geometry
     :param stylesheet: optional path to css stylesheet
@@ -103,7 +104,7 @@ def write_pdf_from_svg(
 ) -> str:
     """Convert an svg file to a pdf.
 
-    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param inkscape: path to inkscape executable
     :param svg: path to svg file
     :param pdf: optional path to png output file
     :return: pdf filename
@@ -114,6 +115,7 @@ def write_pdf_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
+    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
     pdf = str(Path(svg).with_suffix(".pdf")) if pdf is None else str(pdf)
 
     # inkscape versions >= 1.0
@@ -139,7 +141,7 @@ def write_pdf(
 ) -> str:
     """Create a pdf file without writing an intermediate svg file.
 
-    :param inkscape: path to inkscape executable (without .exe extension!)
+    :param inkscape: path to inkscape executable
     :param pdf: path to output pdf file
     :param root: root node of your svg geometry
     :param stylesheet: optional path to css stylesheet
@@ -172,6 +174,7 @@ def export_text_to_path(
 
     Find any text objects in an svg file and convert them to paths.
     """
+    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
     command = [
         str(inkscape),
         "--export-text-to-path",

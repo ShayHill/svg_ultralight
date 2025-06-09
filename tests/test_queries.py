@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from conftest import INKSCAPE, has_inkscape
 from svg_ultralight import BoundingBox, new_svg_root
 from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.query import (
@@ -20,7 +21,6 @@ from svg_ultralight.query import (
     map_elems_to_bounding_boxes,
 )
 
-INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
 
 
 class TestMergeBoundingBoxes:
@@ -150,11 +150,9 @@ class TestTransformBoundingBoxes:
 
 
 class TestMapElemsToBoundingBoxes:
+    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
     def test_gets_bboxes(self) -> None:
         """Run with a temporary file."""
-        if not INKSCAPE.exists():
-            msg = "Inkscape executable does not exist on system."
-            pytest.skip(msg)
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         rect1 = new_sub_element(xml, "rect", id="rect1", x=0, y=0, width=16, height=9)
         rect2 = new_sub_element(xml, "rect", id="rect2", x=0, y=0, width=8, height=32)
@@ -162,11 +160,9 @@ class TestMapElemsToBoundingBoxes:
         assert result[rect1] == BoundingBox(0.0, 0.0, 16.0, 9.0)
         assert result[rect2] == BoundingBox(0.0, 0.0, 8.0, 32.0)
 
+    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
     def test_removes_temp_ids(self) -> None:
         """Removes temporary IDs created during bounding box mapping."""
-        if not INKSCAPE.exists():
-            msg = "Inkscape executable does not exist on system."
-            pytest.skip(msg)
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
         rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
@@ -178,11 +174,9 @@ class TestMapElemsToBoundingBoxes:
         for elem in (rect1, rect2, rect3):
             assert "id" not in elem.attrib
 
+    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
     def test_get_bboxes_explicit(self) -> None:
         """Returns a dict with an entry for each element plus an envelope entry."""
-        if not INKSCAPE.exists():
-            msg = "Inkscape executable does not exist on system."
-            pytest.skip(msg)
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
         rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)
@@ -217,11 +211,9 @@ class TestMapElemsToBoundingBoxes:
             transformation=(1, 0, 0, 1, 0, 0),
         )
 
+    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
     def test_get_bbox_vs_boxes(self) -> None:
         """Multiple calls to get_bounding_box are equivalent to a single call."""
-        if not INKSCAPE.exists():
-            msg = "Inkscape executable does not exist on system."
-            pytest.skip(msg)
         xml = new_svg_root(10, 20, 160, 19, id="svg1")
         rect1 = new_sub_element(xml, "rect", x=0, y=0, width=16, height=9)
         rect2 = new_sub_element(xml, "rect", x=0, y=0, width=8, height=32)

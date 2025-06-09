@@ -6,9 +6,9 @@
 
 import random
 import uuid
-from pathlib import Path
 
 import pytest
+from conftest import INKSCAPE, has_inkscape
 from lxml import etree
 from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
@@ -17,16 +17,7 @@ from svg_ultralight.inkscape import convert_text_to_path
 from svg_ultralight.main import new_svg_root
 from svg_ultralight.nsmap import NSMAP
 
-INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
-
-if not INKSCAPE.with_suffix(".exe").exists():
-    msg = "Inkscape not found. Please install Inkscape or update the INKSCAPE path var."
-    raise FileNotFoundError(msg)
-
-
 PATH_TAG = str(etree.QName(NSMAP["svg"], "path"))
-TEXT_TAG = str(etree.QName(NSMAP["svg"], "text"))
-G_TAG = str(etree.QName(NSMAP["svg"], "g"))
 
 
 @pytest.fixture(scope="function")
@@ -43,11 +34,13 @@ def text_conversion() -> tuple[EtreeElement, EtreeElement]:
     return has_text, no_text
 
 
-# @pytest.mark.skipif(not INKSCAPE.exists(), reason="Inkscape not installed")
+@pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
 class TestTextToPath:
     """Test the convert_text_to_path function."""
 
-    def test_one_path_per_text_elem(self, text_conversion):
+    def test_one_path_per_text_elem(
+        self, text_conversion: tuple[EtreeElement, EtreeElement]
+    ) -> None:
         """Test the convert_text_to_path function."""
         has_text, no_text = text_conversion
         num_text = len(has_text.findall("text"))
