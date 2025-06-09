@@ -1,5 +1,15 @@
 """Functions that create PaddedText instances.
 
+Three variants:
+
+- `pad_text`: uses Inkscape to measure text bounds
+
+- `pad_text_ft`: uses fontTools to measure text bounds (faster, and you get line_gap)
+
+- `pad_text_mix`: uses Inkscape and fontTools to give true ascent, descent, and
+  line_gap while correcting some of the layout differences between fontTools and
+  Inkscape.
+
 :author: Shay Hill
 :created: 2025-06-09
 """

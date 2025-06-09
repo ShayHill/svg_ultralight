@@ -1,45 +1,85 @@
 """Use fontTools to extract some font information and remove the problematic types.
 
-This module is an alternative to the query module's `pad_text`. `pad_text` uses
-Inkscape to inspect reference characters and create a PaddedText instance that can be
-stacked and aligned similarly to how a word processor would stack and align text. For
-instance, the string `gg` is treated as if it were the same height as the string
-`Hh`, even though the `g` descends below the baseline and the `H` does not.
+Svg_Ultralight uses Inkscape command-line calls to find binding boxes, rasterize
+images, and convert font objects to paths. This has some nice advantages:
 
-`new_padded_text` will do the same, but in a more sophisticated, if less reliable,
-way. `new_padded_text` and its helper classes use fontTools to inspect the font file
-and extract the values needed for a PaddedText instance. This has advantages and
-disadvantages:
+- it's free
 
-Advantages:
+- ensures Inkscape compatibility, so you can open the results and edit them in
+  Inkscape
+
+- is much easier to work with than Adobe Illustrator's scripting
+
+... and a couple big disadvantages:
+
+- Inkscape will not read local font files without encoding them.
+
+- Inkscape uses Pango for text layout.
+
+Pango is a Linux / GTK library. You can get it working on Windows with some work, but
+it's definitely not a requirement I want for every project that uses Svg_Ultralight.
+
+This means I can only infer Pango's text layout by passing reference text elements to
+Inkscape and examining the results. That's not terribly, but it's slow and does not
+reveal line_gap, line_height, true ascent, or true descent, which I often want for
+text layout.
+
+FontTools is a Pango-like library that can get *similar* results. Maybe identical
+results you want to re-implement Pango's text layout. I have 389 ttf and otf fonts
+installed on my system.
+
+- for 361 of 389, this module apears to lay out text exactly as Pango.
+
+- 17 of 389 raise an error when trying to examine them. Some of these are only issues
+  with the test text, which may include characters not in the font.
+
+- 7 of 389 have y-bounds differences from Pango, but the line_gap values may still be
+  useful.
+
+- 4 of 389 have x-bounds differences from Pango. A hybrid function `pad_text_mix`
+  uses the x-bounds from Inkscape/Pango and the y-bounds from this module. The 11
+  total mismatched font bounds appear to all be from fonts with liguatures, which I
+  have not implemented.
+
+I have provided the `check_font_tools_alignment` function to check an existing font
+for compatilibilty with Inkscape's text layout. If that returns (NO_ERROR, None),
+then a font object created with
+
+```
+new_element("text", text="abc", **get_svg_font_attributes(path_to_font))
+```
+
+... will lay out the element exactly as Inkscape would *if* Inkscape were able to
+read locally linked font files.
+
+Advantages to using fontTools do predict how Inkscape will lay out text:
+
 - does not require Inkscape to be installed.
+
 - knows the actual ascent and descent of the font, not just inferences based on
   reference characters
+
 - provides the line_gap and line_height, which Inkscape cannot
+
 - much faster
 
 Disadvantages:
+
 - will fail for some fonts that do not have the necessary tables
+
 - will not reflect any layout nuances that Inkscape might apply to the text
+
 - does not adjust for font-weight and other characteristics that Inkscape *might*
+
 - matching the specification of a font file to svg's font-family, font-style,
   font-weight, and font-stretch isn't always straightforward. It's worth a visual
   test to see how well your bounding boxes fit if you're using an unfamiliar font.
+
 - does not support `font-variant`, `font-kerning`, `text-anchor`, and other
   attributes that `pad_text` would through Inkscape.
 
-Will attempt to mimic `pad_text` output if a `y_bounds_reference` is provided. If
-given, will calculate tpad and bpad the same way as `pad_text` does, using the y
-extents of the reference character.
-
-If no `y_bounds_reference` is provided, will center text between the max descent and
-max ascent, which will be a big change from `pad_text` and which might be undesirable
-for vertically centering all-caps text with no descenders. To center between baseline
-and ascent, pass `descent` = 0 and let the module calculate the ascent from the font
-file. Or pass a tall character like "}" as a `y_bounds_reference`.
-
-The helper classes FTFontInfo and FTTextInfo are unfortunate noise to keep most of
-the type kludging inside this module.
+See the padded_text_initializers module for how to create a PaddedText instance using
+fontTools and this module.
 
 :author: Shay Hill
 :created: 2025-05-31
@@ -210,11 +250,11 @@ class FTFontInfo:
         These bounds are in Cartesian coordinates, not translated to SVGs screen
         coordinates, and not x, y, width, height.
         """
-        hmtx_table = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
 
         names = [self.get_glyph_name(c) for c in text]
         bounds = [self.get_char_bounds(c) for c in text]
-        total_advance = sum(hmtx_table[n][0] for n in names[:-1])
+        total_advance = sum(hmtx[n][0] for n in names[:-1])
         total_kern = sum(self.kern_table.get((x, y), 0) for x, y in it.pairwise(names))
         min_xs, min_ys, max_xs, max_ys = zip(*bounds)
         min_x = min_xs[0]
@@ -236,7 +276,7 @@ class FTFontInfo:
 
     def get_lsb(self, char: str) -> float:
         """Return the left side bearing of a character."""
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        hmtx = cast("Any", self.font["hmtx"])
         _, lsb = hmtx.metrics[self.get_glyph_name(char)]
         return lsb
 
