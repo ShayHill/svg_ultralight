@@ -243,4 +243,32 @@ class TestPadText:
         with_font = pad_text(INKSCAPE, test_elem, font=font)
         assert no_font.bbox.height != with_font.bbox.height
 
+    def test_pad_text_line_gap(self) -> None:
+        """A PaddedText instance created by pad_text has no line gap by default."""
+        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
+        padded = pad_text(INKSCAPE, test_elem)
+        with pytest.raises(AttributeError):
+            _ = padded.line_gap
+
+    def test_pad_text_set_line_gap(self) -> None:
+        """A PaddedText instance created by pad_text has a line_gap if set."""
+        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
+        padded = pad_text(INKSCAPE, test_elem)
+        padded.line_gap = 5
+        assert padded.line_gap == 5
+
+    def test_pad_text_no_leading(self) -> None:
+        """A PaddedText instance created by pad_text has no leading by default."""
+        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
+        padded = pad_text(INKSCAPE, test_elem)
+        with pytest.raises(AttributeError):
+            _ = padded.leading
+
+    def test_pad_text_set_leading_by_setting_line_gap(self) -> None:
+        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
+        padded = pad_text(INKSCAPE, test_elem)
+        padded.line_gap = 5
+        assert padded.leading == padded.height + 5
+
+
 

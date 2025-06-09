@@ -66,6 +66,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from paragraphs import par
+
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
@@ -76,6 +78,14 @@ if TYPE_CHECKING:
     )
 
 _Matrix = tuple[float, float, float, float, float, float]
+
+_no_line_gap_msg = par(
+    """No line_gap defined. Line gap is an inherent font attribute defined within a
+    font file. If this PaddedText instance was created with `pad_text` from reference
+    elements, a line_gap was not defined. Reading line_gap from the font file
+    requires creating a PaddedText instance with `pad_text_ft` or `pad_text_mixed`.
+    You can set an arbitrary line_gap after init with `instance.line_gap = value`."""
+)
 
 
 class PaddedText(BoundElement):
@@ -89,6 +99,7 @@ class PaddedText(BoundElement):
         rpad: float,
         bpad: float,
         lpad: float,
+        line_gap: float | None = None,
     ) -> None:
         """Initialize a PaddedText instance.
 
@@ -105,6 +116,7 @@ class PaddedText(BoundElement):
         self.rpad = rpad
         self.base_bpad = bpad
         self.lpad = lpad
+        self._line_gap = line_gap
 
     @property
     def bbox(self) -> BoundingBox:
@@ -152,6 +164,32 @@ class PaddedText(BoundElement):
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
         self.unpadded_bbox.transform(tmat)
         _ = transform_element(self.elem, tmat)
+
+    @property
+    def line_gap(self) -> float:
+        """The line gap between this line of text and the next.
+
+        :return: The line gap between this line of text and the next.
+        """
+        if self._line_gap is None:
+            raise AttributeError(_no_line_gap_msg)
+        return self._line_gap
+
+    @line_gap.setter
+    def line_gap(self, value: float) -> None:
+        """Set the line gap between this line of text and the next.
+
+        :param value: The new line gap.
+        """
+        self._line_gap = value
+
+    @property
+    def leading(self) -> float:
+        """The leading of this line of text.
+
+        :return: The line gap plus the height of this line of text.
+        """
+        return self.height + self.line_gap
 
     @property
     def tpad(self) -> float:
