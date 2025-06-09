@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import functools as ft
 import itertools as it
+import logging
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -69,6 +70,9 @@ from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 
 if TYPE_CHECKING:
     import os
+
+
+logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
 class FTFontInfo:
