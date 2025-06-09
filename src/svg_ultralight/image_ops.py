@@ -35,7 +35,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import bbox_dict
 from svg_ultralight.constructors import new_element
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    import os
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore [reportPrivateUsage]
@@ -115,7 +115,9 @@ def _get_svg_embedded_image_str(image: ImageType) -> str:
 
 
 def new_image_elem_in_bbox(
-    filename: Path | str, bbox: BoundingBox, center: tuple[float, float] | None
+    filename: str | os.PathLike[str],
+    bbox: BoundingBox,
+    center: tuple[float, float] | None,
 ) -> EtreeElement:
     """Create a new svg image element inside a bounding box.
 

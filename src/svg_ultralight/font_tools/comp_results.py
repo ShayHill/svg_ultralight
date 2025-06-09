@@ -135,7 +135,9 @@ def _format_bbox_error(
 
 
 def check_font_tools_alignment(
-    inkscape: str | os.PathLike[str], font: Path, text: str | None = None
+    inkscape: str | os.PathLike[str],
+    font: str | os.PathLike[str],
+    text: str | None = None,
 ) -> tuple[FontBboxError, tuple[int, int, int, int] | None]:
     """Return an error code and the difference b/t Inkscape and fontTools bboxes.
 
@@ -226,7 +228,7 @@ def draw_comparison(
     root.append(padded_pt.elem)
     root.append(padded_ft.elem)
     _ = sys.stdout.write(f"{Path(font).stem} comparison drawn at {output}.\n")
-    _ = write_svg(output, root)
+    _ = write_svg(Path(output), root)
 
 
 def _iter_fonts(*fonts_dirs: Path) -> Iterator[Path]:
@@ -260,7 +262,7 @@ def _test_every_font_on_my_system(
         _ = sys.stdout.write("No font directories found.\n")
         return
 
-    counts = {x: 0 for x in FontBboxError}
+    counts = dict.fromkeys(FontBboxError, 0)
     for font_path in _iter_fonts(*font_dirs):
         error, diff = check_font_tools_alignment(inkscape, font_path, text)
         counts[error] += 1

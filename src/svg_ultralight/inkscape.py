@@ -36,7 +36,9 @@ if TYPE_CHECKING:
 
 
 def write_png_from_svg(
-    inkscape: Path | str, svg: Path | str, png: Path | str | None = None
+    inkscape: str | os.PathLike[str],
+    svg: str | os.PathLike[str],
+    png: str | os.PathLike[str] | None = None,
 ) -> str:
     """Convert an svg file to a png.
 
@@ -69,10 +71,10 @@ def write_png_from_svg(
 
 
 def write_png(
-    inkscape: Path | str,
-    png: Path | str,
+    inkscape: str | os.PathLike[str],
+    png: str | os.PathLike[str],
     root: EtreeElement,
-    stylesheet: str | None = None,
+    stylesheet: str | os.PathLike[str] | None = None,
 ) -> str:
     """Create a png file without writing an intermediate svg file.
 
@@ -95,7 +97,9 @@ def write_png(
 
 
 def write_pdf_from_svg(
-    inkscape: Path | str, svg: Path | str, pdf: Path | str | None = None
+    inkscape: str | os.PathLike[str],
+    svg: str | os.PathLike[str],
+    pdf: str | os.PathLike[str] | None = None,
 ) -> str:
     """Convert an svg file to a pdf.
 
@@ -128,10 +132,10 @@ def write_pdf_from_svg(
 
 
 def write_pdf(
-    inkscape: Path | str,
-    pdf: Path | str,
+    inkscape: str | os.PathLike[str],
+    pdf: str | os.PathLike[str],
     root: EtreeElement,
-    stylesheet: Path | str | None = None,
+    stylesheet: str | os.PathLike[str] | None = None,
 ) -> str:
     """Create a pdf file without writing an intermediate svg file.
 
@@ -154,7 +158,9 @@ def write_pdf(
 
 
 def export_text_to_path(
-    inkscape: str | Path, input_file: str | Path, export_file: str | Path
+    inkscape: str | os.PathLike[str],
+    input_file: str | os.PathLike[str],
+    export_file: str | os.PathLike[str],
 ) -> str:
     """Export copy of svg file with text converted to paths.
 
@@ -177,7 +183,9 @@ def export_text_to_path(
     return str(export_file)
 
 
-def convert_text_to_path(inkscape: str | Path, root: EtreeElement) -> EtreeElement:
+def convert_text_to_path(
+    inkscape: str | os.PathLike[str], root: EtreeElement
+) -> EtreeElement:
     """Convert text to path in a root svg element.
 
     :param inkscape: Path to inkscape executable.
@@ -196,14 +204,14 @@ def convert_text_to_path(inkscape: str | Path, root: EtreeElement) -> EtreeEleme
 
 
 def write_root(
-    inkscape: str | Path,
-    filename: str | Path,
+    inkscape: str | os.PathLike[str],
+    filename: str | os.PathLike[str],
     root: EtreeElement,
     *,
     do_text_to_path: bool = True,
     do_svg: bool = True,
-    do_png: bool | str | Path = False,
-    do_pdf: bool | str | Path = False,
+    do_png: bool | str | os.PathLike[str] = False,
+    do_pdf: bool | str | os.PathLike[str] = False,
 ) -> EtreeElement:
     """Save xml in multiple file formats, optionally updating text to paths.
 

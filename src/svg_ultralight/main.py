@@ -30,6 +30,8 @@ else:
     from typing_extensions import TypeGuard
 
 if TYPE_CHECKING:
+    import os
+
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
@@ -117,9 +119,9 @@ def new_svg_root(
 
 
 def write_svg(
-    svg: Path | str | IO[bytes],
+    svg: str | Path | IO[bytes],
     root: EtreeElement,
-    stylesheet: Path | str | None = None,
+    stylesheet: str | os.PathLike[str] | None = None,
     *,
     do_link_css: bool = False,
     **tostring_kwargs: str | bool,
@@ -182,7 +184,7 @@ def write_svg(
     if _is_io_bytes(svg):
         _ = svg.write(svg_contents)
         return svg.name
-    if isinstance(svg, (Path, str)):
+    if isinstance(svg, (str, Path)):
         with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)
         return str(svg)

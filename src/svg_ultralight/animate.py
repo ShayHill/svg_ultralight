@@ -16,13 +16,13 @@ except ModuleNotFoundError as exc:
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import os
     from collections.abc import Iterable
-    from pathlib import Path
 
 
 def write_gif(
-    gif: str | Path,
-    pngs: Iterable[str] | Iterable[Path] | Iterable[str | Path],
+    gif: str | os.PathLike[str],
+    pngs: Iterable[str] | Iterable[os.PathLike[str]] | Iterable[str | os.PathLike[str]],
     duration: float = 100,
     loop: int = 0,
 ) -> None:
