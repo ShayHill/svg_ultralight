@@ -67,4 +67,20 @@ class TestPadText:
         assert padded.leading == padded.height + 5
 
 class TestPadTextFt:
-    pass
+    def test_has_line_gap(self) -> None:
+        """Test pad_text_ft with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text_ft(font, "Lorem ipsum dolor")
+        assert padded.line_gap > 0
+
+    def test_has_leading(self) -> None:
+        """Test pad_text_ft with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text_ft(font, "Lorem ipsum dolor")
+        assert padded.leading == padded.height + padded.line_gap
