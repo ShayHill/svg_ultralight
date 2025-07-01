@@ -383,7 +383,7 @@ class FTTextInfo:
     @property
     def bpad(self) -> float:
         """Return the bottom padding for the text."""
-        return self.descent - self.bbox.y2
+        return -self.descent - self.bbox.y2
 
     @property
     def lpad(self) -> float:
@@ -433,8 +433,8 @@ def get_padded_text_info(
     :param font_size: the font size to use.
     :param ascent: the ascent of the font. If not provided, it will be calculated
         from the font file.
-    :param descent: the descent of the font. If not provided, it will be calculated
-        from the font file.
+    :param descent: the descent of the font, usually a negative number. If not
+        provided, it will be calculated from the font file.
     :param y_bounds_reference: optional character or string to use as a reference
         for the ascent and descent. If provided, the ascent and descent will be the y
         extents of the capline reference. This argument is provided to mimic the
@@ -447,7 +447,7 @@ def get_padded_text_info(
     if y_bounds_reference:
         capline_info = FTTextInfo(font_info, y_bounds_reference, font_size)
         ascent = -capline_info.bbox.y
-        descent = capline_info.bbox.y2
+        descent = -capline_info.bbox.y2
 
     return FTTextInfo(font_info, text, font_size, ascent, descent)
 
