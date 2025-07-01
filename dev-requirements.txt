@@ -59,7 +59,7 @@ packaging==25.0
     #   tox
 paragraphs==1.0.1
     # via svg-ultralight (pyproject.toml)
-pillow==11.2.1
+pillow==11.3.0
     # via svg-ultralight (pyproject.toml)
 platformdirs==4.3.8
     # via
