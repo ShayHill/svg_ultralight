@@ -27,10 +27,88 @@ if TYPE_CHECKING:
     )
 
 
-def format_number(num: float | str) -> str:
+_MAYBE_NEG = r"(?:(?P<negative>-?))"
+_MAYBE_INT = r"(?:(?P<integer>\d+?))"
+_MAYBE_FRACTION = r"(?:\.(?P<fraction>\d+))?"
+_MAYBE_EXP = r"(?:[eE](?P<exponent>[+-]?\d+))?"
+
+# Split a float (fp or exponential) into its components. All components are optional.
+FLOAT_PATTERN = re.compile(rf"{_MAYBE_NEG}{_MAYBE_INT}{_MAYBE_FRACTION}{_MAYBE_EXP}")
+
+
+def _split_float_str(num: str | float) -> tuple[str, str, str, int]:
+    """Split a float string into its sign, integer part, fractional part, and exponent.
+
+    :param num_str: A string representing the number (e.g., '1.23e+03').
+    :return: A tuple containing the integer part, fractional part, and exponent.
+    """
+    if float(num) == 0:
+        return "", "", "", 0
+    num_str = str(num)
+    groups = FLOAT_PATTERN.fullmatch(num_str)
+    if not groups:
+        msg = "Invalid number string: {num_str}."
+        raise ValueError(msg.format(num_str=num_str))
+
+    sign = groups["negative"] or ""
+    integer = (groups["integer"] or "").lstrip("0")
+    fraction = (groups["fraction"] or "").rstrip("0")
+    exponent = int(groups["exponent"] or 0)
+    return sign, integer, fraction, exponent
+
+
+def _format_as_fixed_point(num: str | float) -> str:
+    """Format a number in fixed-point notation.
+
+    :param exp_str: A string representing the number in exponential notation
+        (e.g., '1.23e+03') or just a number.
+    :return: A string representing the number in fixed-point notation.
+    """
+    sign, integer, fraction, exponent = _split_float_str(num)
+    if exponent > 0:
+        fraction = fraction.ljust(exponent, "0")
+        integer += fraction[:exponent]
+        fraction = fraction[exponent:]
+    elif exponent < 0:
+        integer = integer.rjust(-exponent, "0")
+        fraction = integer[exponent:] + fraction
+        integer = integer[:exponent]
+
+    fraction = "." + fraction if fraction else ""
+    return f"{sign}{integer}{fraction}" or "0"
+
+
+def _format_as_exponential(num: str | float) -> str:
+    """Convert a number in fixed-point notation (as a string) to exponential notation.
+
+    :param num_str: A string representing the number in fixed-point notation
+        (e.g., '123000') or just a number.
+    :return: A string representing the number in exponential notation.
+    """
+    sign, integer, fraction, exponent = _split_float_str(num)
+    if len(integer) > 1:
+        exponent += len(integer) - 1
+        fraction = (integer[1:] + fraction).rstrip("0")
+        integer = integer[0]
+    elif not integer and fraction:
+        leading_zeroes = len(fraction) - len(fraction.lstrip("0"))
+        exponent -= leading_zeroes + 1
+        integer = fraction[leading_zeroes]
+        fraction = fraction[leading_zeroes + 1 :]
+
+    fraction = "." + fraction if fraction else ""
+    exp_str = f"e{exponent}" if exponent else ""
+    return f"{sign}{integer}{fraction}{exp_str}" or "0"
+
+
+def format_number(num: float | str, precision: float | None = 6) -> str:
     """Format strings at limited precision.
 
     :param num: anything that can print as a float.
+    :param precision: number of digits after the decimal point, default 6. You can
+        also pass None for no precision limit. This may produce some long strings,
+        but will retain as much information as possible when converting between
+        floats and strings.
     :return: str
 
     I've read articles that recommend no more than four digits before and two digits
@@ -38,15 +116,20 @@ def format_number(num: float | str) -> str:
     giving six. Mostly to eliminate exponential notation, but I'm "rstripping" the
     strings to reduce filesize and increase readability
 
-    * reduce fp precision to 6 digits
+    * reduce fp precision to (default) 6 digits
     * remove trailing zeros
     * remove trailing decimal point
+    * remove leading 0 in "0.123"
     * convert "-0" to "0"
+    * use shorter of exponential or fixed-point notation
     """
-    as_str = f"{float(num):0.6f}".rstrip("0").rstrip(".")
-    if as_str == "-0":
-        as_str = "0"
-    return as_str
+    if precision is not None:
+        num = f"{float(num):.{precision}f}"
+    exponential_str = _format_as_exponential(num)
+    fixed_point_str = _format_as_fixed_point(num)
+    if len(exponential_str) < len(fixed_point_str):
+        return exponential_str
+    return fixed_point_str
 
 
 def format_numbers(

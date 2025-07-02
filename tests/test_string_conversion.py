@@ -6,10 +6,52 @@
 
 # pyright: reportPrivateUsage=false
 import random
+import itertools as it
 import string
+from collections.abc import Iterator
+from decimal import Decimal
+
 import pytest
 
 import svg_ultralight.string_conversion as mod
+
+
+_FLOAT_ITERATIONS = 100
+
+def random_floats() -> Iterator[float]:
+    """Yield random float values within(-ish) precision limits.
+
+    Value may exceed the precision limits of the system.
+    """
+    for _ in range(_FLOAT_ITERATIONS):
+        yield random.uniform(1e-20, 1e20)
+
+def low_numbers() -> Iterator[float]:
+    """Yield random float values below precision limits.
+
+    Value may exceed the precision limits of the system.
+    """
+    for _ in range(_FLOAT_ITERATIONS):
+        yield random.uniform(1e-25, 1e-24)
+
+def high_numbers() -> Iterator[float]:
+    """Yield random float values above precision limits.
+
+    Value may exceed the precision limits of the system.
+    """
+    for _ in range(_FLOAT_ITERATIONS):
+        yield random.uniform(1e+24, 1e+25)
+
+
+def random_ints() -> Iterator[int]:
+    """Yield random integer values."""
+    big_int = 2**63 - 1
+    for _ in range(_FLOAT_ITERATIONS):
+        yield random.randint(-big_int, big_int)
+
+def random_numbers() -> Iterator[float]:
+    """Yield random numbers values."""
+    return it.chain(random_floats(), low_numbers(), high_numbers(), random_ints())
 
 
 class TestFormatNuber:
@@ -22,6 +64,8 @@ class TestFormatNuber:
         assert mod.format_number(1.0000000001) == "1"
 
 
+
+
 class TestFormatNumbers:
     def test_empty(self):
         """Return empty list."""
@@ -31,10 +75,31 @@ class TestFormatNumbers:
         """Return list of formatted strings."""
         assert mod.format_numbers([1, 2, 3]) == ["1", "2", "3"]
 
+    @pytest.mark.parametrize("num", random_numbers())
+    def test_exp_vs_fp_notation(self, num: float):
+        """Exponential and fp notation have the same value.
+
+        The first assertion is a sanity check.
+        """
+        expect = float(str(num))
+        assert expect == float(Decimal(num))
+        assert expect == float(mod._format_as_fixed_point(str(num)))
+        assert expect == float(mod._format_as_exponential(str(num)))
+
+    @pytest.mark.parametrize("num", random_numbers())
+    def test_exponent_integer_part_is_len_1_or_stripped(self, num: float):
+        """Integer part is one digit."""
+        exponential = mod._format_as_exponential(num)
+        # Result is exactly one digit
+        if "." not in exponential:
+            assert exponential.lstrip("-").isdigit()
+        # Result is nothing before decimal or one non-zero digit before decimal.
+        integer = exponential.split(".")[0].lstrip("-")
+        assert not integer or integer in "123456789"
 
 class TestFormatNumbersInString:
     def test_empty(self):
-        """Return empty string."""
+        """Return empty string.."""
         assert mod.format_numbers_in_string("") == ""
 
     def test_no_numbers(self):
@@ -81,14 +146,14 @@ class TestFormatAttrDict:
 
     def test_datastring(self):
         """Find and format floats in a datastring."""
-        assert mod.format_attr_dict(d="M1.0,0 Q -0,.33333333 1,2z") == {
-            "d": "M1,0 Q 0,0.333333 1,2z"
+        assert mod.format_attr_dict(d="M1.0,0 Q -0,.33333333333 1,2z") == {
+            "d": "M1,0 Q 0,.333333 1,2z"
         }
 
     def test_datastring_with_exponential_number(self):
         """Find and format floats in a datastring."""
         assert mod.format_attr_dict(d="M1.0,1.0e-10 Q -0,.33333333 1,2z") == {
-            "d": "M1,0 Q 0,0.333333 1,2z"
+            "d": "M1,0 Q 0,.333333 1,2z"
         }
 
     def test_format_string(self):

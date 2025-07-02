@@ -41,7 +41,7 @@ class TestNewElement:
     def test_float(self) -> None:
         """Floats at 0.6f precision."""
         elem = constructors.new_element("text", x=1 / 3)
-        assert etree.tostring(elem) == b'<text x="0.333333"/>'
+        assert etree.tostring(elem) == b'<text x=".333333"/>'
 
 
 class TestNewSubElement:

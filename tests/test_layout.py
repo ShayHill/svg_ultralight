@@ -175,14 +175,14 @@ class TestLayout:
         viewbox = (0, 0, 96, 0)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", "2in")
         assert padded == (-12, -12, 120, 24)
-        assert width_attribs == {"width": "2.5in", "height": "0.5in"}
+        assert width_attribs == {"width": "2.5in", "height": ".5in"}
 
     def test_0_height(self):
         """Test that print width is used to calculate pad"""
         viewbox = (0, 0, 0, 96)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", None, "2in")
         assert padded == (-12, -12, 24, 120)
-        assert width_attribs == {"width": "0.5in", "height": "2.5in"}
+        assert width_attribs == {"width": ".5in", "height": "2.5in"}
 
     def test_string_padding(self):
         """Test that string padding is converted to float"""
@@ -229,7 +229,7 @@ class TestLayout:
         assert width_attribs == {"width": "12in", "height": "22in"}
 
         padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "100in")
-        assert [format_number(x) for x in padded] == ['-0.1', '-0.1', '10.2', '20.2']
+        assert [format_number(x) for x in padded] == ['-.1', '-.1', '10.2', '20.2']
         assert width_attribs == {"width": "102in", "height": "202in"}
 
     def test_dpu_(self):
