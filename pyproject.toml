@@ -12,6 +12,7 @@ dependencies = [
     "lxml",
     "paragraphs",
     "pillow",
+    "svg-path-data",
     "types-lxml",
     "typing-extensions",
 ]

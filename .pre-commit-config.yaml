@@ -1,7 +1,7 @@
 ci:
   skip: [pyright]
 
-exclude: "tests"
+exclude: "experiments"
 
 repos:
 
@@ -84,6 +84,7 @@ repos:
   # PGH003 Use specific rule codes when ignoring type issues
   # PLR0913 Too many arguments to function call
   # PTH108 os.unlink should be replaced by .unlink()
+  # SIM108 insists on ternary operator
   #
   # S101 Use of `assert` detected
   # S603 `subprocess` call: check for execution of untrusted input
@@ -94,15 +95,16 @@ repos:
   # BLE001 Use of `except Exception:` detected
   # ANN401 Any type disallowed
   # FLY002 Consider f-string instead of string join
+  # S311 Standard pseudo-random generator used
   rev: 'v0.11.11'
   hooks:
     - id: ruff
       name: "ruff-lint"
-      exclude: "tests"
+      # exclude: "tests"
       args:
       - --target-version=py39
       - --select=ALL
-      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,S320,S301,B028,BLE001,ANN401,FLY002
+      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,S320,S301,B028,BLE001,ANN401,FLY002,SIM108,S311
       - --fix
       - --fixable=RUF022
     - id: ruff

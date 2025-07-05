@@ -51,7 +51,6 @@ from svg_ultralight.string_conversion import (
     format_attr_dict,
     format_number,
     format_numbers,
-    format_numbers_in_string,
 )
 from svg_ultralight.transformations import (
     mat_apply,
@@ -75,7 +74,6 @@ __all__ = [
     "format_attr_dict",
     "format_number",
     "format_numbers",
-    "format_numbers_in_string",
     "get_bounding_box",
     "get_bounding_boxes",
     "mat_apply",
