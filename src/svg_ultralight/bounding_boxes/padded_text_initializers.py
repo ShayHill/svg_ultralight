@@ -122,12 +122,17 @@ def pad_text_ft(
     """
     attributes_ = format_attr_dict(**attributes)
     attributes_.update(get_svg_font_attributes(font))
-    attributes_["font-size"] = attributes_.get("font-size", format_number(font_size))
 
-    elem = new_element("text", text=text, **attributes_)
+    _ = attributes_.pop("font-size", None)
+    _ = attributes_.pop("font-family", None)
+    _ = attributes_.pop("font-style", None)
+    _ = attributes_.pop("font-weight", None)
+    _ = attributes_.pop("font-stretch", None)
+
     info = get_padded_text_info(
         font, text, font_size, ascent, descent, y_bounds_reference=y_bounds_reference
     )
+    elem = info.new_element(**attributes_)
     return PaddedText(elem, info.bbox, *info.padding, info.line_gap)
 
 

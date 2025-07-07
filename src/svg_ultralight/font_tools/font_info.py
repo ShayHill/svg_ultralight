@@ -105,19 +105,23 @@ from typing import TYPE_CHECKING, Any, cast
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
-from svg_path_data import format_svgd_shortest, get_cpts_from_svgd
+from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_from_cpts
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.constructors.new_element import new_element
 from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
+from svg_ultralight.string_conversion import format_numbers
 
 if TYPE_CHECKING:
     import os
     from collections.abc import Iterator
 
+    from lxml.etree import _Element as EtreeElement
+
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
-def split_into_quadratic(
+def _split_into_quadratic(
     *pts: tuple[float, float],
 ) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
     """Connect a series of points with quadratic bezier segments.
@@ -138,7 +142,7 @@ def split_into_quadratic(
     if len(pts) < 2:
         msg = "At least two points are required."
         raise ValueError(msg)
-    for prev_cp, next_cp in zip(pts, pts[1:-1]):
+    for prev_cp, next_cp in it.pairwise(pts[:-1]):
         xs, ys = zip(prev_cp, next_cp)
         midpnt = sum(xs) / 2, sum(ys) / 2
         yield prev_cp, midpnt
@@ -159,6 +163,8 @@ class PathPen(BasePen):
     @property
     def svgd(self) -> str:
         """Return an svg path data string for the glyph."""
+        if not self._cmds:
+            return ""
         svgd = format_svgd_shortest(" ".join(self._cmds))
         return "M" + svgd[1:]
 
@@ -183,7 +189,7 @@ class PathPen(BasePen):
 
     def qCurveTo(self, *pts: tuple[float, float]) -> None:
         """Add a series of quadratic bezier segments to the path."""
-        for q_pts in split_into_quadratic(*pts):
+        for q_pts in _split_into_quadratic(*pts):
             self._cmds.extend(("Q", *map(str, it.chain(*q_pts))))
 
     def closePath(self):
@@ -281,17 +287,25 @@ class FTFontInfo:
         msg = f"Character '{char}' not found in font '{self.path}'."
         raise ValueError(msg)
 
-    def get_char_svgd(self, char: str) -> str:
+    def get_char_svgd(self, char: str, dx: float = 0) -> str:
         """Return the svg path data for a glyph.
 
         :param char: The character to get the svg path data for.
+        :param dx: An optional x translation to apply to the glyph.
         :return: The svg path data for the character.
         """
         glyph_set = self.font.getGlyphSet()
         glyph_name = self.font.getBestCmap().get(ord(char))
         path_pen = PathPen(glyph_set)
         _ = glyph_set[glyph_name].draw(path_pen)
-        return path_pen.svgd
+        svgd = path_pen.svgd
+        if not dx or not svgd:
+            return svgd
+        cpts = path_pen.cpts
+        for i, curve in enumerate(cpts):
+            cpts[i][:] = [(x + dx, y) for x, y in curve]
+        svgd = format_svgd_shortest(get_svgd_from_cpts(cpts))
+        return "M" + svgd[1:]
 
     def get_char_bounds(self, char: str) -> tuple[int, int, int, int]:
         """Return the min and max x and y coordinates of a glyph.
@@ -350,6 +364,25 @@ class FTFontInfo:
         max_x = total_advance + max_xs[-1] + total_kern
         max_y = max(max_ys)
         return min_x, min_y, max_x, max_y
+
+    def get_text_svgd(self, text: str, dx: float = 0) -> str:
+        """Return the svg path data for a string.
+
+        :param text: The text to get the svg path data for.
+        :param dx: An optional x translation to apply to the entire text.
+        :return: The svg path data for the text.
+        """
+        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        svgd = ""
+        char_dx = dx
+        for c_this, c_next in it.pairwise(text):
+            this_name = self.get_glyph_name(c_this)
+            next_name = self.get_glyph_name(c_next)
+            svgd += self.get_char_svgd(c_this, char_dx)
+            char_dx += hmtx[this_name][0]
+            char_dx += self.kern_table.get((this_name, next_name), 0)
+        svgd += self.get_char_svgd(text[-1], char_dx)
+        return svgd
 
     def get_text_bbox(self, text: str) -> BoundingBox:
         """Return the BoundingBox of a string svg coordinates.
@@ -419,6 +452,16 @@ class FTTextInfo:
         :return: The scale factor for the font size.
         """
         return self.font_size / self.font.units_per_em
+
+    def new_element(self, **attributes: str | float) -> EtreeElement:
+        """Return an svg text element with the appropriate font attributes."""
+        matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
+        matrix = f"matrix({' '.join(format_numbers(matrix_vals))})"
+        attributes["transform"] = matrix
+        stroke_width = attributes.get("stroke-width")
+        if stroke_width:
+            attributes["stroke-width"] = float(stroke_width) / self.scale
+        return new_element("path", d=self.font.get_text_svgd(self.text), **attributes)
 
     @property
     def bbox(self) -> BoundingBox:
