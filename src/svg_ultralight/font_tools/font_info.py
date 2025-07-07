@@ -102,17 +102,93 @@ from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
+from svg_path_data import format_svgd_shortest, get_cpts_from_svgd
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 
 if TYPE_CHECKING:
     import os
-
+    from collections.abc import Iterator
 
 logging.getLogger("fontTools").setLevel(logging.ERROR)
+
+
+def split_into_quadratic(
+    *pts: tuple[float, float],
+) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
+    """Connect a series of points with quadratic bezier segments.
+
+    :param points: a series of at least two (x, y) coordinates.
+    :return: an iterator of ((x, y), (x, y)) quadatic bezier control points (the
+        second and third points)
+
+    This is part of connecting a (not provided) current point to the last input
+    point. The other input points will be control points of a series of quadratic
+    Bezier curves. New Bezier curve endpoints will be created between these points.
+
+    given (B, C, D, E) (with A as the not-provided current point):
+    - [A,  B, bc][1:]
+    - [bc, C, cd][1:]
+    - [cd, D,  E][1:]
+    """
+    if len(pts) < 2:
+        msg = "At least two points are required."
+        raise ValueError(msg)
+    for prev_cp, next_cp in zip(pts, pts[1:-1]):
+        xs, ys = zip(prev_cp, next_cp)
+        midpnt = sum(xs) / 2, sum(ys) / 2
+        yield prev_cp, midpnt
+    yield pts[-2], pts[-1]
+
+
+class PathPen(BasePen):
+    """A pen to collect svg path data commands from a glyph."""
+
+    def __init__(self, glyph_set: Any) -> None:
+        """Initialize the PathPen with a glyph set.
+
+        :param glyph_set: TTFont(path).getGlyphSet()
+        """
+        super().__init__(glyph_set)
+        self._cmds: list[str] = []
+
+    @property
+    def svgd(self) -> str:
+        """Return an svg path data string for the glyph."""
+        svgd = format_svgd_shortest(" ".join(self._cmds))
+        return "M" + svgd[1:]
+
+    @property
+    def cpts(self) -> list[list[tuple[float, float]]]:
+        """Return as a list of lists of Bezier control points."""
+        return get_cpts_from_svgd(" ".join(self._cmds))
+
+    def moveTo(self, pt: tuple[float, float]) -> None:
+        """Move the current point to a new location."""
+        self._cmds.extend(("M", *map(str, pt)))
+
+    def lineTo(self, pt: tuple[float, float]) -> None:
+        """Add a line segment to the path."""
+        self._cmds.extend(("L", *map(str, pt)))
+
+    def curveTo(self, *pts: tuple[float, float]) -> None:
+        """Add a series of cubic bezier segments to the path."""
+        msg = "Cubic Bezier curves not implemented for getting svg path data."
+        raise NotImplementedError(msg)
+        self._cmds.extend(("Q", *map(str, it.chain(*pts))))
+
+    def qCurveTo(self, *pts: tuple[float, float]) -> None:
+        """Add a series of quadratic bezier segments to the path."""
+        for q_pts in split_into_quadratic(*pts):
+            self._cmds.extend(("Q", *map(str, it.chain(*q_pts))))
+
+    def closePath(self):
+        """Close the current path."""
+        self._cmds.append("Z")
 
 
 class FTFontInfo:
@@ -205,6 +281,18 @@ class FTFontInfo:
         msg = f"Character '{char}' not found in font '{self.path}'."
         raise ValueError(msg)
 
+    def get_char_svgd(self, char: str) -> str:
+        """Return the svg path data for a glyph.
+
+        :param char: The character to get the svg path data for.
+        :return: The svg path data for the character.
+        """
+        glyph_set = self.font.getGlyphSet()
+        glyph_name = self.font.getBestCmap().get(ord(char))
+        path_pen = PathPen(glyph_set)
+        _ = glyph_set[glyph_name].draw(path_pen)
+        return path_pen.svgd
+
     def get_char_bounds(self, char: str) -> tuple[int, int, int, int]:
         """Return the min and max x and y coordinates of a glyph.
 
@@ -217,7 +305,6 @@ class FTFontInfo:
         glyph_name = self.font.getBestCmap().get(ord(char))
         bounds_pen = BoundsPen(glyph_set)
         _ = glyph_set[glyph_name].draw(bounds_pen)
-
         pen_bounds = cast("None | tuple[int, int, int, int]", bounds_pen.bounds)
         if pen_bounds is None:
             return 0, 0, 0, 0

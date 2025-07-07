@@ -91,7 +91,7 @@ questionary==2.1.0
     # via commitizen
 soupsieve==2.7
     # via beautifulsoup4
-svg-path-data==0.2.0
+svg-path-data==0.3.0
     # via svg-ultralight (pyproject.toml)
 termcolor==3.1.0
     # via commitizen
