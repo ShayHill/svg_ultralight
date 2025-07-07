@@ -461,7 +461,12 @@ class FTTextInfo:
         stroke_width = attributes.get("stroke-width")
         if stroke_width:
             attributes["stroke-width"] = float(stroke_width) / self.scale
-        return new_element("path", d=self.font.get_text_svgd(self.text), **attributes)
+        return new_element(
+            "path",
+            data_text=self.text,
+            d=self.font.get_text_svgd(self.text),
+            **attributes,
+        )
 
     @property
     def bbox(self) -> BoundingBox:
