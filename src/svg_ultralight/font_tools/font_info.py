@@ -121,6 +121,44 @@ if TYPE_CHECKING:
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
+# extract_gpos_kerning is an unfinished attempt to extract kerning from the GPOS
+# table.
+def get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
+    """Extract kerning pairs from the GPOS table of a font.
+
+    :param font: A fontTools TTFont object.
+    :return: A dictionary mapping glyph pairs to their kerning values.
+    :raises ValueError: If the font does not have a GPOS table.
+
+    This is the more elaborate kerning that is used in OTF fonts and some TTF fonts.
+    It has several flavors, I'm only implementing glyph-pair kerning (Format 1),
+    because I don't have fonts to test anything else.
+    """
+    if "GPOS" not in font:
+        msg = "Font does not have a GPOS table."
+        raise ValueError(msg)
+
+    gpos = font["GPOS"].table
+    kern_table: dict[tuple[str, str], int] = {}
+
+    type2_lookups = (x for x in gpos.LookupList.Lookup if x.LookupType == 2)
+    subtables = list(it.chain(*(x.SubTable for x in type2_lookups)))
+    for subtable in (x for x in subtables if x.Format == 1):  # glyph-pair kerning
+        for pair_set, left_glyph in zip(subtable.PairSet, subtable.Coverage.glyphs):
+            for pair_value in pair_set.PairValueRecord:
+                right_glyph = pair_value.SecondGlyph
+                value1 = pair_value.Value1
+                xadv = getattr(value1, "XAdvance", None)
+                xpla = getattr(value1, "XPlacement", None)
+                value = xadv or xpla or 0
+                if value != 0:  # only record non-zero kerning values
+                    kern_table[(left_glyph, right_glyph)] = value
+    for _ in (x for x in subtables if x.Format == 2):  # class-based kerning
+        msg = "Class-based kerning not implemented."
+        raise NotImplementedError(msg)
+    return kern_table
+
+
 def _split_into_quadratic(
     *pts: tuple[float, float],
 ) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
@@ -258,6 +296,8 @@ class FTFontInfo:
                 [x.kernTable for x in self.font["kern"].kernTables],
             )
             return dict(x for d in reversed(kern_tables) for x in d.items())
+        with suppress(Exception):
+            return get_gpos_kerning(self.font)
         return {}
 
     @ft.cached_property
