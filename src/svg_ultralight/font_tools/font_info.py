@@ -105,6 +105,7 @@ from typing import TYPE_CHECKING, Any, cast
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
+from paragraphs import par
 from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_from_cpts
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
@@ -159,9 +160,9 @@ def get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
     return kern_table
 
 
-def _split_into_quadratic(
-    *pts: tuple[float, float],
-) -> Iterator[tuple[tuple[float, float], tuple[float, float]]]:
+_XYTuple = tuple[float, float]
+
+def _split_into_quadratic(*pts: _XYTuple) -> Iterator[tuple[_XYTuple, _XYTuple]]:
     """Connect a series of points with quadratic bezier segments.
 
     :param points: a series of at least two (x, y) coordinates.
@@ -221,9 +222,16 @@ class PathPen(BasePen):
 
     def curveTo(self, *pts: tuple[float, float]) -> None:
         """Add a series of cubic bezier segments to the path."""
-        msg = "Cubic Bezier curves not implemented for getting svg path data."
-        raise NotImplementedError(msg)
-        self._cmds.extend(("Q", *map(str, it.chain(*pts))))
+        if len(pts) > 3:
+            msg = par(
+                """I'm uncertain how to decompose these points into cubics (if the
+                goal is to match font rendering in Inkscape and elsewhere. There is
+                function, decomposeSuperBezierSegment, in fontTools, but I cannot
+                find a reference for the algorithm. I'm hoping to run into one in a
+                font file so I have a test case."""
+            )
+            raise NotImplementedError(msg)
+        self._cmds.extend(("C", *map(str, it.chain(*pts))))
 
     def qCurveTo(self, *pts: tuple[float, float]) -> None:
         """Add a series of quadratic bezier segments to the path."""
