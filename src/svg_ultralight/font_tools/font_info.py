@@ -145,22 +145,38 @@ def get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
     type2_lookups = (x for x in gpos.LookupList.Lookup if x.LookupType == 2)
     subtables = list(it.chain(*(x.SubTable for x in type2_lookups)))
     for subtable in (x for x in subtables if x.Format == 1):  # glyph-pair kerning
-        for pair_set, left_glyph in zip(subtable.PairSet, subtable.Coverage.glyphs):
+        for pair_set, glyph1 in zip(subtable.PairSet, subtable.Coverage.glyphs):
             for pair_value in pair_set.PairValueRecord:
-                right_glyph = pair_value.SecondGlyph
+                glyph2 = pair_value.SecondGlyph
                 value1 = pair_value.Value1
                 xadv = getattr(value1, "XAdvance", None)
                 xpla = getattr(value1, "XPlacement", None)
                 value = xadv or xpla or 0
                 if value != 0:  # only record non-zero kerning values
-                    kern_table[(left_glyph, right_glyph)] = value
-    for _ in (x for x in subtables if x.Format == 2):  # class-based kerning
-        msg = "Class-based kerning not implemented."
-        raise NotImplementedError(msg)
+                    kern_table[(glyph1, glyph2)] = value
+
+    for subtable in (x for x in subtables if x.Format == 2):  # class-based kerning
+        defs1 = subtable.ClassDef1.classDefs
+        defs2 = subtable.ClassDef2.classDefs
+        record1 = subtable.Class1Record
+        defs1 = {k: v for k, v in defs1.items() if v < len(record1)}
+        for (glyph1, class1), (glyph2, class2) in it.product(
+            defs1.items(), defs2.items()
+        ):
+            class1_record = record1[class1]
+            if class2 < len(class1_record.Class2Record):
+                value1 = class1_record.Class2Record[class2].Value1
+                xadv = getattr(value1, "XAdvance", None)
+                xpla = getattr(value1, "XPlacement", None)
+                value = xadv or xpla or 0
+                if value != 0:
+                    kern_table[(glyph1, glyph2)] = value
+
     return kern_table
 
 
 _XYTuple = tuple[float, float]
+
 
 def _split_into_quadratic(*pts: _XYTuple) -> Iterator[tuple[_XYTuple, _XYTuple]]:
     """Connect a series of points with quadratic bezier segments.
@@ -298,15 +314,18 @@ class FTFontInfo:
         method would give precedence to the first occurrence. That behavior is copied
         from examples found online.
         """
-        with suppress(KeyError, AttributeError):
+        try:
             kern_tables = cast(
                 "list[dict[tuple[str, str], int]]",
                 [x.kernTable for x in self.font["kern"].kernTables],
             )
-            return dict(x for d in reversed(kern_tables) for x in d.items())
+            kern = dict(x for d in reversed(kern_tables) for x in d.items())
+        except (KeyError, AttributeError):
+            kern = {}
         with suppress(Exception):
-            return get_gpos_kerning(self.font)
-        return {}
+            kern.update(get_gpos_kerning(self.font))
+
+        return kern
 
     @ft.cached_property
     def hhea(self) -> Any:

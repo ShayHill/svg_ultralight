@@ -31,8 +31,8 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text_ft,
 )
 from svg_ultralight.constructors import new_element
-from svg_ultralight.font_tools.font_info import get_svg_font_attributes
-from svg_ultralight.main import write_svg
+from svg_ultralight.font_tools.font_info import FTFontInfo, get_svg_font_attributes
+from svg_ultralight.inkscape import write_root
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 
 if TYPE_CHECKING:
@@ -201,7 +201,15 @@ def draw_comparison(
         text = Path(font).stem
     font_size = 12
     font_attributes = get_svg_font_attributes(font)
-    text_elem = new_element("text", text=text, **font_attributes, font_size=font_size)
+    text_elem = new_element(
+        "text",
+        text=text,
+        **font_attributes,
+        font_size=font_size,
+        fill="none",
+        stroke="green",
+        stroke_width=0.1,
+    )
     padded_pt = pad_text(inkscape, text_elem)
     padded_ft = pad_text_ft(
         font,
@@ -210,10 +218,10 @@ def draw_comparison(
         y_bounds_reference=DEFAULT_Y_BOUNDS_REFERENCE,
         fill="none",
         stroke="orange",
-        stroke_width=0.05,
+        stroke_width=0.1,
     )
 
-    root = new_svg_root_around_bounds(pad_bbox(padded_pt.bbox, 10))
+    root = new_svg_root_around_bounds(pad_bbox(padded_pt.bbox, 1))
     root.append(
         new_bbox_rect(
             padded_pt.unpadded_bbox, fill="none", stroke_width=0.07, stroke="red"
@@ -227,7 +235,7 @@ def draw_comparison(
     root.append(padded_pt.elem)
     root.append(padded_ft.elem)
     _ = sys.stdout.write(f"{Path(font).stem} comparison drawn at {output}.\n")
-    _ = write_svg(Path(output), root)
+    _ = write_root(inkscape, Path(output), root)
 
 
 def _iter_fonts(*fonts_dirs: Path) -> Iterator[Path]:
@@ -273,11 +281,13 @@ def _test_every_font_on_my_system(
 
 if __name__ == "__main__":
     _INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
-    _FONT_DIRS = [
-        Path(r"C:\Windows\Fonts"),
-        Path(r"C:\Users\shaya\AppData\Local\Microsoft\Windows\Fonts"),
-    ]
-    _test_every_font_on_my_system(_INKSCAPE, _FONT_DIRS)
+    # _FONT_DIRS = [
+    #     Path(r"C:\Windows\Fonts"),
+    #     Path(r"C:\Users\shaya\AppData\Local\Microsoft\Windows\Fonts"),
+    # ]
+    # _test_every_font_on_my_system(_INKSCAPE, _FONT_DIRS)
 
     font = Path(r"C:\Windows\Fonts\arial.ttf")
-    draw_comparison(_INKSCAPE, "temp.svg", font)
+    font = Path("C:/Windows/Fonts/Aptos-Display-Bold.ttf")
+    info = FTFontInfo(font)
+    draw_comparison(_INKSCAPE, "temp.svg", font, "AApple")
