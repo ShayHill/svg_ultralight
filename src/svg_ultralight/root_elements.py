@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
+    from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
     from svg_ultralight.layout import PadArg
 
@@ -43,7 +44,7 @@ def new_svg_root_around_bounds(
     print_height_: float | str | None = None,
     dpu_: float = 1,
     nsmap: dict[str | None, str] | None = None,
-    **attributes: float | str,
+    **attributes: ElemAttrib,
 ) -> EtreeElement:
     """Create svg root around BoundElements.
 

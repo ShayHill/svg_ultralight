@@ -27,10 +27,7 @@ from svg_ultralight.font_tools.font_info import (
 )
 from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 from svg_ultralight.query import get_bounding_boxes
-from svg_ultralight.string_conversion import (
-    format_attr_dict,
-    format_number,
-)
+from svg_ultralight.string_conversion import format_attr_dict, format_number
 
 if TYPE_CHECKING:
     import os
@@ -38,6 +35,8 @@ if TYPE_CHECKING:
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
+
+    from svg_ultralight.attrib_hints import ElemAttrib
 
 DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 
@@ -99,7 +98,7 @@ def pad_text_ft(
     descent: float | None = None,
     *,
     y_bounds_reference: str | None = None,
-    **attributes: str | float,
+    **attributes: ElemAttrib,
 ) -> PaddedText:
     """Create a new PaddedText instance using fontTools.
 
@@ -145,7 +144,7 @@ def pad_text_mix(
     descent: float | None = None,
     *,
     y_bounds_reference: str | None = None,
-    **attributes: str | float,
+    **attributes: ElemAttrib,
 ) -> PaddedText:
     """Use Inkscape text bounds and fill missing with fontTools.
 

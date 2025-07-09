@@ -119,6 +119,8 @@ if TYPE_CHECKING:
 
     from lxml.etree import _Element as EtreeElement
 
+    from svg_ultralight.attrib_hints import ElemAttrib
+
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
@@ -520,7 +522,7 @@ class FTTextInfo:
         """
         return self.font_size / self.font.units_per_em
 
-    def new_element(self, **attributes: str | float) -> EtreeElement:
+    def new_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg text element with the appropriate font attributes."""
         matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
         matrix = f"matrix({' '.join(format_numbers(matrix_vals))})"

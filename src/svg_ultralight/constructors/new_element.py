@@ -25,8 +25,10 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
+    from svg_ultralight.attrib_hints import ElemAttrib
 
-def new_element(tag: str | QName, **attributes: str | float) -> EtreeElement:
+
+def new_element(tag: str | QName, **attributes: ElemAttrib) -> EtreeElement:
     """Create an etree.Element, make every kwarg value a string.
 
     :param tag: element tag
@@ -62,7 +64,7 @@ def new_element(tag: str | QName, **attributes: str | float) -> EtreeElement:
 
 
 def new_sub_element(
-    parent: EtreeElement, tag: str | QName, **attributes: str | float
+    parent: EtreeElement, tag: str | QName, **attributes: ElemAttrib
 ) -> EtreeElement:
     """Create an etree.SubElement, make every kwarg value a string.
 
@@ -81,7 +83,7 @@ def new_sub_element(
     return elem
 
 
-def update_element(elem: EtreeElement, **attributes: str | float) -> EtreeElement:
+def update_element(elem: EtreeElement, **attributes: ElemAttrib) -> EtreeElement:
     """Update an existing etree.Element with additional params.
 
     :param elem: at etree element
@@ -94,7 +96,7 @@ def update_element(elem: EtreeElement, **attributes: str | float) -> EtreeElemen
     return elem
 
 
-def deepcopy_element(elem: EtreeElement, **attributes: str | float) -> EtreeElement:
+def deepcopy_element(elem: EtreeElement, **attributes: ElemAttrib) -> EtreeElement:
     """Create a deepcopy of an element. Optionally pass additional params.
 
     :param elem: at etree element or list of elements

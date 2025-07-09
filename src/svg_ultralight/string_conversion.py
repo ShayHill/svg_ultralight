@@ -26,6 +26,8 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
+    from svg_ultralight.attrib_hints import ElemAttrib
+
 
 def format_number(num: float | str, resolution: int | None = 6) -> str:
     """Format a number into an svg-readable float string with resolution = 6.
@@ -50,7 +52,7 @@ def format_numbers(
     return [format_number(num) for num in nums]
 
 
-def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
+def _fix_key_and_format_val(key: str, val: ElemAttrib) -> tuple[str, str]:
     """Format one key, value pair for an svg element.
 
     :param key: element attribute name
@@ -82,7 +84,9 @@ def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
     else:
         key_ = key.rstrip("_").replace("_", "-")
 
-    if isinstance(val, (int, float)):
+    if val is None:
+        val_ = "none"
+    elif isinstance(val, (int, float)):
         val_ = format_number(val)
     else:
         val_ = val
@@ -90,7 +94,7 @@ def _fix_key_and_format_val(key: str, val: str | float) -> tuple[str, str]:
     return key_, val_
 
 
-def format_attr_dict(**attributes: str | float) -> dict[str, str]:
+def format_attr_dict(**attributes: ElemAttrib) -> dict[str, str]:
     """Use svg_ultralight key / value fixer to create a dict of attributes.
 
     :param attributes: element attribute names and values.
@@ -99,7 +103,7 @@ def format_attr_dict(**attributes: str | float) -> dict[str, str]:
     return dict(_fix_key_and_format_val(key, val) for key, val in attributes.items())
 
 
-def set_attributes(elem: EtreeElement, **attributes: str | float) -> None:
+def set_attributes(elem: EtreeElement, **attributes: ElemAttrib) -> None:
     """Set name: value items as element attributes. Make every value a string.
 
     :param elem: element to receive element.set(keyword, str(value)) calls

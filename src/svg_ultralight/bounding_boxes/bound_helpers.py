@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lxml import etree
 from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -19,14 +20,14 @@ from svg_ultralight.constructors import new_element
 if TYPE_CHECKING:
     import os
 
+    from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
-from lxml import etree
 
 _Matrix = tuple[float, float, float, float, float, float]
 
 
 def new_element_union(
-    *elems: EtreeElement | SupportsBounds, **attributes: float | str
+    *elems: EtreeElement | SupportsBounds, **attributes: ElemAttrib
 ) -> EtreeElement:
     """Get the union of any elements found in the given arguments.
 
@@ -186,13 +187,13 @@ def _get_view_box(elem: EtreeElement) -> tuple[float, float, float, float]:
     return x, y, width, height
 
 
-def parse_bound_element(svg_fil: str | os.PathLike[str]) -> BoundElement:
+def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
     """Import an element as a BoundElement.
 
     :param elem: the element to import.
     :return: a BoundElement instance.
     """
-    tree = etree.parse(svg_fil)
+    tree = etree.parse(svg_file)
     root = tree.getroot()
     elem = new_element("g")
     elem.extend(list(root))

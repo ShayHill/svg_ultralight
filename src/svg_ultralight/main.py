@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
+    from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.layout import PadArg
 
 
@@ -68,7 +69,7 @@ def new_svg_root(
     print_height_: float | str | None = None,
     dpu_: float = 1,
     nsmap: dict[str | None, str] | None = None,
-    **attributes: float | str,
+    **attributes: ElemAttrib,
 ) -> EtreeElement:
     """Create an svg root element from viewBox style parameters.
 
@@ -100,7 +101,7 @@ def new_svg_root(
     if nsmap is None:
         nsmap = NSMAP
 
-    inferred_attribs: dict[str, float | str] = {}
+    inferred_attribs: dict[str, ElemAttrib] = {}
     view_box_args = (x_, y_, width_, height_)
     if _is_four_floats(view_box_args):
         assert isinstance(x_, (float, int))
