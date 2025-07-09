@@ -17,7 +17,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
-    from svg_ultralight.attrib_hints import ElemAttrib
+    from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
     from svg_ultralight.layout import PadArg
 
@@ -44,6 +44,7 @@ def new_svg_root_around_bounds(
     print_height_: float | str | None = None,
     dpu_: float = 1,
     nsmap: dict[str | None, str] | None = None,
+    attrib: OptionalElemAttribMapping = None,
     **attributes: ElemAttrib,
 ) -> EtreeElement:
     """Create svg root around BoundElements.
@@ -62,10 +63,14 @@ def new_svg_root_around_bounds(
         different from print_width_ and print_height_ in that dpu_ scales the
         *padded* output.
     :param nsmap: optionally pass a namespace map of your choosing
+    :param attrib: optionally pass additional attributes as a mapping instead of as
+        anonymous kwargs. This is useful for pleasing the linter when unpacking a
+        dictionary into a function call.
     :param attributes: element attribute names and values
     :return: root svg element
     :raise ValueError: if no bounding boxes are found in bounded
     """
+    attributes.update(attrib or {})
     bbox = bound.new_bbox_union(*bounded)
     viewbox = _viewbox_args_from_bboxes(bbox)
     return new_svg_root(
@@ -78,5 +83,5 @@ def new_svg_root_around_bounds(
         print_height_=print_height_,
         dpu_=dpu_,
         nsmap=nsmap,
-        **attributes,
+        attrib=attributes,
     )

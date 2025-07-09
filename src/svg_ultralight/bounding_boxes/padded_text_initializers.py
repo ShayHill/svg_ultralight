@@ -36,7 +36,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
-    from svg_ultralight.attrib_hints import ElemAttrib
+    from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
 
 DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 
@@ -98,6 +98,7 @@ def pad_text_ft(
     descent: float | None = None,
     *,
     y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
     **attributes: ElemAttrib,
 ) -> PaddedText:
     """Create a new PaddedText instance using fontTools.
@@ -114,11 +115,15 @@ def pad_text_ft(
         extents of the capline reference. This argument is provided to mimic the
         behavior of the query module's `pad_text` function. `pad_text` does no
         inspect font files and relies on Inkscape to measure reference characters.
+    :param attrib: optionally pass additional attributes as a mapping instead of as
+        anonymous kwargs. This is useful for pleasing the linter when unpacking a
+        dictionary into a function call.
     :param attributes: additional attributes to set on the text element. There is a
         chance these will cause the font element to exceed the BoundingBox of the
         PaddedText instance.
     :return: a PaddedText instance with a line_gap defined.
     """
+    attributes.update(attrib or {})
     attributes_ = format_attr_dict(**attributes)
     attributes_.update(get_svg_font_attributes(font))
 
@@ -144,6 +149,7 @@ def pad_text_mix(
     descent: float | None = None,
     *,
     y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
     **attributes: ElemAttrib,
 ) -> PaddedText:
     """Use Inkscape text bounds and fill missing with fontTools.
@@ -160,11 +166,15 @@ def pad_text_mix(
         extents of the capline reference. This argument is provided to mimic the
         behavior of the query module's `pad_text` function. `pad_text` does no
         inspect font files and relies on Inkscape to measure reference characters.
+    :param attrib: optionally pass additional attributes as a mapping instead of as
+        anonymous kwargs. This is useful for pleasing the linter when unpacking a
+        dictionary into a function call.
     :param attributes: additional attributes to set on the text element. There is a
         chance these will cause the font element to exceed the BoundingBox of the
         PaddedText instance.
     :return: a PaddedText instance with a line_gap defined.
     """
+    attributes.update(attrib or {})
     elem = new_element("text", text=text, **attributes)
     padded_inkscape = pad_text(inkscape, elem, y_bounds_reference, font=font)
     padded_fonttools = pad_text_ft(
@@ -174,7 +184,7 @@ def pad_text_mix(
         ascent,
         descent,
         y_bounds_reference=y_bounds_reference,
-        **attributes,
+        attrib=attributes,
     )
     bbox = padded_inkscape.unpadded_bbox
     rpad = padded_inkscape.rpad

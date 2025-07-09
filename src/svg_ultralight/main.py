@@ -36,7 +36,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
-    from svg_ultralight.attrib_hints import ElemAttrib
+    from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.layout import PadArg
 
 
@@ -69,6 +69,7 @@ def new_svg_root(
     print_height_: float | str | None = None,
     dpu_: float = 1,
     nsmap: dict[str | None, str] | None = None,
+    attrib: OptionalElemAttribMapping | None = None,
     **attributes: ElemAttrib,
 ) -> EtreeElement:
     """Create an svg root element from viewBox style parameters.
@@ -88,6 +89,9 @@ def new_svg_root(
         different from print_width_ and print_height_ in that dpu_ scales the
         *padded* output.
     :param nsmap: optionally pass a namespace map of your choosing
+    :param attrib: optionally pass additional attributes as a mapping instead of as
+        anonymous kwargs. This is useful for pleasing the linter when unpacking a
+        dictionary into a function call.
     :param attributes: element attribute names and values
     :return: root svg element
 
@@ -98,6 +102,7 @@ def new_svg_root(
     will be passed to ``etree.Element`` as element parameters. These will
     supercede any parameters inferred from the trailing underscore parameters.
     """
+    attributes.update(attrib or {})
     if nsmap is None:
         nsmap = NSMAP
 

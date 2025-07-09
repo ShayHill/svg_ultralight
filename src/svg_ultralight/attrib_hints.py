@@ -11,4 +11,4 @@ from typing import Union
 ElemAttrib = Union[str, float, None]
 
 # Type for an optional dictionary of element attributes.
-ElemAttribArg = Union[Mapping[str, ElemAttrib], None]
+OptionalElemAttribMapping = Union[Mapping[str, ElemAttrib], None]
