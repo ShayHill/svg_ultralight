@@ -124,9 +124,23 @@ if TYPE_CHECKING:
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
+_ESCAPE_CHARS = {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"}
+
+
+def _sanitize_svg_data_text(text: str) -> str:
+    """Sanitize a string for use in an SVG data-text attribute.
+
+    :param text: The input string to sanitize.
+    :return: The sanitized string with XML characters escaped.
+    """
+    for char, escape_seq in _ESCAPE_CHARS.items():
+        text = text.replace(char, escape_seq)
+    return text
+
+
 # extract_gpos_kerning is an unfinished attempt to extract kerning from the GPOS
 # table.
-def get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
+def _get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
     """Extract kerning pairs from the GPOS table of a font.
 
     :param font: A fontTools TTFont object.
@@ -325,7 +339,7 @@ class FTFontInfo:
         except (KeyError, AttributeError):
             kern = {}
         with suppress(Exception):
-            kern.update(get_gpos_kerning(self.font))
+            kern.update(_get_gpos_kerning(self.font))
 
         return kern
 
@@ -532,7 +546,7 @@ class FTTextInfo:
             attributes["stroke-width"] = float(stroke_width) / self.scale
         return new_element(
             "path",
-            data_text=self.text,
+            data_text=_sanitize_svg_data_text(self.text),
             d=self.font.get_text_svgd(self.text),
             **attributes,
         )
