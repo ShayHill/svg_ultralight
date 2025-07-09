@@ -4,9 +4,10 @@
 :created: 2024-01-30
 """
 
-from svg_ultralight.metadata import new_metadata
-from svg_ultralight.main import new_svg_root
 from lxml import etree
+
+from svg_ultralight.main import new_svg_root
+from svg_ultralight.metadata import new_metadata
 
 _inkscape_output = """
 <metadata id="metadata1">
@@ -52,6 +53,7 @@ _inkscape_output = """
 """
 
 _inkscape_output = "".join([x.strip() for x in _inkscape_output.splitlines()])
+
 
 class TestMetedata:
     def test_inkscape_explicit(self):

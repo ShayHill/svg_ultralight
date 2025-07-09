@@ -4,22 +4,24 @@
 :created: 2024-05-05
 """
 
-import pytest
-import math
-from conftest import TEST_RESOURCES
-from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from lxml import etree
-from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
-from svg_ultralight.bounding_boxes.bound_helpers import (
-    pad_bbox,
-    cut_bbox,
-    parse_bound_element,
-    bbox_dict,
-    new_bbox_rect,
-)
 import copy
+import math
+
+import pytest
+from conftest import TEST_RESOURCES
+from lxml import etree
+
+from svg_ultralight.bounding_boxes.bound_helpers import (
+    bbox_dict,
+    cut_bbox,
+    new_bbox_rect,
+    pad_bbox,
+    parse_bound_element,
+)
+from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 
 
@@ -126,7 +128,7 @@ class TestPaddedText:
         assert bound_element.cy == 148.0
 
     def test_cx(self, bound_element: PaddedText):
-        bbox_x = bound_element.x  
+        bbox_x = bound_element.x
         bbox_x2 = bound_element.x2
         bbox_cx = bound_element.cx
         bound_element.cx += 100.0
@@ -135,13 +137,13 @@ class TestPaddedText:
         assert bound_element.cx == bbox_cx + 100.0
 
     def test_cy(self, bound_element: PaddedText):
-        bbox_y = bound_element.y  
+        bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
         bbox_cy = bound_element.cy
         bound_element.cy += 100.0
         assert bound_element.y == bbox_y + 100.0
         assert bound_element.y2 == bbox_y2 + 100.0
-        assert bound_element.cy == bbox_cy + 100.0 
+        assert bound_element.cy == bbox_cy + 100.0
 
     def test_width(self, bound_element: PaddedText):
         assert bound_element.width == 106.0
@@ -188,7 +190,6 @@ class TestPaddedText:
 
 
 class TestBoundCollection:
-
     @pytest.fixture
     def bound_collection(self) -> BoundCollection:
         elem = new_element("rect", x=0, y=0, width=100, height=200)

@@ -281,11 +281,11 @@ def _test_every_font_on_my_system(
 
 if __name__ == "__main__":
     _INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
-    # _FONT_DIRS = [
-    #     Path(r"C:\Windows\Fonts"),
-    #     Path(r"C:\Users\shaya\AppData\Local\Microsoft\Windows\Fonts"),
-    # ]
-    # _test_every_font_on_my_system(_INKSCAPE, _FONT_DIRS)
+    _FONT_DIRS = [
+        Path(r"C:\Windows\Fonts"),
+        Path(r"C:\Users\shaya\AppData\Local\Microsoft\Windows\Fonts"),
+    ]
+    _test_every_font_on_my_system(_INKSCAPE, _FONT_DIRS)
 
     font = Path(r"C:\Windows\Fonts\arial.ttf")
     font = Path("C:/Windows/Fonts/Aptos-Display-Bold.ttf")

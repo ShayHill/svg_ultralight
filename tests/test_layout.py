@@ -11,7 +11,6 @@
 # pyright: reportMissingParameterType = false
 # pyright: reportPrivateUsage = false
 
-
 import itertools as it
 import math
 from collections.abc import Iterator
@@ -39,13 +38,13 @@ INKSCAPE_SCALARS = {
 }
 
 
-@pytest.fixture(scope="function", params=Unit)
-def unit(request) -> Unit:
+@pytest.fixture(params=Unit)
+def unit(request: pytest.FixtureRequest) -> Unit:
     return request.param
 
 
-@pytest.fixture(scope="function", params=it.product(Unit, Unit))
-def unit_pair(request) -> Iterator[Unit]:
+@pytest.fixture(params=it.product(Unit, Unit))
+def unit_pair(request: pytest.FixtureRequest) -> Iterator[Unit]:
     return request.param
 
 
@@ -80,17 +79,17 @@ class TestParseUnit:
 
 
 class TestMeasurement:
-    def test_unit_identified(self, unit):
+    def test_unit_identified(self, unit: Unit):
         """Test that unit is identified correctly."""
         assert Measurement(f"1{unit.value[0]}").native_unit == unit
 
-    def test_value_scaled(self, unit):
+    def test_value_scaled(self, unit: Unit):
         """Value is scaled per Inkscape conversion values."""
         assert math.isclose(
             Measurement(f"1{unit.value[0]}").value, INKSCAPE_SCALARS[unit.value[0]]
         )
 
-    def test_conversion(self, unit_pair):
+    def test_conversion(self, unit_pair: tuple[Unit, Unit]):
         """Test that value is converted to other units."""
         unit_a, unit_b = unit_pair
         a_unit = Measurement(f"1{unit_a.value[0]}")
@@ -98,27 +97,27 @@ class TestMeasurement:
         b_unit = Measurement(f"{a_as_b}{unit_b.value[0]}")
         assert math.isclose(b_unit.value, a_unit.value)
 
-    def test_add(self, unit):
+    def test_add(self, unit: Unit):
         """Test that values are added."""
         a_unit = Measurement(f"1{unit.value[0]}")
         b_unit = Measurement(f"2{unit.value[0]}")
         assert (a_unit + b_unit).value == Measurement(f"3{unit.value[0]}").value
 
-    def test_subtract(self, unit):
+    def test_subtract(self, unit: Unit):
         """Test that values are subtracted."""
         a_unit = Measurement(f"1{unit.value[0]}")
         b_unit = Measurement(f"2{unit.value[0]}")
         assert (a_unit - b_unit).value == Measurement(f"-1{unit.value[0]}").value
 
-    def test_multiply(self, unit):
+    def test_multiply(self, unit: Unit):
         """Test that values are multiplied."""
         assert (Measurement((1, unit)) * 4).value == Measurement((4, unit)).value
 
-    def test_rmultiply(self, unit):
+    def test_rmultiply(self, unit: Unit):
         """Test that values are multiplied."""
         assert (4 * Measurement((1, unit))).value == Measurement((4, unit)).value
 
-    def test_divide(self, unit):
+    def test_divide(self, unit: Unit):
         """Test that values are multiplied."""
         assert (Measurement((1, unit)) / 4).value == Measurement((1 / 4, unit)).value
 
@@ -143,6 +142,7 @@ class TestExpandPadArg:
     def test_expand_4tuple(self):
         """Test that a single value is expanded to a 4-tuple per css rules."""
         assert layout.expand_pad_arg((1, 2, 3, 4)) == (1, 2, 3, 4)
+
 
 class TestLayout:
     def test_standard(self):
@@ -194,9 +194,8 @@ class TestLayout:
     def test_infinite_width(self):
         """Raise ValueError if no non-infinite scale can be inferred."""
         viewbox = (0, 0, 0, 0)
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match="infinite"):
             _ = layout.pad_and_scale(viewbox, "0.25in", "2in")
-        assert "infinite" in str(excinfo.value)
 
     def test_pad_print_at_input_scale(self):
         """Test that padding is applied at the input scale.
@@ -229,7 +228,7 @@ class TestLayout:
         assert width_attribs == {"width": "12in", "height": "22in"}
 
         padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "100in")
-        assert [format_number(x) for x in padded] == ['-.1', '-.1', '10.2', '20.2']
+        assert [format_number(x) for x in padded] == ["-.1", "-.1", "10.2", "20.2"]
         assert width_attribs == {"width": "102in", "height": "202in"}
 
     def test_dpu_(self):
@@ -248,6 +247,4 @@ class TestLayout:
         viewbox = (0, 0, 1, 1)
         padded, width_attribs = layout.pad_and_scale(viewbox, 1, dpu=2)
         assert padded == (-1, -1, 3, 3)
-        assert width_attribs == {'width': '6', 'height': '6'}
-        
-
+        assert width_attribs == {"width": "6", "height": "6"}

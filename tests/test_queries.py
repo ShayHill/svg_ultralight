@@ -8,11 +8,10 @@ your system.
 """
 
 from dataclasses import dataclass
-from pathlib import Path
 
 import pytest
-
 from conftest import INKSCAPE, has_inkscape
+
 from svg_ultralight import BoundingBox, new_svg_root
 from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.query import (
@@ -20,7 +19,6 @@ from svg_ultralight.query import (
     get_bounding_boxes,
     map_elems_to_bounding_boxes,
 )
-
 
 
 class TestMergeBoundingBoxes:
@@ -223,6 +221,7 @@ class TestMapElemsToBoundingBoxes:
         result = get_bounding_boxes(INKSCAPE, *elems)
         assert result == tuple(get_bounding_box(INKSCAPE, e) for e in elems)
 
+
 class TestAlterBoundingBox:
     def test_reverse_width(self) -> None:
         """adjust width one way then the other returns to original box."""
@@ -232,7 +231,3 @@ class TestAlterBoundingBox:
         bbox.height = 200
         bbox.height = 40
         assert bbox.transformation == (1, 0, 0, 1, 90, 180)
-
-
-
-

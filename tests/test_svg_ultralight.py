@@ -8,13 +8,14 @@ No tests for png writing.
 """
 
 from __future__ import annotations
+
 import os
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight import NSMAP
 
@@ -22,8 +23,13 @@ from svg_ultralight import NSMAP
 from svg_ultralight.main import new_svg_root, write_svg
 from svg_ultralight.string_conversion import svg_tostring
 
+if TYPE_CHECKING:
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
-@pytest.fixture()
+
+@pytest.fixture
 def css_source():
     """Temporary css file object with meaningless contents."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as css_source:
@@ -32,24 +38,29 @@ def css_source():
     os.unlink(css_source.name)
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_filename(mode: str = "w"):
     """Temporary file object to capture test output."""
-    svg_output = tempfile.NamedTemporaryFile(mode=mode, delete=False)
-    svg_output.close()
-    yield svg_output.name
+    with tempfile.NamedTemporaryFile(mode=mode, delete=False) as svg_output:
+        yield svg_output.name
     os.unlink(svg_output.name)
 
 
 class TestWriteSvg:
-    def test_linked(self, css_source, temp_filename) -> None:
+    def test_linked(
+        self, css_source: str | os.PathLike[str], temp_filename: str | os.PathLike[str]
+    ) -> None:
         """Insert stylesheet reference."""
         blank = etree.Element("blank")
-        write_svg(
-            temp_filename, blank, css_source, do_link_css=True, xml_declaration=True
+        _ = write_svg(
+            Path(temp_filename),
+            blank,
+            css_source,
+            do_link_css=True,
+            xml_declaration=True,
         )
-        with open(temp_filename, "rb") as svg_binary:
-            svg_lines = [x.decode() for x in svg_binary.readlines()]
+        with Path(temp_filename).open("rb") as svg_binary:
+            svg_lines = [x.decode() for x in svg_binary]
 
         relative_css_path = Path(css_source).relative_to(Path(temp_filename).parent)
         assert svg_lines == [
@@ -60,12 +71,14 @@ class TestWriteSvg:
             "<blank/>\n",
         ]
 
-    def test_not_linked(self, css_source, temp_filename) -> None:
+    def test_not_linked(
+        self, css_source: str | os.PathLike[str], temp_filename: str | os.PathLike[str]
+    ) -> None:
         """Copy css_source contents into svg file."""
         blank = etree.Element("blank")
-        write_svg(temp_filename, blank, css_source)
-        with open(temp_filename, "rb") as svg_binary:
-            svg_lines = [x.decode() for x in svg_binary.readlines()]
+        _ = write_svg(Path(temp_filename), blank, css_source)
+        with Path(temp_filename).open("rb") as svg_binary:
+            svg_lines = [x.decode() for x in svg_binary]
 
         assert svg_lines == [
             "<blank>\n",
@@ -75,19 +88,19 @@ class TestWriteSvg:
             "</blank>\n",
         ]
 
-    def test_css_none(self, temp_filename) -> None:
+    def test_css_none(self, temp_filename: str | os.PathLike[str]) -> None:
         """Do not link or copy in css if no css_source is passed."""
         blank = etree.Element("blank")
-        write_svg(temp_filename, blank, do_link_css=True)
-        with open(temp_filename, "rb") as svg_binary:
-            svg_lines = [x.decode() for x in svg_binary.readlines()]
+        _ = write_svg(Path(temp_filename), blank, do_link_css=True)
+        with Path(temp_filename).open("rb") as svg_binary:
+            svg_lines = [x.decode() for x in svg_binary]
 
         assert svg_lines == ["<blank/>\n"]
 
         # test with do_link_css = False
-        write_svg(temp_filename, blank)
-        with open(temp_filename, "rb") as svg_binary:
-            svg_lines_false = [x.decode() for x in svg_binary.readlines()]
+        _ = write_svg(Path(temp_filename), blank)
+        with Path(temp_filename).open("rb") as svg_binary:
+            svg_lines_false = [x.decode() for x in svg_binary]
         assert svg_lines_false == svg_lines
 
 
@@ -106,7 +119,7 @@ def svg_root(**kwargs: str | float) -> EtreeElement:
     xmlns = [f'xmlns="{namespace[0][1]}"']
     xmlns += [f'xmlns:{k}="{v}"' for k, v in namespace[1:]]
     attributes = " ".join([f'{k}="{v}"' for k, v in kwargs.items()])
-    return etree.fromstring(f'<svg {" ".join(xmlns)} {attributes}/>'.encode())
+    return etree.fromstring(f"<svg {' '.join(xmlns)} {attributes}/>".encode())
 
 
 class TestNewSvgRoot:
@@ -120,19 +133,19 @@ class TestNewSvgRoot:
 
         Build the svg element namespace from NSMAP and compare to output
         """
-        expect = svg_root(**{"viewBox": "0 1 2 3"})
+        expect = svg_root(viewBox="0 1 2 3")
         result = new_svg_root(0, 1, 2, 3)
         assert result.attrib == expect.attrib
 
     def test_additional_params(self) -> None:
         """Pass additional params."""
-        expect = svg_root(**{"attr": "value", "viewBox": "0 1 2 3"})
+        expect = svg_root(attr="value", viewBox="0 1 2 3")
         result = new_svg_root(0, 1, 2, 3, attr="value")
         assert result.attrib == expect.attrib
 
     def test_conflicting_params(self) -> None:
         """Explicit params overwrite trailing-underscore-inferred params."""
-        expect = svg_root(**{"viewBox": "0 1 2 3", "height": "30"})
+        expect = svg_root(viewBox="0 1 2 3", height="30")
         result = new_svg_root(0, 1, 2, 3, height=30)
         assert result.attrib == expect.attrib
 

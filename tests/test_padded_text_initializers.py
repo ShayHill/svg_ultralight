@@ -3,14 +3,14 @@
 :author: Shay Hill
 :created: 2025-06-09
 """
+
 from pathlib import Path
 
 import pytest
+from conftest import INKSCAPE, has_inkscape
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text, pad_text_ft
 from svg_ultralight.constructors import new_element
-from conftest import has_inkscape, INKSCAPE
-
 
 
 class TestPadText:
@@ -56,6 +56,7 @@ class TestPadText:
         padded = pad_text(INKSCAPE, test_elem)
         padded.line_gap = 5
         assert padded.leading == padded.height + 5
+
 
 class TestPadTextFt:
     def test_has_line_gap(self) -> None:

@@ -13,15 +13,20 @@ if TYPE_CHECKING:
     import os
 
 
-def pytest_assertrepr_compare(config: Any, op: str, left: str, right: str):
+def pytest_assertrepr_compare(
+    config: Any, op: str, left: str, right: str
+) -> list[str] | None:
     """See full error diffs"""
+    del config
     if op in ("==", "!="):
-        return ["{0} {1} {2}".format(left, op, right)]
+        return [f"{left} {op} {right}"]
+    return None
 
 
 TEST_RESOURCES = Path(__file__).parent / "resources"
 
 INKSCAPE = Path(r"C:\Program Files\Inkscape\bin\inkscape")
+
 
 def has_inkscape(inkscape: str | os.PathLike[str]) -> bool:
     """Check if Inkscape is available at a path.

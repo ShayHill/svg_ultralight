@@ -4,10 +4,11 @@
 :created: 2024-05-05
 """
 
-from svg_ultralight.transformations import mat_dot, mat_apply, mat_invert
-import random
 import math
+import random
 from contextlib import suppress
+
+from svg_ultralight.transformations import mat_apply, mat_dot, mat_invert
 
 
 class TestMat:

@@ -48,6 +48,9 @@ legacy_tox_ini = """
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101", "D", "F401"]  # Ignore assertions, docstrings, unused imports in test files
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.44.0"
