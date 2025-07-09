@@ -370,7 +370,7 @@ class FTFontInfo:
         svgd = path_pen.svgd
         if not dx or not svgd:
             return svgd
-        cpts = path_pen.cpts
+        cpts = get_cpts_from_svgd(svgd)
         for i, curve in enumerate(cpts):
             cpts[i][:] = [(x + dx, y) for x, y in curve]
         svgd = format_svgd_shortest(get_svgd_from_cpts(cpts))
