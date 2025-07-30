@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import numbers
 import re
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
@@ -116,16 +117,16 @@ def new_transformation_matrix(
     """
     transformation = transformation or (1, 0, 0, 1, 0, 0)
 
-    if isinstance(scale, float):
+    if isinstance(scale, (float, int, numbers.Real)):
         scale_x, scale_y = (scale, scale)
     elif scale is None:
         scale_x, scale_y = (1, 1)
     else:
-        scale_x, scale_y = cast("tuple[float, float]", scale)
+        scale_x, scale_y = scale
 
     dx = dx or 0
     dy = dy or 0
-    return mat_dot((scale_x, 0, 0, scale_y, dx, dy), transformation)
+    return mat_dot((float(scale_x), 0, 0, float(scale_y), dx, dy), transformation)
 
 
 def transform_element(elem: EtreeElement, matrix: _Matrix) -> EtreeElement:
