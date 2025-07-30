@@ -64,6 +64,7 @@ enough to lay out text on a business card.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 from paragraphs import par
@@ -222,6 +223,41 @@ class PaddedText(BoundElement):
         :param value: The new bottom padding.
         """
         self.base_bpad = value / self.unpadded_bbox.scale[1]
+
+    @property
+    def scale(self) -> tuple[float, float]:
+        """Get scale of the bounding box.
+
+        :return: uniform scale of the bounding box
+
+        Use caution, the scale attribute can cause errors in intuition. Changing
+        width or height will change the scale attribute, but not the x or y values.
+        The scale setter, on the other hand, will work in the tradational manner.
+        I.e., x => x*scale, y => y*scale, x2 => x*scale, y2 => y*scale, width =>
+        width*scale, height => height*scale, scale => scale*scale. This matches how
+        scale works in almost every other context.
+        """
+        xx, xy, yx, yy, *_ = self.unpadded_bbox.transformation
+        return math.sqrt(xx * xx + xy * xy), math.sqrt(yx * yx + yy * yy)
+
+    @scale.setter
+    def scale(self, value: tuple[float, float]) -> None:
+        """Scale the bounding box by a uniform factor.
+
+        :param value: new scale value
+
+        Don't miss this! You are setting the scale, not scaling the scale! If you
+        have a previously defined scale other than 1, this is probably not what you
+        want. Most of the time, you will want to use the *= operator.
+
+        `scale = 2` -> ignore whatever scale was previously defined and set scale to 2
+        `scale *= 2` -> make it twice as big as it was.
+        """
+        new_scale = (
+            value[0] / self.unpadded_bbox.scale[0],
+            value[1] / self.unpadded_bbox.scale[1],
+        )
+        self.transform(scale=new_scale)
 
     @property
     def width(self) -> float:
