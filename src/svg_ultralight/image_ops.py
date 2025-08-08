@@ -32,6 +32,7 @@ from lxml import etree
 
 from svg_ultralight import NSMAP
 from svg_ultralight.bounding_boxes.bound_helpers import bbox_dict
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors import new_element
 
 if TYPE_CHECKING:
@@ -40,8 +41,6 @@ if TYPE_CHECKING:
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore [reportPrivateUsage]
     )
-
-    from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 
 
 def _symmetric_crop(
