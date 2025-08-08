@@ -32,6 +32,7 @@ from lxml import etree
 
 from svg_ultralight import NSMAP
 from svg_ultralight.bounding_boxes.bound_helpers import bbox_dict
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors import new_element
 
@@ -113,6 +114,31 @@ def _get_svg_embedded_image_str(image: ImageType) -> str:
     return "data:image/png;base64," + base64_encoded_result_str
 
 
+def new_image_blem(
+    filename: str | os.PathLike[str],
+    bbox: BoundingBox | None = None,
+    center: tuple[float, float] | None = None,
+) -> BoundElement:
+    """Create a new svg image element inside a bounding box.
+
+    :param filename: filename of source image
+    :param bbox: bounding box for the image
+    :param center: center point for cropping. Proportions of image width and image
+        height, so the default value, (0.5, 0.5), is the true center of the image.
+        (0.4, 0.5) would crop 20% off the right side of the image.
+    :return: a BoundElement element with the cropped image embedded
+    """
+    image = Image.open(filename)
+    if bbox is None:
+        bbox = BoundingBox(0, 0, image.width, image.height)
+    image = _crop_image_to_bbox_ratio(Image.open(filename), bbox, center)
+    svg_image = new_element("image", **bbox_dict(bbox))
+    svg_image.set(
+        etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
+    )
+    return BoundElement(svg_image, bbox)
+
+
 def new_image_elem_in_bbox(
     filename: str | os.PathLike[str],
     bbox: BoundingBox | None = None,
@@ -127,12 +153,4 @@ def new_image_elem_in_bbox(
         (0.4, 0.5) would crop 20% off the right side of the image.
     :return: an etree image element with the cropped image embedded
     """
-    image = Image.open(filename)
-    if bbox is None:
-        bbox = BoundingBox(0, 0, image.width, image.height)
-    image = _crop_image_to_bbox_ratio(Image.open(filename), bbox, center)
-    svg_image = new_element("image", **bbox_dict(bbox))
-    svg_image.set(
-        etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
-    )
-    return svg_image
+    return new_image_blem(filename, bbox, center).elem
