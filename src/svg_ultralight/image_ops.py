@@ -70,7 +70,7 @@ def _symmetric_crop(
 
 
 def _crop_image_to_bbox_ratio(
-    image: ImageType, bbox: BoundingBox, center: tuple[float, float] | None = None
+    image: ImageType, bbox: BoundingBox, center: tuple[float, float] | None
 ) -> ImageType:
     """Crop an image to the ratio of a bounding box.
 
@@ -116,8 +116,8 @@ def _get_svg_embedded_image_str(image: ImageType) -> str:
 
 def new_image_elem_in_bbox(
     filename: str | os.PathLike[str],
-    bbox: BoundingBox,
-    center: tuple[float, float] | None,
+    bbox: BoundingBox | None = None,
+    center: tuple[float, float] | None = None,
 ) -> EtreeElement:
     """Create a new svg image element inside a bounding box.
 
@@ -128,6 +128,9 @@ def new_image_elem_in_bbox(
         (0.4, 0.5) would crop 20% off the right side of the image.
     :return: an etree image element with the cropped image embedded
     """
+    image = Image.open(filename)
+    if bbox is None:
+        bbox = BoundingBox(0, 0, image.width, image.height)
     image = _crop_image_to_bbox_ratio(Image.open(filename), bbox, center)
     svg_image = new_element("image", **bbox_dict(bbox))
     svg_image.set(
