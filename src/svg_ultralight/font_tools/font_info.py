@@ -110,7 +110,6 @@ from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_fro
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element
-from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 from svg_ultralight.string_conversion import format_numbers
 
 if TYPE_CHECKING:
@@ -499,7 +498,7 @@ class FTTextInfo:
         self,
         font: str | os.PathLike[str] | FTFontInfo,
         text: str,
-        font_size: float,
+        font_size: float | None = None,
         ascent: float | None = None,
         descent: float | None = None,
     ) -> None:
@@ -509,7 +508,7 @@ class FTTextInfo:
         else:
             self._font = FTFontInfo(font)
         self._text = text.rstrip(" ")
-        self._font_size = font_size
+        self._font_size = font_size or self._font.units_per_em
         self._ascent = ascent
         self._descent = descent
 
@@ -638,7 +637,7 @@ def get_font_size_given_height(font: str | os.PathLike[str], height: float) -> f
 def get_padded_text_info(
     font: str | os.PathLike[str],
     text: str,
-    font_size: float = DEFAULT_FONT_SIZE,
+    font_size: float | None = None,
     ascent: float | None = None,
     descent: float | None = None,
     *,

@@ -10,6 +10,12 @@ Three variants:
   line_gap while correcting some of the layout differences between fontTools and
   Inkscape.
 
+There is a default font size for pad_text if an element is passed. There is also a
+default for the other pad_text_ functions, but it taken from the font file and is
+usually 1024, so it won't be easy to miss. The default for standard pad_text is to
+prevent surprises if Inksape defaults to font-size 12pt while your browser defaults
+to 16px.
+
 :author: Shay Hill
 :created: 2025-06-09
 """
@@ -25,7 +31,6 @@ from svg_ultralight.font_tools.font_info import (
     get_padded_text_info,
     get_svg_font_attributes,
 )
-from svg_ultralight.font_tools.globs import DEFAULT_FONT_SIZE
 from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
 
@@ -40,6 +45,9 @@ if TYPE_CHECKING:
 
 DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 
+# A default font size for pad_text if font-size is not specified in the reference
+# element.
+DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text if not specified
 
 def pad_text(
     inkscape: str | os.PathLike[str],
@@ -93,7 +101,7 @@ def pad_text(
 def pad_text_ft(
     font: str | os.PathLike[str],
     text: str,
-    font_size: float = DEFAULT_FONT_SIZE,
+    font_size: float | None = None,
     ascent: float | None = None,
     descent: float | None = None,
     *,
@@ -144,7 +152,7 @@ def pad_text_mix(
     inkscape: str | os.PathLike[str],
     font: str | os.PathLike[str],
     text: str,
-    font_size: float = DEFAULT_FONT_SIZE,
+    font_size: float | None = None,
     ascent: float | None = None,
     descent: float | None = None,
     *,
