@@ -16,6 +16,7 @@ from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
+from svg_ultralight.layout import PadArg, expand_pad_arg
 
 if TYPE_CHECKING:
     import os
@@ -94,19 +95,6 @@ def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:
     return BoundElement(group, bbox)
 
 
-def _expand_pad(pad: float | tuple[float, ...]) -> tuple[float, float, float, float]:
-    """Expand a float pad argument into a 4-tuple."""
-    if isinstance(pad, (int, float)):
-        return pad, pad, pad, pad
-    if len(pad) == 1:
-        return pad[0], pad[0], pad[0], pad[0]
-    if len(pad) == 2:
-        return pad[0], pad[1], pad[0], pad[1]
-    if len(pad) == 3:
-        return pad[0], pad[1], pad[2], pad[1]
-    return pad[0], pad[1], pad[2], pad[3]
-
-
 def cut_bbox(
     bbox: SupportsBounds,
     *,
@@ -133,7 +121,7 @@ def cut_bbox(
     return BoundingBox(x, y, width, height)
 
 
-def pad_bbox(bbox: SupportsBounds, pad: float | tuple[float, ...]) -> BoundingBox:
+def pad_bbox(bbox: SupportsBounds, pad: PadArg) -> BoundingBox:
     """Return a new bounding box with padding.
 
     :param bbox: the original bounding box or bounded element.
@@ -146,7 +134,7 @@ def pad_bbox(bbox: SupportsBounds, pad: float | tuple[float, ...]) -> BoundingBo
         len = 4 : 0, 1, 2, 3
     :return: a new bounding box with padding applied.
     """
-    top, right, bottom, left = _expand_pad(pad)
+    top, right, bottom, left = expand_pad_arg(pad)
     return cut_bbox(
         bbox, x=bbox.x - left, y=bbox.y - top, x2=bbox.x2 + right, y2=bbox.y2 + bottom
     )
