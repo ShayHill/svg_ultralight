@@ -49,6 +49,7 @@ DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 # element.
 DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text if not specified
 
+
 def pad_text(
     inkscape: str | os.PathLike[str],
     text_elem: EtreeElement,
@@ -80,7 +81,7 @@ def pad_text(
     if font is not None:
         _ = update_element(text_elem, **get_svg_font_attributes(font))
     if "font-size" not in text_elem.attrib:
-        text_elem.attrib["font-size"] = format_number(DEFAULT_FONT_SIZE)
+        text_elem.attrib["font-size"] = format_number(DEFAULT_FONT_SIZE_FOR_PAD_TEXT)
     rmargin_ref = deepcopy(text_elem)
     capline_ref = deepcopy(text_elem)
     _ = rmargin_ref.attrib.pop("id", None)
