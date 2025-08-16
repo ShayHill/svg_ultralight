@@ -123,7 +123,15 @@ if TYPE_CHECKING:
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
-_ESCAPE_CHARS = {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;"}
+_ESCAPE_CHARS = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&apos;",
+    "{": "&#123",  # valid, but stops MS File Explorer from thumbnailing an svg
+    "}": "&#125",  # valid, but stops MS File Explorer from thumbnailing an svg
+}
 
 
 def _sanitize_svg_data_text(text: str) -> str:
@@ -376,8 +384,8 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the glyph.
         :return: The svg path data for the character.
         """
+        glyph_name = self.get_glyph_name(char)
         glyph_set = self.font.getGlyphSet()
-        glyph_name = self.font.getBestCmap().get(ord(char))
         path_pen = PathPen(glyph_set)
         _ = glyph_set[glyph_name].draw(path_pen)
         svgd = path_pen.svgd
@@ -397,8 +405,8 @@ class FTFontInfo:
         same, but when they disagree, this method is more accurate. Additionally,
         some fonts do not have a glyf table, so this method is more robust.
         """
+        glyph_name = self.get_glyph_name(char)
         glyph_set = self.font.getGlyphSet()
-        glyph_name = self.font.getBestCmap().get(ord(char))
         bounds_pen = BoundsPen(glyph_set)
         _ = glyph_set[glyph_name].draw(bounds_pen)
         pen_bounds = cast("None | tuple[int, int, int, int]", bounds_pen.bounds)
