@@ -82,3 +82,46 @@ class TestPaddedText:
         blem = PaddedText(elem, bbox, 1, 2, 3, 4)
         blem.transform(scale=5)
         assert blem.scale == (5.0, 5.0)
+
+    def test_vpad_scales(self) -> None:
+        """Test that vertical padding scales."""
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+
+        assert blem.tpad == 1.0
+        assert blem.bpad == 3.0
+
+        blem.transform(scale=0.5)
+        assert blem.height == 52.0
+        assert blem.tpad == 0.5
+        assert blem.bpad == 1.5
+
+    def test_vpad_scales_non_uniform(self) -> None:
+        """Test that vertical padding scales non-uniformly."""
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+
+        assert blem.tpad == 1.0
+        assert blem.bpad == 3.0
+
+        blem.transform(scale=(1.5, 0.5))
+        assert blem.height == 52.0
+        assert blem.width == 156.0
+        assert blem.tpad == 0.5
+        assert blem.bpad == 1.5
+
+    def test_hpad_does_not_scale(self) -> None:
+        """Test that horizontal padding does not scale."""
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+
+        assert blem.tpad == 1.0
+        assert blem.bpad == 3.0
+
+        blem.width = 10
+        assert blem.width == 10.0
+        assert blem.rpad == 2.0
+        assert blem.lpad == 4.0
