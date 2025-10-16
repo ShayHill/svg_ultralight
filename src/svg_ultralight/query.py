@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Literal
 from warnings import warn
 
 from lxml import etree
+from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.main import new_svg_root, write_svg
@@ -57,6 +58,8 @@ def _fill_ids(*elem_args: EtreeElement) -> None:
     :param elem: an etree element, accepts multiple arguments
     """
     for elem in _iter_elems(*elem_args):
+        if isinstance(elem, EtreeComment):
+            continue
         if elem.get("id") is None:
             elem.set("id", f"{_TEMP_ID_PREFIX}-{uuid.uuid4()}")
 
