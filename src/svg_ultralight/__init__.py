@@ -1,7 +1,7 @@
-"""Bring many of the svg_ultralight functions into the svg_ultralight namespace.
+"""Import functions into the package namespace.
 
-:author: Shay Hill
-:created: 12/22/2019.
+:author: ShayHill
+:created: 2019-12-22
 """
 
 from svg_ultralight.bounding_boxes.bound_helpers import (

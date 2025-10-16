@@ -1,7 +1,7 @@
-"""Test configuration for pytest.
+"""See full diffs in pytest.
 
 :author: Shay Hill
-:created: 7/2/2019
+:created: 2019-07-02
 """
 
 from __future__ import annotations

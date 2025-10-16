@@ -6,7 +6,7 @@ exclude: "tests|experiments"
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
     - id: check-added-large-files
     - id: check-ast
@@ -25,29 +25,28 @@ repos:
     - id: check-yaml
     - id: debug-statements
     - id: destroyed-symlinks
+    # - id: detect-aws-credentials
     - id: detect-private-key
     - id: end-of-file-fixer
     - id: mixed-line-ending
     - id: requirements-txt-fixer
     - id: trailing-whitespace
-    - id: fix-encoding-pragma
-      args:
-      - --remove
     - id: name-tests-test
       args:
       - --pytest-test-first
     - id: no-commit-to-branch
     - id: pretty-format-json
+      args: ['--autofix']
     # - id: sort-simple-yaml
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.16.1
+  rev: v1.18.2
   hooks:
   - id: mypy
     name: mypy
     language: python
-    language_version: python 3.11
+    language_version: python 3.10
     types: [python]
     require_serial: true
     verbose: true
@@ -58,10 +57,10 @@ repos:
     # files: ^(src/|tests/)
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.20.0
+  rev: v3.21.0
   hooks:
   - args:
-    - --py39-plus
+    - --py310-plus
     id: pyupgrade
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
@@ -69,11 +68,64 @@ repos:
   hooks:
   - id: remove-tabs
 
+# - repo: https://github.com/commitizen-tools/commitizen
+#   rev: v2.40.0
+#   hooks:
+#   - id: commitizen
+
+# # This will only work with pylint installed in the venv
+# - repo: local
+#   hooks:
+#   - id: pylint
+#     exclude: "tests"
+#     name: pylint
+#     entry: ./venv/Scripts/pylint.exe
+#     language: system
+#     types: [python]
+#     args:
+#     - --ignore-patterns=venv
+#     - --good-names=i,j,_,f
+#     # - --disable=protected-access
+#     # - --disable=no-member
+#     # - --disable=import-error
+#     # - --disable=no-name-in-module
+#     - --disable=redundant-returns-doc # many false positives
+#     - --disable=too-many-arguments
+#     - --disable=too-many-instance-attributes
+#     - --disable=redefined-builtin # sticking with edge.next
+#     - --disable=invalid-name # for _TMeshElem and similar type hints
+#     - --disable=useless-return # conflicts with mypy
+#     - --disable=assignment-from-no-return # prevents overloading Attrib methods to only raise an Exception
+#     - --disable=useless-parent-delegation
+#     - --disable=R0801 # Similar lines in multiple files
+#     - --load-plugins=pylint.extensions.docparams
+#     - --accept-no-param-doc=n
+#     - --accept-no-raise-doc=n
+#     - --accept-no-return-doc=n
+#     - --accept-no-yields-doc=n
+
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   # ignores
+  # COM812 Trailing comma missing (does not agree with Black)
+  # D203 1 blank line required before class docstring (incompatible with D211)
+  # D213 multi line summary second line (incompatible with D212):
+  # ISC003 Explicitly concatenated string should be implicitly concatenated
+  #
+  #
   # ANN201 Missing return type annotation for public function
   # ANN202 Missing return type annotation for private function (wants -> None everywhere)
   # B905 zip() without an explicit strict= parameter
+  # COM812 Trailing comma missing
+  # D203 1 blank line required before class docstring
+  # D213 multi line summary second line
+  # I001 Inport block is un-sorted or un-formatted
+  # ISC003 Explicitly concatenated string should be implicitly concatenated
+  # N802 Function name should be lowercase
+  # N806 Variable in function should be lowercase
+  # PGH003 Use specific rule codes when ignoring type issues
+  # PLR0913 Too many arguments to function call
+  # PTH108 os.unlink should be replaced by .unlink()
+  # SIM108 insists on ternary operator
   # COM812 Trailing comma missing
   # D203 1 blank line required before class docstring
   # D213 multi line summary second line
@@ -95,15 +147,16 @@ repos:
   # ANN401 Any type disallowed
   # FLY002 Consider f-string instead of string join
   # S311 Standard pseudo-random generator used
-  rev: 'v0.12.2'
+  # FLY Use f-string instead of ...
+  # S311 Starndard pseudo-random generators are not suitable for security/cryptographic purposes
+  rev: 'v0.14.0'
   hooks:
     - id: ruff
-      name: "ruff-lint"
-      # exclude: "tests"
+      exclude: "tests"
       args:
-      - --target-version=py39
+      - --target-version=py310
       - --select=ALL
-      - --ignore=ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,S101,S603,PLR2004,S301,B028,BLE001,ANN401,FLY002,SIM108,S311
+      - --ignore=COM812,D203,D213,ISC003,FLY,S311,COM812,D203,D213,ISC003,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,SIM108,S101,S603,PLR2004,S301,B028,BLE001,ANN401,FLY002,S311
       - --fix
       - --fixable=RUF022
     - id: ruff
@@ -113,6 +166,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.403
+  rev: v1.1.406
   hooks:
     - id: pyright
