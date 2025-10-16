@@ -11,7 +11,7 @@ import re
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
-from svg_ultralight.string_conversion import format_number
+from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
     from lxml.etree import (
@@ -136,6 +136,5 @@ def transform_element(elem: EtreeElement, matrix: _Matrix) -> EtreeElement:
     :param matrix: transformation matrix
     """
     current = get_transform_matrix(elem)
-    updated = map(format_number, mat_dot(matrix, current))
-    elem.attrib["transform"] = f"matrix({' '.join(updated)})"
+    elem.attrib["transform"] = svg_matrix(mat_dot(matrix, current))
     return elem

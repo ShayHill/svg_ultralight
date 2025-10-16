@@ -110,7 +110,7 @@ from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_fro
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element
-from svg_ultralight.string_conversion import format_numbers
+from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
     import os
@@ -548,8 +548,7 @@ class FTTextInfo:
     def new_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg text element with the appropriate font attributes."""
         matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
-        matrix = f"matrix({' '.join(format_numbers(matrix_vals))})"
-        attributes["transform"] = matrix
+        attributes["transform"] = svg_matrix(matrix_vals)
         stroke_width = attributes.get("stroke-width")
         if stroke_width:
             attributes["stroke-width"] = float(stroke_width) / self.scale

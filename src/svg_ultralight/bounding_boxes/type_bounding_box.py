@@ -10,7 +10,7 @@ import dataclasses
 import math
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
-from svg_ultralight.string_conversion import format_number
+from svg_ultralight.strings import svg_matrix
 from svg_ultralight.transformations import mat_apply, mat_dot, new_transformation_matrix
 
 _Matrix = tuple[float, float, float, float, float, float]
@@ -275,7 +275,7 @@ class HasBoundingBox(SupportsBounds):
         Use with
         ``update_element(elem, transform=bbox.transform_string)``
         """
-        return f"matrix({' '.join(map(format_number, self.bbox.transformation))})"
+        return svg_matrix(self.bbox.transformation)
 
 
 @dataclasses.dataclass
