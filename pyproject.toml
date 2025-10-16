@@ -7,7 +7,7 @@ license = "MIT"
 authors = [
     { name = "Shay Hill", email = "shay_public@hotmail.com" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "cssutils>=2.11.1",
     "fonttools>=4.60.1",

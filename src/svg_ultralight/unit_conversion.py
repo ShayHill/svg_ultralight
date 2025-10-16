@@ -14,7 +14,6 @@ from __future__ import annotations
 import dataclasses
 import enum
 import re
-from typing import Union
 
 from svg_ultralight.string_conversion import format_number
 
@@ -49,15 +48,15 @@ class Unit(enum.Enum):
 
 
 # the arguments this module will attempt to interpret as a string with a unit specifier
-MeasurementArg = Union[
-    float,
-    str,
-    tuple[str, str],
-    tuple[float, str],
-    tuple[str, Unit],
-    tuple[float, Unit],
-    Unit,
-]
+MeasurementArg = (
+    float
+    | str
+    | tuple[str, str]
+    | tuple[float, str]
+    | tuple[str, Unit]
+    | tuple[float, Unit]
+    | Unit
+)
 
 _UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
 

@@ -7,12 +7,11 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Union
 
 from svg_ultralight.string_conversion import format_number
 from svg_ultralight.unit_conversion import Measurement, MeasurementArg
 
-PadArg = Union[float, str, Measurement, Sequence[Union[float, str, Measurement]]]
+PadArg = float | str | Measurement | Sequence[float | str | Measurement]
 
 
 def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:

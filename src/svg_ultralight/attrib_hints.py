@@ -5,10 +5,9 @@
 """
 
 from collections.abc import Mapping
-from typing import Union
 
 # Types svg_ultralight can format to pass through to lxml constructors.
-ElemAttrib = Union[str, float, None]
+ElemAttrib = str | float | None
 
 # Type for an optional dictionary of element attributes.
-OptionalElemAttribMapping = Union[Mapping[str, ElemAttrib], None]
+OptionalElemAttribMapping = Mapping[str, ElemAttrib] | None

@@ -149,7 +149,6 @@ repos:
   # S311 Standard pseudo-random generator used
   # FLY Use f-string instead of ...
   # S311 Starndard pseudo-random generators are not suitable for security/cryptographic purposes
-  # UP007 use | for type annotations
   rev: 'v0.14.0'
   hooks:
     - id: ruff
@@ -157,7 +156,7 @@ repos:
       args:
       - --target-version=py310
       - --select=ALL
-      - --ignore=COM812,D203,D213,ISC003,FLY,S311,COM812,D203,D213,ISC003,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,SIM108,S101,S603,PLR2004,S301,B028,BLE001,ANN401,FLY002,S311,UP007
+      - --ignore=COM812,D203,D213,ISC003,FLY,S311,COM812,D203,D213,ISC003,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,SIM108,S101,S603,PLR2004,S301,B028,BLE001,ANN401,FLY002,S311
       - --fix
       - --fixable=RUF022
     - id: ruff
