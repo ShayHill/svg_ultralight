@@ -13,9 +13,8 @@ should work with all Inkscape versions. Please report any issues.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-from typing import IO, TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, TypeGuard
 
 from lxml import etree
 
@@ -23,11 +22,6 @@ from svg_ultralight.constructors import update_element
 from svg_ultralight.layout import pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import get_viewBox_str, svg_tostring
-
-if sys.version_info >= (3, 10):
-    from typing import TypeGuard
-else:
-    from typing_extensions import TypeGuard
 
 if TYPE_CHECKING:
     import os
