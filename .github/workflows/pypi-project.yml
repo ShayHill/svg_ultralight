@@ -7,9 +7,9 @@ name: pypi project
 
 on:
   push:
-    branches: [dev, master]
+    branches: [dev, main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
 
@@ -37,11 +37,11 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
-  # Deploy on pypi when branch is master and commit message starts with 'bump'
+  # Deploy on pypi when branch is main and commit message starts with 'bump'
   deploy-on-pypi:
     runs-on: ubuntu-latest
     continue-on-error: true
-    if: github.ref_name == 'master' && startsWith(github.event.head_commit.message, 'bump:')
+    if: github.ref_name == 'main' && startsWith(github.event.head_commit.message, 'bump:')
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
