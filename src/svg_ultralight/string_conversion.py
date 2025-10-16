@@ -149,7 +149,7 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
     return cast("bytes", as_bytes)
 
 
-def get_viewBox_str(
+def get_view_box_str(
     x: float,
     y: float,
     width: float,

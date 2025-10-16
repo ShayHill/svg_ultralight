@@ -78,7 +78,7 @@ class HasBoundingBox(SupportsBounds):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-    ):
+    ) -> None:
         """Transform the bounding box by updating the transformation attribute.
 
         :param transformation: 2D transformation matrix
@@ -137,7 +137,7 @@ class HasBoundingBox(SupportsBounds):
         return min(x for x, _ in self._get_transformed_corners())
 
     @x.setter
-    def x(self, value: float):
+    def x(self, value: float) -> None:
         """Set the x coordinate of the left edge of the bounding box.
 
         :param value: the new x coordinate of the left edge of the bounding box
@@ -153,7 +153,7 @@ class HasBoundingBox(SupportsBounds):
         return self.x + self.width / 2
 
     @cx.setter
-    def cx(self, value: float):
+    def cx(self, value: float) -> None:
         """Center x value.
 
         :param value: new center x value after transformation
@@ -201,7 +201,7 @@ class HasBoundingBox(SupportsBounds):
         return self.y + self.height / 2
 
     @cy.setter
-    def cy(self, value: float):
+    def cy(self, value: float) -> None:
         """Center y value.
 
         :param value: new center y value after transformation

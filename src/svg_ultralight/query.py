@@ -191,10 +191,10 @@ def _try_bbox_cache(elem_hash: str) -> BoundingBox | None:
             return pickle.load(f)
     except (EOFError, pickle.UnpicklingError) as e:
         msg = f"Error loading cache file {cache_path}: {e}"
-        warn(msg)
+        warn(msg, stacklevel=2)
     except Exception as e:
         msg = f"Unexpected error loading cache file {cache_path}: {e}"
-        warn(msg)
+        warn(msg, stacklevel=2)
     return None
 
 
@@ -218,8 +218,10 @@ def get_bounding_boxes(
     if None not in cached:
         return tuple(filter(None, cached))
 
-    hash2bbox = {h: c for h, c in zip(elem2hash.values(), cached) if c is not None}
-    remainder = [e for e, c in zip(elem_args, cached) if c is None]
+    hash2bbox = {
+        h: c for h, c in zip(elem2hash.values(), cached, strict=True) if c is not None
+    }
+    remainder = [e for e, c in zip(elem_args, cached, strict=True) if c is None]
     id2bbox = map_elems_to_bounding_boxes(inkscape, *remainder)
     for elem in remainder:
         hash_ = elem2hash[elem]

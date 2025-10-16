@@ -47,7 +47,7 @@ class BoundCollection(HasBoundingBox):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-    ):
+    ) -> None:
         """Transform each bound element in self.blems.
 
         :param transformation: 2D transformation matrix

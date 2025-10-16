@@ -21,7 +21,7 @@ from lxml import etree
 from svg_ultralight.constructors import update_element
 from svg_ultralight.layout import pad_and_scale
 from svg_ultralight.nsmap import NSMAP
-from svg_ultralight.string_conversion import get_viewBox_str, svg_tostring
+from svg_ultralight.string_conversion import get_view_box_str, svg_tostring
 
 if TYPE_CHECKING:
     import os
@@ -32,15 +32,6 @@ if TYPE_CHECKING:
 
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.layout import PadArg
-
-
-def _is_four_floats(objs: tuple[object, ...]) -> bool:
-    """Is obj a 4-tuple of numbers?.
-
-    :param objs: list of objects
-    :return: True if all objects are numbers and there are 4 of them
-    """
-    return len(objs) == 4 and all(isinstance(x, (float, int)) for x in objs)
 
 
 def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
@@ -101,16 +92,16 @@ def new_svg_root(
         nsmap = NSMAP
 
     inferred_attribs: dict[str, ElemAttrib] = {}
-    view_box_args = (x_, y_, width_, height_)
-    if _is_four_floats(view_box_args):
-        assert isinstance(x_, (float, int))
-        assert isinstance(y_, (float, int))
-        assert isinstance(width_, (float, int))
-        assert isinstance(height_, (float, int))
+    if (
+        isinstance(x_, (float, int))
+        and isinstance(y_, (float, int))
+        and isinstance(width_, (float, int))
+        and isinstance(height_, (float, int))
+    ):
         padded_viewbox, scale_attribs = pad_and_scale(
             (x_, y_, width_, height_), pad_, print_width_, print_height_, dpu_
         )
-        inferred_attribs["viewBox"] = get_viewBox_str(*padded_viewbox)
+        inferred_attribs["viewBox"] = get_view_box_str(*padded_viewbox)
         inferred_attribs.update(scale_attribs)
     inferred_attribs.update(attributes)
     # can only pass nsmap on instance creation

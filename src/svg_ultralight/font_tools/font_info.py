@@ -168,7 +168,9 @@ def _get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
     type2_lookups = (x for x in gpos.LookupList.Lookup if x.LookupType == 2)
     subtables = list(it.chain(*(x.SubTable for x in type2_lookups)))
     for subtable in (x for x in subtables if x.Format == 1):  # glyph-pair kerning
-        for pair_set, glyph1 in zip(subtable.PairSet, subtable.Coverage.glyphs):
+        for pair_set, glyph1 in zip(
+            subtable.PairSet, subtable.Coverage.glyphs, strict=True
+        ):
             for pair_value in pair_set.PairValueRecord:
                 glyph2 = pair_value.SecondGlyph
                 value1 = pair_value.Value1
@@ -221,7 +223,7 @@ def _split_into_quadratic(*pts: _XYTuple) -> Iterator[tuple[_XYTuple, _XYTuple]]
         msg = "At least two points are required."
         raise ValueError(msg)
     for prev_cp, next_cp in it.pairwise(pts[:-1]):
-        xs, ys = zip(prev_cp, next_cp)
+        xs, ys = zip(prev_cp, next_cp, strict=True)
         midpnt = sum(xs) / 2, sum(ys) / 2
         yield prev_cp, midpnt
     yield pts[-2], pts[-1]
@@ -277,7 +279,7 @@ class PathPen(BasePen):
         for q_pts in _split_into_quadratic(*pts):
             self._cmds.extend(("Q", *map(str, it.chain(*q_pts))))
 
-    def closePath(self):
+    def closePath(self) -> None:
         """Close the current path."""
         self._cmds.append("Z")
 
@@ -412,8 +414,8 @@ class FTFontInfo:
         pen_bounds = cast("None | tuple[int, int, int, int]", bounds_pen.bounds)
         if pen_bounds is None:
             return 0, 0, 0, 0
-        xMin, yMin, xMax, yMax = pen_bounds
-        return xMin, yMin, xMax, yMax
+        x_min, y_min, x_max, y_max = pen_bounds
+        return x_min, y_min, x_max, y_max
 
     def get_char_bbox(self, char: str) -> BoundingBox:
         """Return the BoundingBox of a character svg coordinates.
@@ -447,7 +449,7 @@ class FTFontInfo:
         bounds = [self.get_char_bounds(c) for c in text]
         total_advance = sum(hmtx[n][0] for n in names[:-1])
         total_kern = sum(self.kern_table.get((x, y), 0) for x, y in it.pairwise(names))
-        min_xs, min_ys, max_xs, max_ys = zip(*bounds)
+        min_xs, min_ys, max_xs, max_ys = zip(*bounds, strict=True)
         min_x = min_xs[0]
         min_y = min(min_ys)
 

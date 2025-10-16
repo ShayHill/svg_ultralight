@@ -52,7 +52,7 @@ class BoundElement(HasBoundingBox):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-    ):
+    ) -> None:
         """Transform the element and bounding box.
 
         :param transformation: a 6-tuple transformation matrix

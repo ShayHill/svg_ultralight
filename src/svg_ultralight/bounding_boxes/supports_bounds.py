@@ -52,7 +52,7 @@ class SupportsBounds(Protocol):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-    ):
+    ) -> None:
         """Apply a transformation to the object."""
         ...
 
@@ -62,7 +62,7 @@ class SupportsBounds(Protocol):
         ...
 
     @x.setter
-    def x(self, value: float):
+    def x(self, value: float) -> None:
         """Set minimum x coordinate.
 
         :param value: The minimum x coordinate.
@@ -74,7 +74,7 @@ class SupportsBounds(Protocol):
         ...
 
     @x2.setter
-    def x2(self, value: float):
+    def x2(self, value: float) -> None:
         """Set maximum x coordinate.
 
         :param value: The maximum x coordinate.
@@ -86,7 +86,7 @@ class SupportsBounds(Protocol):
         ...
 
     @cx.setter
-    def cx(self, value: float):
+    def cx(self, value: float) -> None:
         """Set center x coordinate.
 
         :param value: The center x coordinate.
@@ -98,7 +98,7 @@ class SupportsBounds(Protocol):
         ...
 
     @y.setter
-    def y(self, value: float):
+    def y(self, value: float) -> None:
         """Set minimum y coordinate.
 
         :param value: The minimum y coordinate.
@@ -110,7 +110,7 @@ class SupportsBounds(Protocol):
         ...
 
     @y2.setter
-    def y2(self, value: float):
+    def y2(self, value: float) -> None:
         """Set maximum y coordinate.
 
         :param value: The maximum y coordinate.
@@ -122,7 +122,7 @@ class SupportsBounds(Protocol):
         ...
 
     @cy.setter
-    def cy(self, value: float):
+    def cy(self, value: float) -> None:
         """Set center y coordinate.
 
         :param value: The center y coordinate.
@@ -134,7 +134,7 @@ class SupportsBounds(Protocol):
         ...
 
     @width.setter
-    def width(self, value: float):
+    def width(self, value: float) -> None:
         """Set width of the object.
 
         :param value: The width of the object.
@@ -146,7 +146,7 @@ class SupportsBounds(Protocol):
         ...
 
     @height.setter
-    def height(self, value: float):
+    def height(self, value: float) -> None:
         """Set height of the object.
 
         :param value: The height of the object.
@@ -158,7 +158,7 @@ class SupportsBounds(Protocol):
         ...
 
     @scale.setter
-    def scale(self, value: tuple[float, float]):
+    def scale(self, value: tuple[float, float]) -> None:
         """Return scale of the object.
 
         :param value: The scale of the object.

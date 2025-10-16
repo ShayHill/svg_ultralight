@@ -111,44 +111,18 @@ repos:
   # D213 multi line summary second line (incompatible with D212):
   # ISC003 Explicitly concatenated string should be implicitly concatenated
   #
-  #
-  # ANN201 Missing return type annotation for public function
-  # ANN202 Missing return type annotation for private function (wants -> None everywhere)
-  # B905 zip() without an explicit strict= parameter
-  # COM812 Trailing comma missing
-  # D203 1 blank line required before class docstring
-  # D213 multi line summary second line
-  # I001 Inport block is un-sorted or un-formatted
-  # ISC003 Explicitly concatenated string should be implicitly concatenated
-  # N802 Function name should be lowercase
-  # N806 Variable in function should be lowercase
-  # PGH003 Use specific rule codes when ignoring type issues
-  # PLR0913 Too many arguments to function call
-  # PTH108 os.unlink should be replaced by .unlink()
-  # SIM108 insists on ternary operator
-  # COM812 Trailing comma missing
-  # D203 1 blank line required before class docstring
-  # D213 multi line summary second line
-  # I001 Inport block is un-sorted or un-formatted
-  # ISC003 Explicitly concatenated string should be implicitly concatenated
-  # N802 Function name should be lowercase
-  # N806 Variable in function should be lowercase
-  # PGH003 Use specific rule codes when ignoring type issues
-  # PLR0913 Too many arguments to function call
-  # PTH108 os.unlink should be replaced by .unlink()
-  # SIM108 insists on ternary operator
-  #
-  # S101 Use of `assert` detected
-  # S603 `subprocess` call: check for execution of untrusted input
-  # PLR2004 Magic value used in comparison
+  # ANN401 Any type disallowed (need Any for fonttools)
+  # BLE001 Use of `except Exception:` detected (continue through Any failure to load cache)
   # S301 don't use pickle
-  # B028 wants explicit stacklevel on warn
-  # BLE001 Use of `except Exception:` detected
-  # ANN401 Any type disallowed
-  # FLY002 Consider f-string instead of string join
-  # S311 Standard pseudo-random generator used
-  # FLY Use f-string instead of ...
-  # S311 Starndard pseudo-random generators are not suitable for security/cryptographic purposes
+  # PLR2004 Magic value used in comparison
+  # S603 `subprocess` call: check for execution of untrusted input
+  # SIM108 insists on ternary operator
+  # PTH108 os.unlink should be replaced by .unlink()
+  # PLR0913 Too many arguments to function call
+  # PGH003 Use specific rule codes when ignoring type issues (multipe for *args to etree.tostring)
+  # FLY Consider f-string ...
+  # N802 function name should be lowercase (need for some magic in font_info)
+
   rev: 'v0.14.0'
   hooks:
     - id: ruff
@@ -156,7 +130,7 @@ repos:
       args:
       - --target-version=py310
       - --select=ALL
-      - --ignore=COM812,D203,D213,ISC003,FLY,S311,COM812,D203,D213,ISC003,ANN201,ANN202,B905,COM812,D203,D213,I001,ISC003,N802,N806,PGH003,PLR0913,PTH108,SIM108,S101,S603,PLR2004,S301,B028,BLE001,ANN401,FLY002,S311
+      - --ignore=COM812,D203,D213,ISC003,ANN401,BLE001,S301,PLR2004,S603,SIM108,PTH108,PLR0913,PGH003,FLY,N802
       - --fix
       - --fixable=RUF022
     - id: ruff

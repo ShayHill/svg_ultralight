@@ -129,7 +129,9 @@ def _format_bbox_error(
         bbox_b.width - bbox_a.width,
         bbox_b.height - bbox_a.height,
     )
-    scaled_diff = (x / y for x, y in zip(diff, (height, height, width, height)))
+    scaled_diff = (
+        x / y for x, y in zip(diff, (height, height, width, height), strict=True)
+    )
     dx, dy, dw, dh = (int(x * 100) for x in scaled_diff)
     return dx, dy, dw, dh
 
