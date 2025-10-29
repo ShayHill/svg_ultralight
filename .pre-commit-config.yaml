@@ -123,7 +123,7 @@ repos:
   # FLY Consider f-string ...
   # N802 function name should be lowercase (need for some magic in font_info)
 
-  rev: 'v0.14.0'
+  rev: 'v0.14.2'
   hooks:
     - id: ruff
       exclude: "tests"
@@ -140,6 +140,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.406
+  rev: v1.1.407
   hooks:
     - id: pyright

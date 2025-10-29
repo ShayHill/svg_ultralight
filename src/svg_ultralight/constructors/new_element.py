@@ -13,14 +13,16 @@ from __future__ import annotations
 
 import copy
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from lxml import etree
 
 from svg_ultralight.string_conversion import set_attributes
 
 if TYPE_CHECKING:
-    from lxml.etree import QName
+    from lxml.etree import (
+        QName,
+    )
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
@@ -78,7 +80,10 @@ def new_sub_element(
         >>> etree.tostring(parent)
         b'<g><rect/></g>'
     """
-    elem = etree.SubElement(parent, tag)
+    elem = cast(
+        "EtreeElement",
+        etree.SubElement(parent, tag),  # pyright: ignore[reportUnknownMemberType]
+    )
     set_attributes(elem, **attributes)
     return elem
 
