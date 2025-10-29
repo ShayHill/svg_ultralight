@@ -5,9 +5,10 @@
 """
 
 from collections.abc import Mapping
+from typing import TypeAlias
 
 # Types svg_ultralight can format to pass through to lxml constructors.
-ElemAttrib = str | float | None
+ElemAttrib: TypeAlias = str | float | None
 
 # Type for an optional dictionary of element attributes.
-OptionalElemAttribMapping = Mapping[str, ElemAttrib] | None
+OptionalElemAttribMapping: TypeAlias = Mapping[str, ElemAttrib] | None

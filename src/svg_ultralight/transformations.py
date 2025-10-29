@@ -9,7 +9,7 @@ from __future__ import annotations
 import numbers
 import re
 from contextlib import suppress
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeAlias, cast
 
 from svg_ultralight.strings import svg_matrix
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 RE_MATRIX = re.compile(r"matrix\(([^)]+)\)")
 
-_Matrix = tuple[float, float, float, float, float, float]
+_Matrix: TypeAlias = tuple[float, float, float, float, float, float]
 
 
 def mat_dot(mat1: _Matrix, mat2: _Matrix) -> _Matrix:
