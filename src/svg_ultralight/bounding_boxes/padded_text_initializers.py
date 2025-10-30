@@ -23,11 +23,12 @@ to 16px.
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
+    FTFontInfo,
     get_padded_text_info,
     get_svg_font_attributes,
 )
@@ -99,6 +100,7 @@ def pad_text(
     return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
 
 
+@overload
 def pad_text_ft(
     font: str | os.PathLike[str],
     text: str,
@@ -109,11 +111,38 @@ def pad_text_ft(
     y_bounds_reference: str | None = None,
     attrib: OptionalElemAttribMapping = None,
     **attributes: ElemAttrib,
-) -> PaddedText:
+) -> PaddedText: ...
+
+
+@overload
+def pad_text_ft(
+    font: str | os.PathLike[str],
+    text: list[str],
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
+    **attributes: ElemAttrib,
+) -> list[PaddedText]: ...
+
+
+def pad_text_ft(
+    font: str | os.PathLike[str],
+    text: str | list[str],
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
+    **attributes: ElemAttrib,
+) -> PaddedText | list[PaddedText]:
     """Create a new PaddedText instance using fontTools.
 
     :param font: path to a font file.
-    :param text: the text of the text element.
+    :param text: the text of the text element or a list of text strings.
     :param font_size: the font size to use.
     :param ascent: the ascent of the font. If not provided, it will be calculated
         from the font file.
@@ -130,7 +159,8 @@ def pad_text_ft(
     :param attributes: additional attributes to set on the text element. There is a
         chance these will cause the font element to exceed the BoundingBox of the
         PaddedText instance.
-    :return: a PaddedText instance with a line_gap defined.
+    :return: a PaddedText instance with a line_gap defined. If a list of strings is
+        given for parameter `text`, a list of PaddedText instances is returned.
     """
     attributes.update(attrib or {})
     attributes_ = format_attr_dict(**attributes)
@@ -142,11 +172,33 @@ def pad_text_ft(
     _ = attributes_.pop("font-weight", None)
     _ = attributes_.pop("font-stretch", None)
 
-    info = get_padded_text_info(
-        font, text, font_size, ascent, descent, y_bounds_reference=y_bounds_reference
-    )
-    elem = info.new_element(**attributes_)
-    return PaddedText(elem, info.bbox, *info.padding, info.line_gap)
+    font_info = FTFontInfo(font)
+
+    try:
+        input_one_text_item = False
+        if isinstance(text, str):
+            input_one_text_item = True
+            text = [text]
+
+        elems: list[PaddedText] = []
+        for text_item in text:
+            text_info = get_padded_text_info(
+                font_info,
+                text_item,
+                font_size,
+                ascent,
+                descent,
+                y_bounds_reference=y_bounds_reference,
+            )
+            elem = text_info.new_element(**attributes_)
+            elems.append(
+                PaddedText(elem, text_info.bbox, *text_info.padding, text_info.line_gap)
+            )
+    finally:
+        font_info.font.close()
+    if input_one_text_item:
+        return elems[0]
+    return elems
 
 
 def pad_text_mix(

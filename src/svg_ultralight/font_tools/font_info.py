@@ -644,7 +644,7 @@ def get_font_size_given_height(font: str | os.PathLike[str], height: float) -> f
 
 
 def get_padded_text_info(
-    font: str | os.PathLike[str],
+    font: str | os.PathLike[str] | FTFontInfo,
     text: str,
     font_size: float | None = None,
     ascent: float | None = None,
@@ -669,7 +669,10 @@ def get_padded_text_info(
     :return: A FTTextInfo object with the information necessary to create a
         PaddedText instance: bbox, tpad, rpad, bpad, lpad.
     """
-    font_info = FTFontInfo(font)
+    if isinstance(font, FTFontInfo):
+        font_info = font
+    else:
+        font_info = FTFontInfo(font)
     if y_bounds_reference:
         capline_info = FTTextInfo(font_info, y_bounds_reference, font_size)
         ascent = -capline_info.bbox.y

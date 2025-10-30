@@ -76,3 +76,12 @@ class TestPadTextFt:
             pytest.skip(msg)
         padded = pad_text_ft(font, "Lorem ipsum dolor")
         assert padded.leading == padded.height + padded.line_gap
+
+    def test_multiple_text_args(self) -> None:
+        """Test pad_text_ft a list of strings."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text_ft(font, ["Lorem", "ipsum", "dolor"])
+        assert len(padded) == 3
