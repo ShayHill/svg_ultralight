@@ -425,7 +425,13 @@ class FTFontInfo:
         coordinates (+y is down).
         """
         min_x, min_y, max_x, max_y = self.get_char_bounds(char)
-        return BoundingBox(min_x, -max_y, max_x - min_x, max_y - min_y)
+        return BoundingBox(
+            min_x,
+            min_y,
+            max_x - min_x,
+            max_y - min_y,
+            transformation=(1, 0, 0, -1, 0, 0),
+        )
 
     def get_text_bounds(self, text: str) -> tuple[int, int, int, int]:
         """Return bounds of a string as xmin, ymin, xmax, ymax.
@@ -484,7 +490,13 @@ class FTFontInfo:
         coordinates (+y is down).
         """
         min_x, min_y, max_x, max_y = self.get_text_bounds(text)
-        return BoundingBox(min_x, -max_y, max_x - min_x, max_y - min_y)
+        return BoundingBox(
+            min_x,
+            min_y,
+            max_x - min_x,
+            max_y - min_y,
+            transformation=(1, 0, 0, -1, 0, 0),
+        )
 
     def get_lsb(self, char: str) -> float:
         """Return the left side bearing of a character."""
@@ -567,7 +579,7 @@ class FTTextInfo:
         """
         bbox = self.font.get_text_bbox(self.text)
         bbox.transform(scale=self.scale)
-        return BoundingBox(*bbox.values())
+        return bbox
 
     @property
     def ascent(self) -> float:
