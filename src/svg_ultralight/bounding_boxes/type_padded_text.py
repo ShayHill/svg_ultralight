@@ -120,6 +120,16 @@ class PaddedText(BoundElement):
         self._line_gap = line_gap
 
     @property
+    def tbox(self) -> BoundingBox:
+        """Return the unpadded BoundingBox around the text element.
+
+        Tight bbox or True bbox. An alias for unpadded_bbox.
+
+        :return: The unpadded BoundingBox around the text element.
+        """
+        return self.unpadded_bbox
+
+    @property
     def bbox(self) -> BoundingBox:
         """Return a BoundingBox around the margins and cap/baseline.
 
