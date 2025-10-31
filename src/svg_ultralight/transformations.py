@@ -129,12 +129,24 @@ def new_transformation_matrix(
     return mat_dot((float(scale_x), 0, 0, float(scale_y), dx, dy), transformation)
 
 
-def transform_element(elem: EtreeElement, matrix: _Matrix) -> EtreeElement:
+def transform_element(
+    elem: EtreeElement, matrix: _Matrix, *, reverse: bool = False
+) -> EtreeElement:
     """Apply a transformation matrix to an svg element.
 
     :param elem: svg element
-    :param matrix: transformation matrix
+    :par m matrix: transformation matrix
+
+    :param reverse: If you have a transformation matrix, A, and wish to apply an
+    additional transform, B, the result is B @ A. This is how an element can be
+    cumulatively transformed in svg.
+
+    If the element is transformed by A and is a part of a GROUP transformed by B,
+    then the result is the reverse: A @ B.
     """
     current = get_transform_matrix(elem)
-    elem.attrib["transform"] = svg_matrix(mat_dot(matrix, current))
+    if reverse:
+        elem.attrib["transform"] = svg_matrix(mat_dot(current, matrix))
+    else:
+        elem.attrib["transform"] = svg_matrix(mat_dot(matrix, current))
     return elem

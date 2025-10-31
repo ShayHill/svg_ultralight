@@ -47,6 +47,7 @@ class BoundCollection(HasBoundingBox):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
+        reverse: bool = False,
     ) -> None:
         """Transform each bound element in self.blems.
 
@@ -54,9 +55,11 @@ class BoundCollection(HasBoundingBox):
         :param scale: optional scale factor
         :param dx: optional x translation
         :param dy: optional y translation
+        :param reverse: Transform the element as if it were in a <g> element
+            transformed by tmat.
 
         Keep track of all compounding transformations in order to have a value for
-        self.scale (required for membersh and to provide access to cumulative
+        self.scale (required for members and to provide access to cumulative
         transforms should this be useful for any reason. This means all
         transformations must be applied to two bounding boxes: a persistant bbox to
         keep track of the scale property and a temporary bbox to isolate each
@@ -66,6 +69,6 @@ class BoundCollection(HasBoundingBox):
         self.bbox.transform(tmat)
         for blem in self.blems:
             if isinstance(blem, EtreeElement):
-                _ = transform_element(blem, tmat)
+                _ = transform_element(blem, tmat, reverse=reverse)
             else:
-                blem.transform(tmat)
+                blem.transform(tmat, reverse=reverse)

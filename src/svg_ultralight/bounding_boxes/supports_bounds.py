@@ -52,6 +52,7 @@ class SupportsBounds(Protocol):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
+        reverse: bool = False,
     ) -> None:
         """Apply a transformation to the object."""
         ...

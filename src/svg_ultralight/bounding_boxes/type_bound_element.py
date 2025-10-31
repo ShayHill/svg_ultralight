@@ -52,6 +52,7 @@ class BoundElement(HasBoundingBox):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
+        reverse: bool = False,
     ) -> None:
         """Transform the element and bounding box.
 
@@ -59,7 +60,9 @@ class BoundElement(HasBoundingBox):
         :param scale: a scaling factor
         :param dx: the x translation
         :param dy: the y translation
+        :param reverse: Transform the element as if it were in a <g> element
+            transformed by tmat.
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        self.bbox.transform(tmat)
-        _ = transform_element(self.elem, tmat)
+        self.bbox.transform(tmat, reverse=reverse)
+        _ = transform_element(self.elem, tmat, reverse=reverse)

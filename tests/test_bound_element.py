@@ -8,6 +8,7 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.constructors import new_element
+from svg_ultralight.transformations import mat_dot, get_transform_matrix, transform_element
 
 
 class TestTransforms:
@@ -18,6 +19,17 @@ class TestTransforms:
         bbox = BoundingBox(0, 0, 100, 100)
         bbox.transform(transformation=(1, 2, 3, 4, 5, 6))
         assert bbox.transformation == (1, 2, 3, 4, 5, 6)
+
+    def test_reverse(self) -> None:
+        mat_a = (1, 2, 3, 4, 5, 6)
+        mat_b = (2, 1, 4, 3, 6, 5)
+        elem = new_element('circle', cx=0, cy=0, r=1)
+        _ = transform_element(elem, mat_a)
+        bbox = BoundingBox(0, 0, 1, 1, transformation=mat_a)
+        blem = BoundElement(elem, bbox)
+        blem.transform(transformation=mat_b, reverse=True)
+        assert blem.bbox.transformation == mat_dot(mat_a, mat_b)
+        assert get_transform_matrix(blem.elem) == mat_dot(mat_a, mat_b)
 
     def test_scale_float(self) -> None:
         """Test the scale method with a float."""

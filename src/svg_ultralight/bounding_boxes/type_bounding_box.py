@@ -78,6 +78,7 @@ class HasBoundingBox(SupportsBounds):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
+        reverse: bool = False,
     ) -> None:
         """Transform the bounding box by updating the transformation attribute.
 
@@ -85,6 +86,8 @@ class HasBoundingBox(SupportsBounds):
         :param scale: scale factor
         :param dx: x translation
         :param dy: y translation
+        :param reverse: Transform the element as if it were in a <g> element
+            transformed by tmat.
 
         All parameters are optional. Scale, dx, and dy are optional and applied after
         the transformation matrix if both are given. This shouldn't be necessary in
@@ -94,7 +97,10 @@ class HasBoundingBox(SupportsBounds):
         when applying a transformation from another bounding box instance.
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        self.bbox.transformation = mat_dot(tmat, self.bbox.transformation)
+        if reverse:
+            self.bbox.transformation = mat_dot(self.bbox.transformation, tmat)
+        else:
+            self.bbox.transformation = mat_dot(tmat, self.bbox.transformation)
 
     @property
     def scale(self) -> tuple[float, float]:
