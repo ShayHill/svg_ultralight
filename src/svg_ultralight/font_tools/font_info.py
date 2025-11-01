@@ -427,10 +427,9 @@ class FTFontInfo:
         min_x, min_y, max_x, max_y = self.get_char_bounds(char)
         return BoundingBox(
             min_x,
-            min_y,
+            -max_y,
             max_x - min_x,
             max_y - min_y,
-            transformation=(1, 0, 0, -1, 0, 0),
         )
 
     def get_text_bounds(self, text: str) -> tuple[int, int, int, int]:
@@ -492,10 +491,9 @@ class FTFontInfo:
         min_x, min_y, max_x, max_y = self.get_text_bounds(text)
         return BoundingBox(
             min_x,
-            min_y,
+            -max_y,
             max_x - min_x,
             max_y - min_y,
-            transformation=(1, 0, 0, -1, 0, 0),
         )
 
     def get_lsb(self, char: str) -> float:

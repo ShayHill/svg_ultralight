@@ -64,7 +64,6 @@ enough to lay out text on a business card.
 
 from __future__ import annotations
 
-import copy
 import math
 from typing import TYPE_CHECKING
 
@@ -113,7 +112,7 @@ class PaddedText(BoundElement):
         :param lpad: Left padding.
         """
         self.elem = elem
-        self.unpadded_bbox = copy.copy(bbox)
+        self.unpadded_bbox = bbox
         self.base_tpad = tpad
         self.rpad = rpad
         self.base_bpad = bpad
