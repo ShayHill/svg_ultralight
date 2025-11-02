@@ -570,9 +570,12 @@ class FTTextInfo:
 
     def new_chars_group_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg group element with a path for each character in the text."""
+        names = map(self.font.get_glyph_name, self.text)
+        svgds = self.font.get_text_svgd_by_char(self.text)
         group = new_element("g", **attributes)
-        for char_svgd in self.font.get_text_svgd_by_char(self.text):
-            _ = new_sub_element(group, "path", d=char_svgd)
+        for name, svgd in zip(names, svgds, strict=True):
+            data_text = _sanitize_svg_data_text(name)
+            _ = new_sub_element(group, "path", d=svgd, data_text=data_text)
         matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
         group.attrib["transform"] = svg_matrix(matrix_vals)
         stroke_width = group.attrib.get("stroke-width")
