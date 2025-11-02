@@ -9,7 +9,9 @@ from pathlib import Path
 import pytest
 from conftest import INKSCAPE, has_inkscape
 
-from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text, pad_text_ft
+from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text, pad_text_ft, pad_chars_ft
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+
 from svg_ultralight.constructors import new_element
 
 
@@ -85,3 +87,24 @@ class TestPadTextFt:
             pytest.skip(msg)
         padded = pad_text_ft(font, ["Lorem", "ipsum", "dolor"])
         assert len(padded) == 3
+
+class TestPadCharsFt:
+
+    def test_multiple_text_args(self) -> None:
+        """Test pad_chars_ft a list of strings."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_chars_ft(font, ["Lorem", "ipsum", "dolor"])
+        assert len(padded) == 3
+
+    def test_single_text_arg(self) -> None:
+        """Test pad_chars_ft a single string."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_chars_ft(font, "Lorem")
+        assert isinstance(padded, BoundElement)
+

@@ -109,7 +109,11 @@ from paragraphs import par
 from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_from_cpts
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.constructors.new_element import new_element
+from svg_ultralight.constructors.new_element import (
+    new_element,
+    new_sub_element,
+    update_element,
+)
 from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
@@ -145,8 +149,6 @@ def _sanitize_svg_data_text(text: str) -> str:
     return text
 
 
-# extract_gpos_kerning is an unfinished attempt to extract kerning from the GPOS
-# table.
 def _get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
     """Extract kerning pairs from the GPOS table of a font.
 
@@ -457,6 +459,23 @@ class FTFontInfo:
         max_y = max(max_ys)
         return min_x, min_y, max_x, max_y
 
+    def get_text_svgd_by_char(self, text: str, dx: float = 0) -> Iterator[str]:
+        """Return an iterator of svg path data for each character in a string.
+
+        :param text: The text to get the svg path data for.
+        :param dx: An optional x translation to apply to the entire text.
+        :return: An iterator of svg path data for each character in the text.
+        """
+        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        char_dx = dx
+        for c_this, c_next in it.pairwise(text):
+            this_name = self.get_glyph_name(c_this)
+            next_name = self.get_glyph_name(c_next)
+            yield self.get_char_svgd(c_this, char_dx)
+            char_dx += hmtx[this_name][0]
+            char_dx += self.kern_table.get((this_name, next_name), 0)
+        yield self.get_char_svgd(text[-1], char_dx)
+
     def get_text_svgd(self, text: str, dx: float = 0) -> str:
         """Return the svg path data for a string.
 
@@ -464,17 +483,7 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the entire text.
         :return: The svg path data for the text.
         """
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
-        svgd = ""
-        char_dx = dx
-        for c_this, c_next in it.pairwise(text):
-            this_name = self.get_glyph_name(c_this)
-            next_name = self.get_glyph_name(c_next)
-            svgd += self.get_char_svgd(c_this, char_dx)
-            char_dx += hmtx[this_name][0]
-            char_dx += self.kern_table.get((this_name, next_name), 0)
-        svgd += self.get_char_svgd(text[-1], char_dx)
-        return svgd
+        return "".join(self.get_text_svgd_by_char(text, dx))
 
     def get_text_bbox(self, text: str) -> BoundingBox:
         """Return the BoundingBox of a string svg coordinates.
@@ -558,6 +567,18 @@ class FTTextInfo:
             d=self.font.get_text_svgd(self.text),
             **attributes,
         )
+
+    def new_chars_group_element(self, **attributes: ElemAttrib) -> EtreeElement:
+        """Return an svg group element with a path for each character in the text."""
+        group = new_element("g", **attributes)
+        for char_svgd in self.font.get_text_svgd_by_char(self.text):
+            _ = new_sub_element(group, "path", d=char_svgd)
+        matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
+        group.attrib["transform"] = svg_matrix(matrix_vals)
+        stroke_width = group.attrib.get("stroke-width")
+        if stroke_width:
+            _ = update_element(group, stroke_width=float(stroke_width) / self.scale)
+        return group
 
     @property
     def bbox(self) -> BoundingBox:

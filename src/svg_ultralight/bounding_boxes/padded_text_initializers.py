@@ -25,6 +25,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
@@ -98,6 +99,89 @@ def pad_text(
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
     return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
+
+
+@overload
+def pad_chars_ft(
+    font: str | os.PathLike[str],
+    text: str,
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
+    **attributes: ElemAttrib,
+) -> BoundElement: ...
+
+
+@overload
+def pad_chars_ft(
+    font: str | os.PathLike[str],
+    text: list[str],
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
+    **attributes: ElemAttrib,
+) -> list[BoundElement]: ...
+
+
+def pad_chars_ft(
+    font: str | os.PathLike[str],
+    text: str | list[str],
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+    attrib: OptionalElemAttribMapping = None,
+    **attributes: ElemAttrib,
+) -> BoundElement | list[BoundElement]:
+    """Create a bound group of paths for each character in the text.
+
+    Create a bound group of path elements, one for each character in the text. This
+    will provide less utility in most respects than `pad_text_ft`, but will be useful
+    for animations and other effects where individual characters need to be
+    addressed.
+    """
+    attributes.update(attrib or {})
+    attributes_ = format_attr_dict(**attributes)
+    attributes_.update(get_svg_font_attributes(font))
+
+    _ = attributes_.pop("font-size", None)
+    _ = attributes_.pop("font-family", None)
+    _ = attributes_.pop("font-style", None)
+    _ = attributes_.pop("font-weight", None)
+    _ = attributes_.pop("font-stretch", None)
+
+    font_info = FTFontInfo(font)
+
+    try:
+        input_one_text_item = False
+        if isinstance(text, str):
+            input_one_text_item = True
+            text = [text]
+
+        elems: list[BoundElement] = []
+        for text_item in text:
+            text_info = get_padded_text_info(
+                font_info,
+                text_item,
+                font_size,
+                ascent,
+                descent,
+                y_bounds_reference=y_bounds_reference,
+            )
+            elem = text_info.new_chars_group_element(**attributes_)
+            elems.append(BoundElement(elem, text_info.bbox))
+    finally:
+        font_info.font.close()
+    if input_one_text_item:
+        return elems[0]
+    return elems
 
 
 @overload
