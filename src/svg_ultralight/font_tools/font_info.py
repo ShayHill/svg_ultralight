@@ -575,7 +575,7 @@ class FTTextInfo:
         group = new_element("g", **attributes)
         for name, svgd in zip(names, svgds, strict=True):
             data_text = _sanitize_svg_data_text(name)
-            _ = new_sub_element(group, "path", d=svgd, data_text=data_text)
+            _ = new_sub_element(group, "path", data_text=data_text, d=svgd)
         matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
         group.attrib["transform"] = svg_matrix(matrix_vals)
         stroke_width = group.attrib.get("stroke-width")
