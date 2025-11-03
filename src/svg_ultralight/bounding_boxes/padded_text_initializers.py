@@ -25,6 +25,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
+from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element, update_element
@@ -157,15 +158,14 @@ def pad_chars_ft(
     _ = attributes_.pop("font-weight", None)
     _ = attributes_.pop("font-stretch", None)
 
+    input_one_text_item = False
+    if isinstance(text, str):
+        input_one_text_item = True
+        text = [text]
+    elems: list[BoundElement] = []
+
     font_info = FTFontInfo(font)
-
     try:
-        input_one_text_item = False
-        if isinstance(text, str):
-            input_one_text_item = True
-            text = [text]
-
-        elems: list[BoundElement] = []
         for text_item in text:
             text_info = get_padded_text_info(
                 font_info,
@@ -176,7 +176,8 @@ def pad_chars_ft(
                 y_bounds_reference=y_bounds_reference,
             )
             elem = text_info.new_chars_group_element(**attributes_)
-            elems.append(BoundElement(elem, text_info.bbox))
+            bbox = pad_bbox(text_info.bbox, text_info.padding)
+            elems.append(BoundElement(elem, bbox))
     finally:
         font_info.font.close()
     if input_one_text_item:
