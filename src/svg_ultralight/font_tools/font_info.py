@@ -247,7 +247,7 @@ class PathPen(BasePen):
         """Return an svg path data string for the glyph."""
         if not self._cmds:
             return ""
-        svgd = format_svgd_shortest(" ".join(self._cmds))
+        svgd = " ".join(self._cmds)
         return "M" + svgd[1:]
 
     @property
@@ -394,7 +394,7 @@ class FTFontInfo:
         _ = glyph_set[glyph_name].draw(path_pen)
         svgd = path_pen.svgd
         if not dx or not svgd:
-            return svgd
+            return format_svgd_shortest(svgd)
         cpts = get_cpts_from_svgd(svgd)
         for i, curve in enumerate(cpts):
             cpts[i][:] = [(x + dx, y) for x, y in curve]
@@ -485,6 +485,28 @@ class FTFontInfo:
         """
         return "".join(self.get_text_svgd_by_char(text, dx))
 
+    def get_text_svgds(self, text: str, dx: float = 0) -> list[tuple[str, str]]:
+        """Return a list of svg path data for each character in a string.
+
+        :param text: The text to get the svg path data for.
+        :param dx: An optional x translation to apply to the entire text.
+        :return: A list of svg path data for each character in the text.
+        """
+        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        svgds: list[tuple[str, str]] = []
+        for c_this, c_next in it.pairwise(text):
+            this_name = self.get_glyph_name(c_this)
+            next_name = self.get_glyph_name(c_next)
+            svgd = self.get_char_svgd(c_this)
+            tmat = "" if dx == 0 else f"matrix(1 0 0 1 {dx} 0)"
+            svgds.append((svgd, tmat))
+            dx += hmtx[this_name][0]
+            dx += self.kern_table.get((this_name, next_name), 0)
+        svgd = self.get_char_svgd(text[-1])
+        tmat = "" if dx == 0 else f"matrix(1 0 0 1 {dx} 0)"
+        svgds.append((svgd, tmat))
+        return svgds
+
     def get_text_bbox(self, text: str) -> BoundingBox:
         """Return the BoundingBox of a string svg coordinates.
 
@@ -561,12 +583,16 @@ class FTTextInfo:
         stroke_width = attributes.get("stroke-width")
         if stroke_width:
             attributes["stroke-width"] = float(stroke_width) / self.scale
-        return new_element(
-            "path",
-            data_text=_sanitize_svg_data_text(self.text),
-            d=self.font.get_text_svgd(self.text),
-            **attributes,
-        )
+        data_text = _sanitize_svg_data_text(self.text)
+        group = new_element("g", data_text=data_text, **attributes)
+        for svgd, tmat in self.font.get_text_svgds(self.text):
+            if not svgd:
+                continue
+            if not tmat:
+                _ = new_sub_element(group, "path", d=svgd)
+                continue
+            _ = new_sub_element(group, "path", d=svgd, transform=tmat)
+        return group
 
     def new_chars_group_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg group element with a path for each character in the text."""
