@@ -332,7 +332,7 @@ def pad_text_mix(
         y_bounds_reference=y_bounds_reference,
         attrib=attributes,
     )
-    bbox = padded_inkscape.unpadded_bbox
+    bbox = padded_inkscape.tbox
     rpad = padded_inkscape.rpad
     lpad = padded_inkscape.lpad
     if y_bounds_reference is None:

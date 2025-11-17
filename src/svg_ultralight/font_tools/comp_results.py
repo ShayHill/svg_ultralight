@@ -163,7 +163,7 @@ def check_font_tools_alignment(
     except Exception:
         return FontBboxError.INIT, None
 
-    error = _format_bbox_error(rslt_pt.unpadded_bbox, rslt_ft.unpadded_bbox)
+    error = _format_bbox_error(rslt_pt.tbox, rslt_ft.tbox)
     if error[1] or error[3]:
         return FontBboxError.ELEM_Y, error
     if error[0] or error[2]:
@@ -225,14 +225,10 @@ def draw_comparison(
 
     root = new_svg_root_around_bounds(pad_bbox(padded_pt.bbox, 1))
     root.append(
-        new_bbox_rect(
-            padded_pt.unpadded_bbox, fill="none", stroke_width=0.07, stroke="red"
-        )
+        new_bbox_rect(padded_pt.tbox, fill="none", stroke_width=0.07, stroke="red")
     )
     root.append(
-        new_bbox_rect(
-            padded_ft.unpadded_bbox, fill="none", stroke_width=0.05, stroke="blue"
-        )
+        new_bbox_rect(padded_ft.tbox, fill="none", stroke_width=0.05, stroke="blue")
     )
     root.append(padded_pt.elem)
     root.append(padded_ft.elem)

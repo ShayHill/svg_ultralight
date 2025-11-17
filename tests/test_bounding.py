@@ -168,25 +168,25 @@ class TestPaddedText:
         """Alter bbox margins, but do no move text when setting tpad."""
         bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
-        elem_y = bound_element.unpadded_bbox.y
-        elem_y2 = bound_element.unpadded_bbox.y2
+        elem_y = bound_element.tbox.y
+        elem_y2 = bound_element.tbox.y2
         bound_element.tpad += 10
         assert bound_element.y == bbox_y - 10
         assert bound_element.y2 == bbox_y2
-        assert bound_element.unpadded_bbox.x == elem_y
-        assert bound_element.unpadded_bbox.y2 == elem_y2
+        assert bound_element.tbox.x == elem_y
+        assert bound_element.tbox.y2 == elem_y2
 
     def test_bpad_preserves_elem_moves_y2(self, bound_element: PaddedText):
         """Alter bbox margins, but do no move text when setting bpad."""
         bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
-        elem_y = bound_element.unpadded_bbox.y
-        elem_y2 = bound_element.unpadded_bbox.y2
+        elem_y = bound_element.tbox.y
+        elem_y2 = bound_element.tbox.y2
         bound_element.bpad += 10
         assert bound_element.y == bbox_y
         assert bound_element.y2 == bbox_y2 + 10
-        assert bound_element.unpadded_bbox.y == elem_y
-        assert bound_element.unpadded_bbox.y2 == elem_y2
+        assert bound_element.tbox.y == elem_y
+        assert bound_element.tbox.y2 == elem_y2
 
 
 class TestBoundCollection:
