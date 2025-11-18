@@ -89,6 +89,8 @@ def new_svg_root_around_bounds(
         nsmap=nsmap,
         attrib=attributes,
     )
-    if elem is not None:
-        root.append(elem)
+    if elem is None:
+        return root
+    for subelem in elem:
+        root.append(subelem)
     return root
