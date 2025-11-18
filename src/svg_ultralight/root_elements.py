@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes import bound_helpers as bound
@@ -72,8 +73,11 @@ def new_svg_root_around_bounds(
     """
     attributes.update(attrib or {})
     bbox = bound.new_bbox_union(*bounded)
+    elem: EtreeElement | None = None
+    with suppress(ValueError):
+        elem = bound.new_element_union(*bounded)
     viewbox = _viewbox_args_from_bboxes(bbox)
-    return new_svg_root(
+    root = new_svg_root(
         x_=viewbox["x_"],
         y_=viewbox["y_"],
         width_=viewbox["width_"],
@@ -85,3 +89,6 @@ def new_svg_root_around_bounds(
         nsmap=nsmap,
         attrib=attributes,
     )
+    if elem is not None:
+        root.append(elem)
+    return root
