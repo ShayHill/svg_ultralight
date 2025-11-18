@@ -28,10 +28,10 @@ padded_list[::2].transform(dx=10)
 import itertools as it
 from typing import cast, overload
 
+from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.transformations import new_transformation_matrix
 
 _Matrix = tuple[float, float, float, float, float, float]
@@ -95,10 +95,8 @@ class PaddedList:
 
     def get_dim(self, name: str) -> float:
         """Get a dimension from bbox or tbox."""
-        if name.removeprefix("t"):
-            box, name = self.tbox, name[1:]
-        else:
-            box = self.bbox
+        box = self.tbox if name.startswith("t") else self.bbox
+        name = name.removeprefix("t")
         if name not in ("x", "cx", "x2", "y", "cy", "y2", "width", "height"):
             msg = f"Cannot get dimension '{name}'"
             raise AttributeError(msg)
