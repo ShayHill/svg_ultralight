@@ -28,7 +28,10 @@ padded_list[::2].transform(dx=10)
 import itertools as it
 from typing import cast, overload
 
-from svg_ultralight import BoundElement, BoundingBox, PaddedText, new_bound_union
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.transformations import new_transformation_matrix
 
 _Matrix = tuple[float, float, float, float, float, float]
