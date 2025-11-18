@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import copy
 import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from lxml import etree
 
@@ -80,10 +80,7 @@ def new_sub_element(
         >>> etree.tostring(parent)
         b'<g><rect/></g>'
     """
-    elem = cast(
-        "EtreeElement",
-        etree.SubElement(parent, tag),  # pyright: ignore[reportUnknownMemberType]
-    )
+    elem = etree.SubElement(parent, tag)
     set_attributes(elem, **attributes)
     return elem
 
