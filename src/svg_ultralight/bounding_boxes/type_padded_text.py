@@ -4,20 +4,21 @@ A text element (presumably), an svg_ultralight BoundingBox around that element, 
 padding on each side of that box. This is to simplify treating scaling and moving a
 text element as if it were written on a ruled sheet of paper.
 
-Padding represents the left margin, right margin, baseline, and capline of the text.
-Baseling and capline padding will often be less than zero, as descenders and
-ascenders will extend below the baseline and above the capline.
+Padding represents the space between the direction-most point of the text and the
+left margin, right margin, descent, and ascent of the text. Top and bottom padding
+may be less than zero if the constructor used a `y_bounds_reference` argument, as
+descenders and ascenders may extend below and above the bounds of that reference
+character.
 
 There is a getter and setter for each of the four padding values. These *do not* move
 the text element. For instance, if you decrease the left padding, the left margin
 will move, *not* the text element.
 
-There is a getter and setter for each of lmargin, rmargin, baseline, and capline.
-These *do* move the element, but do not scale it. For instance, if you move the
-left margin to the left, the right margin (and the text element with it) will move to
-the left.
+There is a getter and setter for each of x, cx, x2, y, cy, and y2. These *do* move
+the element, but do not scale it. For instance, if you move the left margin (x value)
+to the left, the right margin (and the text element with it) will move to the left.
 
-There is a getter and setter for width, height, and scale. These scale the text and
+There are getters and setters for width, height, and scale. These scale the text and
 the padding values.
 
 `set_width_preserve_sidebearings()`, `set_height_preserve_sidebearings(), and
@@ -499,8 +500,3 @@ class PaddedText(BoundElement):
         :param value: The bottom of this line of text.
         """
         self.transform(dy=value - self.bpad - self.tbox.y2)
-
-    lmargin = x
-    rmargin = x2
-    capline = y
-    baseline = y2

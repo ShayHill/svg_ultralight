@@ -158,12 +158,6 @@ class TestPaddedText:
         assert math.isclose(bound_element.height, 250)
         assert math.isclose(bound_element.y2, y2)
 
-    def test_aliases(self, bound_element: PaddedText):
-        assert bound_element.lmargin == bound_element.x
-        assert bound_element.rmargin == bound_element.x2
-        assert bound_element.capline == bound_element.y
-        assert bound_element.baseline == bound_element.y2
-
     def test_tpad_preserves_elem_moves_y(self, bound_element: PaddedText):
         """Alter bbox margins, but do no move text when setting tpad."""
         bbox_y = bound_element.y
