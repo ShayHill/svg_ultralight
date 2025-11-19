@@ -28,13 +28,22 @@ padded_list[::2].transform(dx=10)
 import itertools as it
 from typing import cast, overload
 
+from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.constructors import update_element
 from svg_ultralight.transformations import new_transformation_matrix
 
 _Matrix = tuple[float, float, float, float, float, float]
+
+# fmt: off
+_BBOX_DIMS = {
+    "x", "cx", "x2", "y", "cy", "y2", "width", "height",
+    "tx", "tcx", "tx2", "ty", "tcy", "ty2", "twidth", "theight",
+}
+# fmt: on
 
 
 class PaddedList:
@@ -81,49 +90,78 @@ class PaddedList:
         for p in self.plems:
             p.transform(transformation, scale=scale, dx=dx, dy=dy)
 
-    @property
-    def union(self) -> BoundElement:
-        """A single bound element containing all the padded text elements."""
-        return new_bound_union(*self.plems)
+    def transform_preserve_sidebearings(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: tuple[float, float] | float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+    ) -> None:
+        """Apply a transformation to all the padded text elements."""
+        for p in self.plems:
+            p.transform_preserve_sidebearings(transformation, scale=scale, dx=dx, dy=dy)
 
-    @property
-    def tunion(self) -> BoundElement:
-        """A single bound element containing all the unpadded text elements."""
-        union = self.union
+    def union(self, **attribs: ElemAttrib) -> BoundElement:
+        """Return a single bound element containing all the padded text elements."""
+        union = new_bound_union(*self.plems)
+        _ = update_element(union.elem, **attribs)
+        return union
+
+    def tunion(self, **attribs: ElemAttrib) -> BoundElement:
+        """Return a single bound element containing all the unpadded text elements.
+
+        This version uses the unpadded bounding boxes of the padded text elements.
+        """
+        union = self.union(**attribs)
         union.bbox = self.tbox
         return union
 
-    def get_dim(self, name: str) -> float:
+    def get_dim(self, dim: str) -> float:
         """Get a dimension from bbox or tbox."""
-        box = self.tbox if name.startswith("t") else self.bbox
-        name = name.removeprefix("t")
-        if name not in ("x", "cx", "x2", "y", "cy", "y2", "width", "height"):
-            msg = f"Cannot get dimension '{name}'"
+        if dim not in _BBOX_DIMS:
+            msg = "Invalid bbox dimension '{dim}'"
+            raise ValueError(msg)
+        box = self.tbox if dim.startswith("t") else self.bbox
+        dim = dim.removeprefix("t")
+        if dim not in ("x", "cx", "x2", "y", "cy", "y2", "width", "height"):
+            msg = f"Cannot get dimension '{dim}'"
             raise AttributeError(msg)
-        return cast("float", getattr(box, name))
+        return cast("float", getattr(box, dim))
 
-    def new_tmat(self, name: str, value: float) -> _Matrix:
-        """Create a transformation matrix to set a dimension to a value.
+    def new_tmat(self, dim: str, value: float) -> _Matrix:
+        """Create a transformation matrix to set a bbox dimension to a value.
 
-        This is a separate method so it can be, when necessary, be identified and
-        applied to subsets of the PaddedList.
+        :param dim: One of 'x', 'cx', 'x2', 'y', 'cy', 'y2', 'width', or 'height'
+            or any of the same prefixed with 't'.
         """
-        current_value = self.get_dim(name)
-        name = name.removeprefix("t")
-        if name in ("x", "cx", "x2"):
+        if dim not in _BBOX_DIMS:
+            msg = "Invalid bbox dimension '{dim}'"
+            raise ValueError(msg)
+        current_value = self.get_dim(dim)
+        dim = dim.removeprefix("t")
+        if dim in ("x", "cx", "x2"):
             return new_transformation_matrix(dx=value - current_value)
-        if name in ("y", "cy", "y2"):
+        if dim in ("y", "cy", "y2"):
             return new_transformation_matrix(dy=value - current_value)
-        if name in ("width", "height"):
+        if dim in ("width", "height"):
             return new_transformation_matrix(scale=value / current_value)
-        msg = f"Cannot set dimension '{name}'"
+        msg = f"Cannot set dimension '{dim}'"
         raise AttributeError(msg)
 
-    def set_dim(self, **kwargs: float) -> None:
+    def set_dim(self, **dims: float) -> None:
         """Set a dimension on bbox or tbox."""
-        for name, value in kwargs.items():
-            tmat = self.new_tmat(name, value)
+        for dim, value in dims.items():
+            if dim not in _BBOX_DIMS:
+                msg = "Invalid bbox dim '{dim}'"
+                raise ValueError(msg)
+            tmat = self.new_tmat(dim, value)
             self.transform(transformation=tmat)
+
+    def set(self, **attribs: ElemAttrib) -> None:
+        """Set an attribute on all padded text elements."""
+        for p in self.plems:
+            _ = update_element(p.elem, **attribs)
 
     def align(self, dimension: str, value: float | None = None) -> None:
         """Align the specified edges or centers of the padded text elements.
