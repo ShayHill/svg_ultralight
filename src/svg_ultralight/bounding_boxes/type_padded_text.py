@@ -12,34 +12,19 @@ There is a getter and setter for each of the four padding values. These *do not*
 the text element. For instance, if you decrease the left padding, the left margin
 will move, *not* the text element.
 
-_There is a getter and setter for each of lmargin, rmargin, baseline, and capline.
+There is a getter and setter for each of lmargin, rmargin, baseline, and capline.
 These *do* move the element, but do not scale it. For instance, if you move the
-leftmargin to the left, the right margin (and the text element with it) will move to
+left margin to the left, the right margin (and the text element with it) will move to
 the left.
 
-There is a getter and setter for width (padded width) and height (padded_height).
-These scale the element and the top and bottom padding, but *not* the left and right
-padding. `.transform(scale=n)` will also scale the top and bottom padding, but not
-the left and right. This is one of two quirks which make this PaddedText class
-different from a generalized padded bounding box:
+There is a getter and setter for width, height, and scale. These scale the text and
+the padding values.
 
-1. As above, the left and right padding are not scaled with the text element, the top
-and bottom padding are. This preserves but does not exaggerate the natural
-sidebearings of the text element.  This lack of scaling will be pronounced if
-adjacent padded lines are scaled to dramatically different sizes. The idea is to
-scale each PaddedText as little as possible to match widths (or any other
-relationship) then scale the resulting transformed text elements another way. For
-instance, create multiple PaddedText instances, scale their padded_width atributes to
-match, then put the resulting elements in a <g> element and scale the <g> element to
-the ultimate desired size.
-
-2. The left margin and baseline (*bottom* and left) do not move when the height or
-width is changed. This is in contrast to an InkScape rect element, which, when the
-width or height is changed, preserve the *top* and left boundaries.
-
-The `.resize(scalar)` method scales the text element and all four padding values.
-This (or passing a font_size to one of the padded_text_initializers) is the correct
-way to make dramatic scale changes.
+`set_width_preserve_sidebearings()`, `set_height_preserve_sidebearings(), and
+`transform_preserve_sidebearings()` methods scale the text and the top and bottom
+padding, but not the left or right padding. These also keep the text element anchored
+on `x` and `y2`. These methods are useful for aligning text of different sizes on,
+for instance, a business card so that Ls or Hs of different sizes line up vertically.
 
 Building an honest instance of this class is fairly involved:
 
@@ -58,11 +43,6 @@ Building an honest instance of this class is fairly involved:
 
 The padded text initializers in bounding_boxes.padded_text_initializers create
 PaddedText instances with sensible defaults.
-
-A lot can be done with a dishonest instance of this class. For instance, you could
-align and scale text while preserving left margin. The capline would scale with the
-height or width, so a left margin and capline (assume baseline is zero) would be
-enough to lay out text on a business card.
 
 :author: Shay Hill
 :created: 2021-11-28
@@ -96,11 +76,8 @@ _no_line_gap_msg = par(
 
 _no_font_size_msg = par(
     """No font_size defined. Font size is an inherent font attribute defined within a
-    font file. If this PaddedText instance was created with `pad_text` from reference
-    elements, a font_size was not defined. Reading font_size from the font file
-    requires creating a PaddedText instance with `pad_text_ft` or `pad_text_mixed`.
-    You can set an arbitrary font_size after init with `instance.font_size =
-    value`."""
+    font file or an argument passed to `pad_text`. Any instance created with a padded
+    text initializer should have this property."""
 )
 
 
@@ -204,10 +181,44 @@ class PaddedText(BoundElement):
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
         self.unpadded_bbox.transform(tmat, reverse=reverse)
-        if self._line_gap:
-            y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
-            self._line_gap *= y_norm
         _ = transform_element(self.elem, tmat, reverse=reverse)
+        x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
+        self.lpad *= x_norm
+        self.rpad *= x_norm
+        if self._line_gap or self._font_size:
+            y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
+            if self._line_gap:
+                self._line_gap *= y_norm
+            if self._font_size:
+                self._font_size *= y_norm
+
+    def transform_preserve_sidebearings(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: tuple[float, float] | float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+        reverse: bool = False,
+    ) -> None:
+        """Transform the element and bounding box preserving sidebearings.
+
+        :param transformation: a 6-tuple transformation matrix
+        :param scale: a scaling factor
+        :param dx: the x translation
+        :param dy: the y translation
+        :param reverse: Transform the element as if it were in a <g> element
+            transformed by tmat.
+        """
+        lpad = self.lpad
+        rpad = self.rpad
+        x = self.x
+        y2 = self.y2
+        self.transform(transformation, scale=scale, dx=dx, dy=dy, reverse=reverse)
+        self.lpad = lpad
+        self.rpad = rpad
+        self.x = x
+        self.y2 = y2
 
     @property
     def line_gap(self) -> float:
@@ -227,24 +238,6 @@ class PaddedText(BoundElement):
         """
         self._line_gap = value
 
-    def resize(self, scalar: float) -> None:
-        """Scale the text element and padding uniformly.
-
-        :param scalar: The uniform scaling factor.
-
-        This method scales the left and right padding as well as the top and bottom.
-        `transform.scale` only scales the top and bottom padding. This method is
-        equivalent to scaling the initial font size passed to `pad_text_ft` or
-        `pad_text_mixed`.
-        """
-        self.transform(scale=scalar)
-        x = self.x
-        self.lpad *= scalar
-        self.rpad *= scalar
-        self.x = x
-        if self._font_size:
-            self._font_size *= scalar
-
     @property
     def font_size(self) -> float:
         """The font size of this line of text.
@@ -260,12 +253,8 @@ class PaddedText(BoundElement):
         """Set the font size of this line of text.
 
         :param value: The new font size.
-
-        This setter and resize are the only means to change the font size. The font
-        size value will not change when scaling the PaddedText instance with
-        transform.
         """
-        self.resize(value / self.font_size)
+        self.transform(scale=value / self.font_size)
 
     @property
     def leading(self) -> float:
@@ -343,6 +332,19 @@ class PaddedText(BoundElement):
         self.transform(scale=new_scale)
 
     @property
+    def uniform_scale(self) -> float:
+        """Get uniform scale of the bounding box.
+
+        :return: uniform scale of the bounding box
+        :raises ValueError: if the scale is non-uniform.
+        """
+        scale = self.scale
+        if math.isclose(scale[0], scale[1]):
+            return scale[0]
+        msg = f"Non-uniform scale detected: sx={scale[0]}, sy={scale[1]}"
+        raise ValueError(msg)
+
+    @property
     def width(self) -> float:
         """The width of this line of text with padding.
 
@@ -363,14 +365,18 @@ class PaddedText(BoundElement):
         baseline is near y2 (y + height) not y. So, we preserve baseline (alter y
         *and* y2) when scaling.
         """
-        y2 = self.y2
+        self.transform(scale=value / self.width)
 
+    def set_width_preserve_sidebearings(self, value: float) -> None:
+        """Set the width of this line of text without scaling sidebearings.
+
+        :param value: The new width of this line of text.
+        :effects: the text_element bounding box is scaled to width - lpad - rpad.
+        """
         no_margins_old = self.tbox.width
         no_margins_new = value - self.lpad - self.rpad
         scale = no_margins_new / no_margins_old
-        self.transform(scale=(scale, scale))
-
-        self.y2 = y2
+        self.transform_preserve_sidebearings(scale=scale)
 
     @property
     def height(self) -> float:
@@ -387,10 +393,16 @@ class PaddedText(BoundElement):
         :param height: The new height of this line of text.
         :effects: the text_element bounding box is scaled to height - tpad - bpad.
         """
-        y2 = self.y2
         scale = value / self.height
-        self.transform(scale=(scale, scale))
-        self.y2 = y2
+        self.transform(scale=scale)
+
+    def set_height_preserve_sidebearings(self, value: float) -> None:
+        """Set the height of this line of text without scaling sidebearings.
+
+        :param value: The new height of this line of text.
+        :effects: the text_element bounding box is scaled to height - tpad - bpad.
+        """
+        self.transform_preserve_sidebearings(scale=value / self.height)
 
     @property
     def x(self) -> float:

@@ -4,6 +4,7 @@
 :created: 2025-07-29
 """
 
+import math
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
@@ -106,17 +107,6 @@ class TestPaddedText:
         blem.transform(scale=3)
         assert blem.line_gap == 6.0
 
-    def test_resize_scales_all_padding(self) -> None:
-        elem = new_element("rect", width=100, height=100)
-        bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2)
-        blem.resize(10)
-        assert blem.tpad == 10
-        assert blem.rpad == 20
-        assert blem.bpad == 30
-        assert blem.lpad == 40
-        assert blem.line_gap == 20
-
     def test_font_size_setter_scales_padding(self) -> None:
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
@@ -152,7 +142,7 @@ class TestPaddedText:
         assert blem.tpad == 1.0
         assert blem.bpad == 3.0
 
-        blem.transform(scale=(1.5, 0.5))
+        blem.transform_preserve_sidebearings(scale=(1.5, 0.5))
         assert blem.height == 52.0
         assert blem.width == 156.0
         assert blem.tpad == 0.5
@@ -167,7 +157,7 @@ class TestPaddedText:
         assert blem.tpad == 1.0
         assert blem.bpad == 3.0
 
-        blem.width = 10
-        assert blem.width == 10.0
+        blem.set_width_preserve_sidebearings(10)
+        assert math.isclose(blem.width, 10.0)
         assert blem.rpad == 2.0
         assert blem.lpad == 4.0

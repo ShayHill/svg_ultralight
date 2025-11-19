@@ -147,14 +147,14 @@ class TestPaddedText:
 
     def test_width(self, bound_element: PaddedText):
         assert bound_element.width == 106.0
-        bound_element.width = 150.0
+        bound_element.set_width_preserve_sidebearings(150.0)
         assert bound_element.width == 150.0
         assert bound_element.x2 == 146.0
 
     def test_height(self, bound_element: PaddedText):
         y2 = bound_element.y2
         assert bound_element.height == 204.0
-        bound_element.height = 250.0
+        bound_element.set_height_preserve_sidebearings(250.0)
         assert math.isclose(bound_element.height, 250)
         assert math.isclose(bound_element.y2, y2)
 
