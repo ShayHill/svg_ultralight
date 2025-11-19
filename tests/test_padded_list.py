@@ -98,3 +98,8 @@ class TestPaddedList:
         plist.stack(gap=gap)
         for above, below in it.pairwise(plist.plems):
             assert math.isclose(above.y2 + gap, below.y)
+
+    def test_padded_union(self):
+        union = test_instance.padded_union(pad=2, fill="yellow")
+        assert union.tbox.values() == test_instance.tbox.values()
+        assert union.bbox.values() == test_instance.bbox.values()

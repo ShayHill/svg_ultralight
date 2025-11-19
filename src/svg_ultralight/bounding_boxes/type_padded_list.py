@@ -117,6 +117,15 @@ class PaddedList:
         union.bbox = self.tbox
         return union
 
+    def padded_union(self, **attribs: ElemAttrib) -> PaddedText:
+        """Return a PaddedText inst where the elem is a `g` of all the padded text."""
+        union = self.tunion(**attribs)
+        tpad = self.tbox.y - self.bbox.y
+        rpad = self.bbox.x2 - self.tbox.x2
+        bpad = self.bbox.y2 - self.tbox.y2
+        lpad = self.tbox.x - self.bbox.x
+        return PaddedText(union.elem, union.bbox, tpad, rpad, bpad, lpad)
+
     def get_dim(self, dim: str) -> float:
         """Get a dimension from bbox or tbox."""
         if dim not in _BBOX_DIMS:
