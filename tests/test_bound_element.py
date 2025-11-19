@@ -8,7 +8,11 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.constructors import new_element
-from svg_ultralight.transformations import mat_dot, get_transform_matrix, transform_element
+from svg_ultralight.transformations import (
+    mat_dot,
+    get_transform_matrix,
+    transform_element,
+)
 
 
 class TestTransforms:
@@ -23,7 +27,7 @@ class TestTransforms:
     def test_reverse(self) -> None:
         mat_a = (1, 2, 3, 4, 5, 6)
         mat_b = (2, 1, 4, 3, 6, 5)
-        elem = new_element('circle', cx=0, cy=0, r=1)
+        elem = new_element("circle", cx=0, cy=0, r=1)
         _ = transform_element(elem, mat_a)
         bbox = BoundingBox(0, 0, 1, 1, transformation=mat_a)
         blem = BoundElement(elem, bbox)
@@ -94,6 +98,36 @@ class TestPaddedText:
         blem = PaddedText(elem, bbox, 1, 2, 3, 4)
         blem.transform(scale=5)
         assert blem.scale == (5.0, 5.0)
+
+    def test_scale_scales_line_gap(self) -> None:
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2)
+        blem.transform(scale=3)
+        assert blem.line_gap == 6.0
+
+    def test_resize_scales_all_padding(self) -> None:
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2)
+        blem.resize(10)
+        assert blem.tpad == 10
+        assert blem.rpad == 20
+        assert blem.bpad == 30
+        assert blem.lpad == 40
+        assert blem.line_gap == 20
+
+    def test_font_size_setter_scales_padding(self) -> None:
+        elem = new_element("rect", width=100, height=100)
+        bbox = BoundingBox(0, 0, 100, 100)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2, font_size=2)
+        blem.font_size = 20
+        assert blem.font_size == 20
+        assert blem.tpad == 10
+        assert blem.rpad == 20
+        assert blem.bpad == 30
+        assert blem.lpad == 40
+        assert blem.line_gap == 20
 
     def test_vpad_scales(self) -> None:
         """Test that vertical padding scales."""

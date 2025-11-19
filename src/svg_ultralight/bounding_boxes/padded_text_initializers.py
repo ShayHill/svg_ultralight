@@ -99,7 +99,15 @@ def pad_text(
     rpad = -rmargin_bbox.x2
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
-    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
+    return PaddedText(
+        text_elem,
+        bbox,
+        tpad,
+        rpad,
+        bpad,
+        lpad,
+        font_size=float(text_elem.attrib["font-size"]),
+    )
 
 
 @overload
@@ -277,7 +285,13 @@ def pad_text_ft(
             )
             elem = text_info.new_element(**attributes_)
             elems.append(
-                PaddedText(elem, text_info.bbox, *text_info.padding, text_info.line_gap)
+                PaddedText(
+                    elem,
+                    text_info.bbox,
+                    *text_info.padding,
+                    text_info.line_gap,
+                    text_info.font_size,
+                )
             )
     finally:
         font_info.font.close()
@@ -341,4 +355,6 @@ def pad_text_mix(
     else:
         tpad = padded_inkscape.tpad
         bpad = padded_inkscape.bpad
-    return PaddedText(elem, bbox, tpad, rpad, bpad, lpad, padded_fonttools.line_gap)
+    return PaddedText(
+        elem, bbox, tpad, rpad, bpad, lpad, padded_fonttools.line_gap, font_size
+    )
