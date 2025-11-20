@@ -65,6 +65,10 @@ class PaddedList:
             return self.plems[idx]
         return PaddedList(*self.plems[idx])
 
+    def append(self, ptext: PaddedText) -> None:
+        """Append a padded text element to the list."""
+        self.plems.append(ptext)
+
     @property
     def bbox(self) -> BoundingBox:
         """The bounding box of the padded text elements."""
