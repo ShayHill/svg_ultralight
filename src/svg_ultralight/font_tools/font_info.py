@@ -585,13 +585,16 @@ class FTTextInfo:
             attributes["stroke-width"] = float(stroke_width) / self.scale
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", data_text=data_text, **attributes)
-        for svgd, tmat in self.font.get_text_svgds(self.text):
+        for i, (svgd, tmat) in enumerate(self.font.get_text_svgds(self.text)):
             if not svgd:
                 continue
+            data_text = _sanitize_svg_data_text(self.text[i])
             if not tmat:
-                _ = new_sub_element(group, "path", d=svgd)
+                _ = new_sub_element(group, "path", data_text=data_text, d=svgd)
                 continue
-            _ = new_sub_element(group, "path", d=svgd, transform=tmat)
+            _ = new_sub_element(
+                group, "path", data_text=data_text, d=svgd, transform=tmat
+            )
         return group
 
     def new_chars_group_element(self, **attributes: ElemAttrib) -> EtreeElement:
