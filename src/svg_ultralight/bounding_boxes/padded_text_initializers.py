@@ -32,7 +32,6 @@ from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
-    FTTextInfo,
     get_padded_text_info,
     get_svg_font_attributes,
 )
@@ -284,21 +283,17 @@ def pad_text_ft(
 
     font_info = FTFontInfo(font)
 
-    def get_text_info(text_item: str) -> FTTextInfo:
-        """Get the FTTextInfo for a given text item."""
-        return get_padded_text_info(
-            font_info,
-            text_item,
-            font_size,
-            ascent,
-            descent,
-            y_bounds_reference=y_bounds_reference,
-        )
-
     try:
         elems: list[PaddedText] = []
         for text_item in text:
-            ti = get_text_info(text_item)
+            ti = get_padded_text_info(
+                font_info,
+                text_item,
+                font_size,
+                ascent,
+                descent,
+                y_bounds_reference=y_bounds_reference,
+            )
             elem = ti.new_element(**attributes_)
             plem = PaddedText(elem, ti.bbox, *ti.padding, ti.line_gap, ti.font_size)
             elems.append(plem)
@@ -307,6 +302,84 @@ def pad_text_ft(
     if input_one_text_item:
         return elems[0]
     return elems
+
+
+@overload
+def wrap_text_ft(
+    font: str | os.PathLike[str],
+    text: str,
+    width: float,
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+) -> list[str]: ...
+
+
+@overload
+def wrap_text_ft(
+    font: str | os.PathLike[str],
+    text: list[str],
+    width: float,
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+) -> list[list[str]]: ...
+
+
+def wrap_text_ft(
+    font: str | os.PathLike[str],
+    text: str | list[str],
+    width: float,
+    font_size: float | None = None,
+    ascent: float | None = None,
+    descent: float | None = None,
+    *,
+    y_bounds_reference: str | None = None,
+) -> list[str] | list[list[str]]:
+    """Wrap text to fit within the width of the font's bounding box."""
+    input_one_text_item = False
+    if isinstance(text, str):
+        input_one_text_item = True
+        text = [text]
+
+    all_wrapped: list[list[str]] = []
+    font_info = FTFontInfo(font)
+
+    def get_width(line: str) -> float:
+        ti = get_padded_text_info(
+            font_info,
+            line,
+            font_size,
+            ascent,
+            descent,
+            y_bounds_reference=y_bounds_reference,
+        )
+        return ti.bbox.width
+
+    try:
+        for text_item in text:
+            words = text_item.split()
+            if not words:
+                all_wrapped.append([])
+                continue
+            wrapped: list[str] = [words.pop(0)]
+            while words:
+                next_word = words.pop(0)
+                test_line = f"{wrapped[-1]} {next_word}"
+                if get_width(test_line) <= width:
+                    wrapped[-1] = test_line
+                else:
+                    wrapped.append(next_word)
+            all_wrapped.append(wrapped)
+    finally:
+        font_info.font.close()
+    if input_one_text_item:
+        return all_wrapped[0]
+    return all_wrapped
 
 
 def pad_text_mix(

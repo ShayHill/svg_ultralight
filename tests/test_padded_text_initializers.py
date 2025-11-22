@@ -9,7 +9,12 @@ from pathlib import Path
 import pytest
 from conftest import INKSCAPE, has_inkscape
 
-from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text, pad_text_ft, pad_chars_ft
+from svg_ultralight.bounding_boxes.padded_text_initializers import (
+    pad_text,
+    pad_text_ft,
+    pad_chars_ft,
+    wrap_text_ft,
+)
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 
 from svg_ultralight.constructors import new_element
@@ -88,6 +93,28 @@ class TestPadTextFt:
         padded = pad_text_ft(font, ["Lorem", "ipsum", "dolor"])
         assert len(padded) == 3
 
+
+class TestWrapTextFt:
+    def test_wraps_single(self) -> None:
+        """Test pad_text_ft with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
+        expect = ["Lorem ipsum dolor sit", "amet, consectetur", "adipiscing elit, sed"]
+        result = wrap_text_ft(font, text, width=20000)
+        assert result == expect
+
+    def test_wraps_multi(self) -> None:
+        """Test pad_text_ft with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        text = ["Lorem ipsum dolor sit amet,", "consectetur adipiscing elit, sed"]
+        expect = [
+            ["Lorem ipsum", "dolor sit amet,"],
+            ["consectetur", "adipiscing elit,", "sed"],
+        ]
+        result = wrap_text_ft(font, text, width=15000)
+        assert result == expect
+
+
 class TestPadCharsFt:
 
     def test_multiple_text_args(self) -> None:
@@ -107,4 +134,3 @@ class TestPadCharsFt:
             pytest.skip(msg)
         padded = pad_chars_ft(font, "Lorem")
         assert isinstance(padded, BoundElement)
-
