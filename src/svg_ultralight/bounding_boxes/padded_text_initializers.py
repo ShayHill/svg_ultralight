@@ -25,12 +25,14 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
+from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
+    FTTextInfo,
     get_padded_text_info,
     get_svg_font_attributes,
 )
@@ -193,6 +195,23 @@ def pad_chars_ft(
     return elems
 
 
+def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
+    """Remove svg font attributes from the attributes dict.
+
+    These are either not required when explicitly passing a font file, not relevant,
+    or not supported by fontTools.
+    """
+    attributes_ = format_attr_dict(**attributes)
+    keys_to_remove = [
+        "font-size",
+        "font-family",
+        "font-style",
+        "font-weight",
+        "font-stretch",
+    ]
+    return {k: v for k, v in attributes_.items() if k not in keys_to_remove}
+
+
 @overload
 def pad_text_ft(
     font: str | os.PathLike[str],
@@ -256,43 +275,33 @@ def pad_text_ft(
         given for parameter `text`, a list of PaddedText instances is returned.
     """
     attributes.update(attrib or {})
-    attributes_ = format_attr_dict(**attributes)
-    attributes_.update(get_svg_font_attributes(font))
+    attributes_ = _remove_svg_font_attributes(attributes)
 
-    _ = attributes_.pop("font-size", None)
-    _ = attributes_.pop("font-family", None)
-    _ = attributes_.pop("font-style", None)
-    _ = attributes_.pop("font-weight", None)
-    _ = attributes_.pop("font-stretch", None)
+    input_one_text_item = False
+    if isinstance(text, str):
+        input_one_text_item = True
+        text = [text]
 
     font_info = FTFontInfo(font)
 
-    try:
-        input_one_text_item = False
-        if isinstance(text, str):
-            input_one_text_item = True
-            text = [text]
+    def get_text_info(text_item: str) -> FTTextInfo:
+        """Get the FTTextInfo for a given text item."""
+        return get_padded_text_info(
+            font_info,
+            text_item,
+            font_size,
+            ascent,
+            descent,
+            y_bounds_reference=y_bounds_reference,
+        )
 
+    try:
         elems: list[PaddedText] = []
         for text_item in text:
-            text_info = get_padded_text_info(
-                font_info,
-                text_item,
-                font_size,
-                ascent,
-                descent,
-                y_bounds_reference=y_bounds_reference,
-            )
-            elem = text_info.new_element(**attributes_)
-            elems.append(
-                PaddedText(
-                    elem,
-                    text_info.bbox,
-                    *text_info.padding,
-                    text_info.line_gap,
-                    text_info.font_size,
-                )
-            )
+            ti = get_text_info(text_item)
+            elem = ti.new_element(**attributes_)
+            plem = PaddedText(elem, ti.bbox, *ti.padding, ti.line_gap, ti.font_size)
+            elems.append(plem)
     finally:
         font_info.font.close()
     if input_one_text_item:
