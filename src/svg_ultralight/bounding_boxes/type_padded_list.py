@@ -72,7 +72,7 @@ class PaddedList:
     @property
     def bbox(self) -> BoundingBox:
         """The bounding box of the padded text elements."""
-        return BoundingBox.merge(*(x.bbox for x in self.plems))
+        return BoundingBox.union(*(x.bbox for x in self.plems))
 
     @property
     def tbox(self) -> BoundingBox:
@@ -80,7 +80,7 @@ class PaddedList:
 
         t for true or tight.
         """
-        return BoundingBox.merge(*(x.tbox for x in self.plems))
+        return BoundingBox.union(*(x.tbox for x in self.plems))
 
     def transform(
         self,

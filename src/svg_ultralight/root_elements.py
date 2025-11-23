@@ -29,7 +29,7 @@ def _viewbox_args_from_bboxes(*bboxes: BoundingBox) -> dict[str, float]:
     :param bbox: bounding boxes to merge
     :return: dict of new_svg_root arguments
     """
-    merged = BoundingBox.merged(*bboxes)
+    merged = BoundingBox.union(*bboxes)
     return {
         "x_": merged.x,
         "y_": merged.y,

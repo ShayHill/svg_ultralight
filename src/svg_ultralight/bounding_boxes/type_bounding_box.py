@@ -372,25 +372,31 @@ class BoundingBox(HasBoundingBox):
         self.transformation = transformation
         self.bbox = self
 
-    def merge(self, *others: BoundingBox) -> BoundingBox:
+    def join(self, *others: BoundingBox) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
 
         :param others: one or more bounding boxes to merge with self
         :return: a bounding box around self and other bounding boxes
         :raises DeprecationWarning:
         """
-        return BoundingBox.merged(self, *others)
+        return BoundingBox.union(self, *others)
+
+    def intersect(self, *bboxes: SupportsBounds) -> BoundingBox | None:
+        """Create a bounding box around the intersection of all other bounding boxes.
+
+        :param bboxes: one or more bounding boxes to intersect with self
+        :return: a bounding box around the intersection of self and other bounding
+             boxes, or None if there is no intersection
+        """
+        return BoundingBox.intersection(self, *bboxes)
 
     @classmethod
-    def merged(cls, *bboxes: SupportsBounds) -> BoundingBox:
+    def union(cls, *bboxes: SupportsBounds) -> BoundingBox:
         """Create a bounding box around all other bounding boxes.
 
         :param bboxes: one or more bounding boxes
         :return: a bounding box encompasing all bboxes args
         :raises ValueError: if no bboxes are given
-
-        This can be used to repace a bounding box after the element it bounds has
-        been transformed with instance.transform_string.
         """
         if not bboxes:
             msg = "At least one bounding box is required"
@@ -400,3 +406,27 @@ class BoundingBox(HasBoundingBox):
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
         return BoundingBox(min_x, min_y, max_x - min_x, max_y - min_y)
+
+    @classmethod
+    def intersection(cls, *bboxes: SupportsBounds) -> BoundingBox | None:
+        """Create a bounding box around the intersection of all other bounding boxes.
+
+        :param bboxes: one or more bounding boxes
+        :return: a bounding box around the intersection of all bboxes, or None if
+            there is no intersection
+        :raises ValueError: if no bboxes are given
+        """
+        if not bboxes:
+            return None
+        valid_bboxes: list[BoundingBox] = []
+        for bbox in bboxes:
+            x, x2 = sorted([bbox.x, bbox.x2])
+            y, y2 = sorted([bbox.y, bbox.y2])
+            valid_bboxes.append(BoundingBox(x, y, x2 - x, y2 - y))
+        x = max(x.x for x in valid_bboxes)
+        x2 = min(x.x2 for x in valid_bboxes)
+        y = max(x.y for x in valid_bboxes)
+        y2 = min(x.y2 for x in valid_bboxes)
+        if x > x2 or y > y2:
+            return None
+        return BoundingBox(x, y, x2 - x, y2 - y)

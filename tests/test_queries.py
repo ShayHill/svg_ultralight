@@ -25,7 +25,7 @@ class TestMergeBoundingBoxes:
     def test_new_merged_bbox(self):
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
-        merged = BoundingBox.merged(bbox_a, bbox_b)
+        merged = BoundingBox.union(bbox_a, bbox_b)
         assert merged.x == -2
         assert merged.y == -4
         assert merged.width == 12
@@ -116,14 +116,30 @@ class TestBoundingBox:
         transform_string = bounding_box.transform_string
         assert transform_string == "matrix(1 0 0 1 0 0)"
 
-    def test_merge(self):
-        bbox1 = MockSupportsBounds(0, 0, 100, 200)
-        bbox2 = MockSupportsBounds(50, 50, 150, 250)
-        merged_bbox = BoundingBox.merged(bbox1, bbox2)
+    def test_union(self):
+        bbox1 = BoundingBox(0, 0, 100, 200)
+        bbox2 = BoundingBox(50, 50, 150, 250)
+        merged_bbox = BoundingBox.union(bbox1, bbox2)
         assert merged_bbox.x == 0.0
         assert merged_bbox.y == 0.0
         assert merged_bbox.width == 200.0
         assert merged_bbox.height == 300.0
+
+    def test_intersect(self):
+        bbox1 = BoundingBox(0, 0, 100, 200)
+        bbox2 = BoundingBox(50, 50, 150, 250)
+        intersect_bbox = BoundingBox.intersect(bbox1, bbox2)
+        assert intersect_bbox is not None
+        assert intersect_bbox.x == 50.0
+        assert intersect_bbox.y == 50.0
+        assert intersect_bbox.width == 50.0
+        assert intersect_bbox.height == 150.0
+
+    def test_intersect_is_none(self):
+        bbox1 = BoundingBox(210, 0, 100, 200)
+        bbox2 = BoundingBox(50, 50, 150, 250)
+        intersect_bbox = BoundingBox.intersect(bbox1, bbox2)
+        assert intersect_bbox is None
 
 
 class TestTransformBoundingBoxes:

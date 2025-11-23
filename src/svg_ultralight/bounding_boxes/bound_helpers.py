@@ -78,7 +78,7 @@ def new_bbox_union(*blems: SupportsBounds | EtreeElement) -> BoundingBox:
         )
         raise ValueError(msg)
 
-    return BoundingBox.merged(*bboxes)
+    return BoundingBox.union(*bboxes)
 
 
 def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:

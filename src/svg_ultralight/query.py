@@ -168,7 +168,7 @@ def map_elems_to_bounding_boxes(
             elem2bbox[elem] = id2bbox[elem_id]
         if elem_id.startswith(_TEMP_ID_PREFIX):
             del elem.attrib["id"]
-    elem2bbox["svg"] = BoundingBox.merged(*id2bbox.values())
+    elem2bbox["svg"] = BoundingBox.union(*id2bbox.values())
     return elem2bbox
 
 
