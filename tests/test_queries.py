@@ -39,6 +39,14 @@ class MockSupportsBounds:
     width: float
     height: float
 
+    @property
+    def x2(self):
+        return self.x + self.width
+
+    @property
+    def y2(self):
+        return self.y + self.height
+
 
 class TestBoundingBox:
     @pytest.fixture

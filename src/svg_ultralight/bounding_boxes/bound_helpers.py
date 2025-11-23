@@ -116,6 +116,8 @@ def cut_bbox(
     y = bbox.y if y is None else y
     x2 = bbox.x2 if x2 is None else x2
     y2 = bbox.y2 if y2 is None else y2
+    x, x2 = sorted((x, x2))
+    y, y2 = sorted((y, y2))
     width = x2 - x
     height = y2 - y
     return BoundingBox(x, y, width, height)

@@ -395,8 +395,8 @@ class BoundingBox(HasBoundingBox):
         if not bboxes:
             msg = "At least one bounding box is required"
             raise ValueError(msg)
-        min_x = min(x.x for x in bboxes)
-        max_x = max(x.x + x.width for x in bboxes)
-        min_y = min(x.y for x in bboxes)
-        max_y = max(x.y + x.height for x in bboxes)
+        xs = [*(x.x for x in bboxes), *(x.x2 for x in bboxes)]
+        ys = [*(x.y for x in bboxes), *(x.y2 for x in bboxes)]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
         return BoundingBox(min_x, min_y, max_x - min_x, max_y - min_y)
