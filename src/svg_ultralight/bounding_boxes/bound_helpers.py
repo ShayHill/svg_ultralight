@@ -182,10 +182,19 @@ def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
 
     :param elem: the element to import.
     :return: a BoundElement instance.
+    :raises ValueError: if the SVG file does not contain any elements.
+
+    This will work on any svg file that has a root element with a viewBox attribute.
+    That's any svg created by this library and most others.
     """
     tree = etree.parse(svg_file)
     root = tree.getroot()
+    if len(root) == 0:
+        msg = "SVG file does not contain any elements."
+        raise ValueError(msg)
     elem = new_element("g")
     elem.extend(list(root))
+    if len(elem) == 1:
+        elem = elem[0]
     bbox = BoundingBox(*_get_view_box(root))
     return BoundElement(elem, bbox)
