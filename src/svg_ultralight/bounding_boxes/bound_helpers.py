@@ -151,13 +151,23 @@ def bbox_dict(bbox: SupportsBounds) -> dict[str, float]:
     return {"x": bbox.x, "y": bbox.y, "width": bbox.width, "height": bbox.height}
 
 
-def new_bbox_rect(bbox: BoundingBox, **kwargs: float | str) -> EtreeElement:
+def new_bbox_rect(bbox: BoundingBox, **kwargs: ElemAttrib) -> EtreeElement:
     """Return a new rect element with the same dimensions as the bounding box.
 
     :param bbox: the bounding box or bound element from which to extract dimensions.
     :param kwargs: additional attributes for the rect element.
     """
     return new_element("rect", **bbox_dict(bbox), **kwargs)
+
+
+def new_bound_rect(bbox: BoundingBox, **kwargs: ElemAttrib) -> BoundElement:
+    """Return a new rect element with the same dimensions as the bounding box.
+
+    :param bbox: the bounding box or bound element from which to extract dimensions.
+    :param kwargs: additional attributes for the rect element.
+    """
+    elem = new_bbox_rect(bbox, **kwargs)
+    return BoundElement(elem, bbox)
 
 
 def _get_view_box(elem: EtreeElement) -> tuple[float, float, float, float]:
