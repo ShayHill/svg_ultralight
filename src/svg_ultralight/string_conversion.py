@@ -10,9 +10,10 @@ Rounding some numbers to ensure quality svg rendering:
 from __future__ import annotations
 
 import binascii
+import itertools as it
 import re
 from enum import Enum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import svg_path_data
 from lxml import etree
@@ -20,13 +21,17 @@ from lxml import etree
 from svg_ultralight.nsmap import NSMAP
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
     from svg_ultralight.attrib_hints import ElemAttrib
+
+
+# match a hex color string with 8 digits: #RRGGBBAA
+_HEX_COLOR_8DIGIT = re.compile(r"^#([0-9a-fA-F]{8})$")
 
 
 def format_number(num: float | str, resolution: int | None = 6) -> str:
@@ -52,7 +57,24 @@ def format_numbers(
     return [format_number(num) for num in nums]
 
 
-def _fix_key_and_format_val(key: str, val: ElemAttrib) -> tuple[str, str]:
+def _split_opacity(
+    prefix: Literal["fill", "stroke"], hex_color: str
+) -> Iterator[tuple[str, str]]:
+    """Get a fill and fill-opacity or stroke and stroke-opacity for an svg element.
+
+    :param prefix: either "fill" or "stroke"
+    :param color: an 8-digit hex color with leading # ("#RRGGBBAA")
+    :yield: tuples of (attribute name, attribute value)
+    """
+    rgb, opacity = hex_color[:7], hex_color[7:]
+    if opacity == "00":
+        yield (prefix, "none")
+    else:
+        yield (prefix, rgb)
+        yield f"{prefix}-opacity", format_number(int(opacity, 16) / 255)
+
+
+def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, str]]:
     """Format one key, value pair for an svg element.
 
     :param key: element attribute name
@@ -64,17 +86,18 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> tuple[str, str]:
     values. This saves having to convert input to strings.
 
     * convert float values to formatted strings
-    * format datastring values when keyword is 'd'
     * replace '_' with '-' in keywords
     * remove trailing '_' from keywords
     * will convert `namespace:tag` to a qualified name
+    * will convert 8-digit hex colors to color + opacity. SVG supports 8-digit hex
+      colors, but Inkscape (and likely other Linux-based SVG rasterizers) do not.
 
     SVG attribute names like `font-size` and `stroke-width` are not valid python
-    keywords, but can be passed as `font-size` and `stroke-width`.
+    keywords, but can be passed as `font_size` and `stroke_width`.
 
     Reserved Python keywords that are also valid and useful SVG attribute names (a
     popular one will be 'class') can be passed with a trailing underscore (e.g.,
-    class_='body_text').
+    class_='body_text') to keep your code highlighter from getting confused.
     """
     if "http:" in key or "https:" in key:
         key_ = key
@@ -88,10 +111,18 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> tuple[str, str]:
         val_ = "none"
     elif isinstance(val, (int, float)):
         val_ = format_number(val)
+    elif _HEX_COLOR_8DIGIT.match(val):
+        if key_ == "fill":
+            yield from _split_opacity("fill", val)
+            return
+        if key_ == "stroke":
+            yield from _split_opacity("stroke", val)
+            return
+        val_ = val
     else:
         val_ = val
 
-    return key_, val_
+    yield key_, val_
 
 
 def format_attr_dict(**attributes: ElemAttrib) -> dict[str, str]:
@@ -100,7 +131,8 @@ def format_attr_dict(**attributes: ElemAttrib) -> dict[str, str]:
     :param attributes: element attribute names and values.
     :return: dict of attributes, each key a valid svg attribute name, each value a str
     """
-    return dict(_fix_key_and_format_val(key, val) for key, val in attributes.items())
+    items = attributes.items()
+    return dict(it.chain(*(_fix_key_and_format_val(k, v) for k, v in items)))
 
 
 def set_attributes(elem: EtreeElement, **attributes: ElemAttrib) -> None:
