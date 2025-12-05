@@ -40,7 +40,7 @@ class HasBoundingBox(SupportsBounds):
         y = self.bbox.base_y
         x2 = x + self.bbox.base_width
         y2 = y + self.bbox.base_height
-        return (x, y), (x2, y), (x2, y2), (x, y2)
+        return (x, y), (x, y2), (x2, y2), (x2, y)
 
     def values(self) -> tuple[float, float, float, float]:
         """Get the values of the bounding box.
@@ -66,11 +66,27 @@ class HasBoundingBox(SupportsBounds):
 
         :return: four corners counter-clockwise starting at top left, transformed by
             self.transformation
+
+        These quadrilateral defined by these corners may not be axis aligned. This is
+        purely for determining the bounds of the transformed box.
         """
         c0, c1, c2, c3 = (
             mat_apply(self.bbox.transformation, c) for c in self._get_input_corners()
         )
         return c0, c1, c2, c3
+
+    @property
+    def corners(
+        self,
+    ) -> tuple[
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+        tuple[float, float],
+    ]:
+        """Get the corners of the bbox in the current state. CW from top left."""
+        x, y, x2, y2 = self.x, self.y, self.x2, self.y2
+        return ((x, y), (x, y2), (x2, y2), (x2, y))
 
     def transform(
         self,
