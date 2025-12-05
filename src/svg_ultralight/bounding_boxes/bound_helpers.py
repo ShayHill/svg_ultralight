@@ -16,12 +16,11 @@ from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
-from svg_ultralight.layout import expand_pad_arg
+from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 
 if TYPE_CHECKING:
     import os
-    from collections.abc import Sequence
 
     from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -125,9 +124,7 @@ def cut_bbox(
     return BoundingBox(x, y, width, height)
 
 
-def pad_bbox(
-    bbox: SupportsBounds, pad: MeasurementArg | Sequence[MeasurementArg]
-) -> BoundingBox:
+def pad_bbox(bbox: SupportsBounds, pad: PadArg) -> BoundingBox:
     """Return a new bounding box with padding.
 
     :param bbox: the original bounding box or bounded element.

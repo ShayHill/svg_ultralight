@@ -6,8 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, cast
+from typing import TypeAlias, cast
 
 from svg_ultralight.string_conversion import format_number
 from svg_ultralight.unit_conversion import (
@@ -16,13 +15,30 @@ from svg_ultralight.unit_conversion import (
     is_measurement_arg,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
+_MeasurementArgs: TypeAlias = (
+    tuple[MeasurementArg]
+    | tuple[MeasurementArg, MeasurementArg]
+    | tuple[MeasurementArg, MeasurementArg, MeasurementArg]
+    | tuple[MeasurementArg, MeasurementArg, MeasurementArg, MeasurementArg]
+)
+
+PadArg: TypeAlias = MeasurementArg | _MeasurementArgs
 
 
-def expand_pad_arg(
-    pad: MeasurementArg | Sequence[MeasurementArg],
-) -> tuple[float, float, float, float]:
+def _expand_pad_args(pad: _MeasurementArgs) -> tuple[float, float, float, float]:
+    """Transform a tuple of MeasurementArgs to a 4-tuple of user units."""
+    as_ms = (m if isinstance(m, Measurement) else Measurement(m) for m in pad)
+    as_units = [m.value for m in as_ms]
+    if len(as_units) == 1:
+        as_units = as_units * 4
+    elif len(as_units) == 2:
+        as_units = as_units * 2
+    elif len(as_units) == 3:
+        as_units = [*as_units, as_units[1]]
+    return as_units[0], as_units[1], as_units[2], as_units[3]
+
+
+def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
     """Transform a single value or tuple of values to a 4-tuple of user units.
 
     :param pad: padding value(s)
@@ -35,7 +51,7 @@ def expand_pad_arg(
     (1.0, 2.0, 1.0, 2.0)
 
     >>> expand_pad_arg("1in")
-    (96.0, 96.0, 96.0, 96.0)
+    (96.0, 96.0, 96.0, 96.
 
     >>> expand_pad_arg(("1in", "2in"))
     (96.0, 192.0, 96.0, 192.0)
@@ -46,20 +62,10 @@ def expand_pad_arg(
     >>> expand_pad_arg((Measurement("1in"), Measurement("2in")))
     (96.0, 192.0, 96.0, 192.0)
     """
-    if isinstance(pad, Measurement):
-        return expand_pad_arg([pad])
     if is_measurement_arg(pad):
-        return expand_pad_arg([pad])
-    pad = cast("Sequence[Measurement | MeasurementArg]", pad)
-    as_ms = (m if isinstance(m, Measurement) else Measurement(m) for m in pad)
-    as_units = [m.value for m in as_ms]
-    if len(as_units) == 1:
-        as_units = as_units * 4
-    elif len(as_units) == 2:
-        as_units = as_units * 2
-    elif len(as_units) == 3:
-        as_units = [*as_units, as_units[1]]
-    return as_units[0], as_units[1], as_units[2], as_units[3]
+        return _expand_pad_args((pad,))
+    pads = cast("_MeasurementArgs", pad)
+    return _expand_pad_args(pads)
 
 
 def pad_viewbox(
@@ -148,7 +154,7 @@ def _infer_scale(
 
 def pad_and_scale(
     viewbox: tuple[float, float, float, float],
-    pad: MeasurementArg | Sequence[MeasurementArg] = 0,
+    pad: PadArg = 0,
     print_width: MeasurementArg | None = None,
     print_height: MeasurementArg | None = None,
     dpu: float = 1,

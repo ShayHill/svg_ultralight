@@ -14,14 +14,13 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.main import new_svg_root
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
+    from svg_ultralight.layout import PadArg
     from svg_ultralight.unit_conversion import MeasurementArg
 
 
@@ -42,7 +41,7 @@ def _viewbox_args_from_bboxes(*bboxes: BoundingBox) -> dict[str, float]:
 
 def new_svg_root_around_bounds(
     *bounded: SupportsBounds | EtreeElement,
-    pad_: MeasurementArg | Sequence[MeasurementArg] = 0,
+    pad_: PadArg = 0,
     print_width_: MeasurementArg | None = None,
     print_height_: MeasurementArg | None = None,
     dpu_: float | None = None,
