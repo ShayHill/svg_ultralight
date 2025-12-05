@@ -100,10 +100,10 @@ def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:
 def cut_bbox(
     bbox: SupportsBounds,
     *,
-    x: float | None = None,
-    y: float | None = None,
-    x2: float | None = None,
-    y2: float | None = None,
+    x: MeasurementArg | None = None,
+    y: MeasurementArg | None = None,
+    x2: MeasurementArg | None = None,
+    y2: MeasurementArg | None = None,
 ) -> BoundingBox:
     """Return a new bounding box with updated limits.
 
@@ -114,10 +114,10 @@ def cut_bbox(
     :param y2: the new y2-coordinate.
     :return: a new bounding box with the updated limits.
     """
-    x = bbox.x if x is None else x
-    y = bbox.y if y is None else y
-    x2 = bbox.x2 if x2 is None else x2
-    y2 = bbox.y2 if y2 is None else y2
+    x = bbox.x if x is None else to_user_units(x)
+    y = bbox.y if y is None else to_user_units(y)
+    x2 = bbox.x2 if x2 is None else to_user_units(x2)
+    y2 = bbox.y2 if y2 is None else to_user_units(y2)
     x, x2 = sorted((x, x2))
     y, y2 = sorted((y, y2))
     width = x2 - x
