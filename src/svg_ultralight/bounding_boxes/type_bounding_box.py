@@ -107,7 +107,7 @@ class HasBoundingBox(SupportsBounds):
     def scale(self) -> tuple[float, float]:
         """Get scale of the bounding box.
 
-        :return: uniform scale of the bounding box
+        :return: x and y scale of the bounding box
 
         Use caution, the scale attribute can cause errors in intuition. Changing
         width or height will change the scale attribute, but not the x or y values.
@@ -302,13 +302,13 @@ class BoundingBox(HasBoundingBox):
     :param transformation: transformation matrix
 
     Functions that return a bounding box will return a BoundingBox instance. This
-    instance can be transformed (uniform scale and translate only). Transformations
-    will be combined and scored to be passed to new_element as a transform value.
+    instance can be transformed. Transformations will be combined and stored to be
+    passed to new_element as a transform value.
 
     Define the bbox with x=, y=, width=, height=
 
     Transform the BoundingBox by setting these variables. Each time you set x, cx,
-    x2, y, cy, y2, width, or height, private transformation value transformation
+    x2, y, cy, y2, width, or height, private transformation value `transformation`
     will be updated.
 
     The ultimate transformation can be accessed through ``.transform_string``.
@@ -317,7 +317,7 @@ class BoundingBox(HasBoundingBox):
         1. Get the bounding box of an svg element
         2. Update the bounding box x, y, width, and height
         3. Transform the original svg element with
-            update_element(elem, transform=bbox.transform_string)
+            svg_ultralight.transform_element(elem, bbox.transformation)
         4. The transformed element will lie in the transformed BoundingBox
 
     In addition to x, y, width, and height, x2 and y2 can be set to establish the
