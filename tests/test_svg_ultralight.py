@@ -149,6 +149,12 @@ class TestNewSvgRoot:
         result = new_svg_root(0, 1, 2, 3, height=30)
         assert result.attrib == expect.attrib
 
+    def test_new_svg_root_no_viewbox(self) -> None:
+        """No viewBox when no trailing-underscore params."""
+        expect = svg_root(width="14in", height="7in")
+        result = new_svg_root(print_width_="14in", print_height_="7in")
+        assert result.attrib == expect.attrib
+
 
 class TestTostringKwargs:
     """Pass write_svg **kwargs to lxml.etree.tostring."""

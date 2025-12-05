@@ -52,7 +52,7 @@ def new_svg_root(
     pad_: PadArg = 0,
     print_width_: float | str | None = None,
     print_height_: float | str | None = None,
-    dpu_: float = 1,
+    dpu_: float | None = None,
     nsmap: dict[str | None, str] | None = None,
     attrib: OptionalElemAttribMapping | None = None,
     **attributes: ElemAttrib,
@@ -98,11 +98,23 @@ def new_svg_root(
         and isinstance(width_, (float, int))
         and isinstance(height_, (float, int))
     ):
+        dpu = dpu_ or 1
         padded_viewbox, scale_attribs = pad_and_scale(
-            (x_, y_, width_, height_), pad_, print_width_, print_height_, dpu_
+            (x_, y_, width_, height_), pad_, print_width_, print_height_, dpu
         )
         inferred_attribs["viewBox"] = get_view_box_str(*padded_viewbox)
         inferred_attribs.update(scale_attribs)
+    elif (
+        x_ is None
+        and y_ is None
+        and (width_ or print_width_) is not None
+        and (height_ or print_height_) is not None
+        and pad_ == 0
+        and dpu_ is None
+    ):
+        inferred_attribs["width"] = print_width_ if width_ is None else width_
+        inferred_attribs["height"] = print_height_ if height_ is None else height_
+
     inferred_attribs.update(attributes)
     # can only pass nsmap on instance creation
     svg_root = etree.Element(f"{{{nsmap[None]}}}svg", nsmap=nsmap)
