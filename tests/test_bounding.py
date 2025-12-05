@@ -25,6 +25,15 @@ from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 
 
+class TestBoundingBox:
+    def test_measurement_args(self):
+        bbox = BoundingBox("-2in", "0", "1in", "3pt")
+        assert bbox.x == -192
+        assert bbox.y == 0
+        assert bbox.width == 96
+        assert bbox.height == 4
+
+
 class TestBoundElement:
     @pytest.fixture
     def bound_element(self) -> BoundElement:

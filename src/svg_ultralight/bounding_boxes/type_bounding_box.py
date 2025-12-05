@@ -12,6 +12,7 @@ import math
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.strings import svg_matrix
 from svg_ultralight.transformations import mat_apply, mat_dot, new_transformation_matrix
+from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -352,10 +353,10 @@ class BoundingBox(HasBoundingBox):
 
     def __init__(
         self,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
+        x: MeasurementArg,
+        y: MeasurementArg,
+        width: MeasurementArg,
+        height: MeasurementArg,
         transformation: _Matrix = (1, 0, 0, 1, 0, 0),
     ) -> None:
         """Initialize a BoundingBox instance.
@@ -365,10 +366,10 @@ class BoundingBox(HasBoundingBox):
         :param width: width of the bounding box
         :param height: height of the bounding box
         """
-        self.base_x = x
-        self.base_y = y
-        self.base_width = width
-        self.base_height = height
+        self.base_x = to_user_units(x)
+        self.base_y = to_user_units(y)
+        self.base_width = to_user_units(width)
+        self.base_height = to_user_units(height)
         self.transformation = transformation
         self.bbox = self
 

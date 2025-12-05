@@ -245,3 +245,14 @@ class Measurement:
         :return: the measurement divided by the scalar in self native unit
         """
         return self.__mul__(1.0 / scalar)
+
+
+def to_user_units(measurement_arg: MeasurementArg) -> float:
+    """Convert a measurement argument to user units.
+
+    :param measurement_arg: The measurement argument to convert
+    :return: The measurement in user units
+    """
+    if isinstance(measurement_arg, (int, float)):
+        return float(measurement_arg)
+    return Measurement(measurement_arg).value
