@@ -26,13 +26,13 @@ from svg_ultralight.unit_conversion import MeasurementArg, to_svg_str, to_user_u
 
 if TYPE_CHECKING:
     import os
+    from collections.abc import Sequence
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
-    from svg_ultralight.layout import PadArg
 
 
 def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
@@ -50,7 +50,7 @@ def new_svg_root(
     width_: MeasurementArg | None = None,
     height_: MeasurementArg | None = None,
     *,
-    pad_: PadArg = 0,
+    pad_: MeasurementArg | Sequence[MeasurementArg] = 0,
     print_width_: MeasurementArg | None = None,
     print_height_: MeasurementArg | None = None,
     dpu_: float | None = None,

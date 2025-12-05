@@ -14,7 +14,8 @@ from __future__ import annotations
 import dataclasses
 import enum
 import re
-from typing import Literal, TypeAlias, TypeGuard, cast, Any
+from contextlib import suppress
+from typing import Any, Literal, TypeAlias, TypeGuard, cast
 
 from svg_ultralight.string_conversion import format_number
 
@@ -52,16 +53,6 @@ _UnitSpecifier: TypeAlias = Literal[
     "in", "pt", "px", "mm", "cm", "m", "km", "Q", "pc", "yd", "ft", ""
 ]
 
-# the arguments this module will attempt to interpret as a string with a unit specifier
-MeasurementArg = (
-    float
-    | str
-    | tuple[str, _UnitSpecifier]
-    | tuple[float, _UnitSpecifier]
-    | tuple[str, Unit]
-    | tuple[float, Unit]
-    | Unit
-)
 
 _UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
 
@@ -80,22 +71,17 @@ def is_unit_specifier(obj: object) -> TypeGuard[_UnitSpecifier]:
     """
     return isinstance(obj, str) and obj in _UNIT_SPECIFIER2UNIT
 
+
 def is_measurement_arg(obj: object) -> TypeGuard[MeasurementArg]:
     """Determine if an object is a valid measurement argument.
 
     :param obj: object to check
     :return: True if the object is a valid measurement argument
     """
-    if isinstance(obj, (int, float, str, Unit)):
+    maybe_measurement_arg = cast("Any", obj)
+    with suppress(ValueError):
+        _ = Measurement(maybe_measurement_arg)
         return True
-    if isinstance(obj, tuple):
-        obj = cast('tuple[Any, Any]', obj)
-        if len(obj) != 2:
-            return False
-        first, second = obj
-        if isinstance(first, (int, float, str)):
-            if is_unit_specifier(second) or isinstance(second, Unit):
-                return True
     return False
 
 
@@ -126,6 +112,8 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     | Measurement   | Measurement("3in") | (3.0, Unit.IN)     |
 
     """
+    if isinstance(measurement_arg, Measurement):
+        return measurement_arg.get_tuple()
     failure_msg = f"Cannot parse value and unit from {measurement_arg}"
     unit: _UnitSpecifier | Unit
     try:
@@ -145,7 +133,7 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
             unit = _UNIT_SPECIFIER2UNIT[number_unit["unit"]]
             return _parse_unit((number_unit["number"], unit))
 
-    except (ValueError, KeyError) as e:
+    except (ValueError, KeyError, IndexError) as e:
         raise ValueError(failure_msg) from e
 
     raise ValueError(failure_msg)
@@ -294,3 +282,16 @@ def to_svg_str(measurement_arg: MeasurementArg) -> str:
     :return: The measurement as an svg string
     """
     return Measurement(measurement_arg).get_svg()
+
+
+# the arguments this module will attempt to interpret as a string with a unit specifier
+MeasurementArg: TypeAlias = (
+    float
+    | str
+    | tuple[str, _UnitSpecifier]
+    | tuple[float, _UnitSpecifier]
+    | tuple[str, Unit]
+    | tuple[float, Unit]
+    | Unit
+    | Measurement
+)

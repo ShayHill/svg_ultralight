@@ -7,16 +7,22 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TypeAlias, cast
+from typing import TYPE_CHECKING, cast
 
 from svg_ultralight.string_conversion import format_number
-from svg_ultralight.unit_conversion import Measurement, MeasurementArg, is_unit_specifier, Unit, is_measurement_arg
+from svg_ultralight.unit_conversion import (
+    Measurement,
+    MeasurementArg,
+    is_measurement_arg,
+)
 
-PadArg: TypeAlias = Measurement | MeasurementArg | Sequence[Measurement | MeasurementArg]
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
-
-def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
+def expand_pad_arg(
+    pad: MeasurementArg | Sequence[MeasurementArg],
+) -> tuple[float, float, float, float]:
     """Transform a single value or tuple of values to a 4-tuple of user units.
 
     :param pad: padding value(s)
@@ -142,7 +148,7 @@ def _infer_scale(
 
 def pad_and_scale(
     viewbox: tuple[float, float, float, float],
-    pad: PadArg,
+    pad: MeasurementArg | Sequence[MeasurementArg] = 0,
     print_width: MeasurementArg | None = None,
     print_height: MeasurementArg | None = None,
     dpu: float = 1,
@@ -228,10 +234,10 @@ def pad_and_scale(
       so there is no additional information supplied by giving both, but I've
       had unexpected behavior from pandoc when one was missing.
 
-    * If only a unit is given, (e.g., "pt"), the user units (viewbox width and
-      height) will be interpreted as that unit. This is important for InDesign,
-      which may not display in image at all if the width and height are not
-      explicitly "pt".
+    * If only a unit is given, (e.g., Unit.PT), the user units (viewbox width and
+      height) will be interpreted as that unit. This is important for InDesign, which
+      may not display an image at all if the width and height are not explicitly
+      "pt".
 
     * Print ratios are discarded. The viwebox ratio is preserved. For instance,
       if the viewbox is (0, 0, 16, 9), giving a 16:9 aspect ratio and the

@@ -83,6 +83,12 @@ class TestMeasurement:
         """Test that unit is identified correctly."""
         assert Measurement(f"1{unit.value[0]}").native_unit == unit
 
+    def test_measurement_instance_as_measurement_arg(self, unit: Unit):
+        """Test that Measurement instance can be passed as argument."""
+        m = Measurement(f"1{unit.value[0]}")
+        m2 = Measurement(m)
+        assert m2.get_tuple() == m.get_tuple()
+
     def test_value_scaled(self, unit: Unit):
         """Value is scaled per Inkscape conversion values."""
         assert math.isclose(
