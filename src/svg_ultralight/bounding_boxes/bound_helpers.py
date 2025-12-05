@@ -17,6 +17,7 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoun
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 from svg_ultralight.layout import PadArg, expand_pad_arg
+from svg_ultralight.unit_conversion import to_user_units, MeasurementArg
 
 if TYPE_CHECKING:
     import os
@@ -170,7 +171,9 @@ def new_bound_rect(bbox: BoundingBox, **kwargs: ElemAttrib) -> BoundElement:
     return BoundElement(elem, bbox)
 
 
-def _get_view_box(elem: EtreeElement) -> tuple[float, float, float, float]:
+def _get_view_box(
+    elem: EtreeElement,
+) -> tuple[float, float, MeasurementArg, MeasurementArg]:
     """Return the view box of an element as a tuple of floats.
 
     :param elem: the element from which to extract the view box.
@@ -180,11 +183,15 @@ def _get_view_box(elem: EtreeElement) -> tuple[float, float, float, float]:
     files have a viewBox attribute.
     """
     view_box = elem.get("viewBox")
-    if view_box is None:
-        msg = "Element does not have a viewBox attribute."
+    if view_box:
+        x, y, width, height = map(float, view_box.split())
+        return x, y, width, height
+    width = elem.get("width")
+    height = elem.get("height")
+    if width is None or height is None:
+        msg = "Cannot infer viewBox from element."
         raise ValueError(msg)
-    x, y, width, height = map(float, view_box.split())
-    return x, y, width, height
+    return 0, 0, to_user_units(width), to_user_units(height)
 
 
 def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
