@@ -79,6 +79,13 @@ class TestParseUnit:
 
 
 class TestMeasurement:
+    def test_mistyped_string(self):
+        """Test that mistyped string raises ValueError.
+
+        This is to catch a bug found in another project.
+        """
+        with pytest.raises(ValueError, match="Cannot parse"):
+            _ = Measurement("O.25in")  # Capital O instead of zero
     def test_unit_identified(self, unit: Unit):
         """Test that unit is identified correctly."""
         assert Measurement(f"1{unit.value[0]}").native_unit == unit

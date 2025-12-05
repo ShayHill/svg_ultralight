@@ -51,7 +51,7 @@ def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
     (1.0, 2.0, 1.0, 2.0)
 
     >>> expand_pad_arg("1in")
-    (96.0, 96.0, 96.0, 96.
+    (96.0, 96.0, 96.0, 96.0)
 
     >>> expand_pad_arg(("1in", "2in"))
     (96.0, 192.0, 96.0, 192.0)

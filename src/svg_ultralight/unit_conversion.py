@@ -58,7 +58,7 @@ _UNIT_SPECIFIER2UNIT = {x.value[0]: x for x in Unit}
 
 _UNIT_SPECIFIERS = [x.value[0] for x in Unit]
 _NUMBER = r"([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?"
-_UNIT_RE = re.compile(rf"(?P<unit>{'|'.join(_UNIT_SPECIFIERS)})")
+_UNIT_RE = re.compile(rf"(?P<unit>{'|'.join(_UNIT_SPECIFIERS)})$")
 _NUMBER_RE = re.compile(rf"(?P<number>{_NUMBER})")
 _NUMBER_AND_UNIT = re.compile(rf"^{_NUMBER_RE.pattern}{_UNIT_RE.pattern}$")
 
@@ -121,15 +121,15 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
         if isinstance(measurement_arg, Unit):
             return _parse_unit((0, measurement_arg))
 
-        if number_unit := _NUMBER_AND_UNIT.match(str(measurement_arg)):
+        if number_unit := _NUMBER_AND_UNIT.match(measurement_arg):
             unit = _UNIT_SPECIFIER2UNIT[number_unit["unit"]]
             return _parse_unit((number_unit["number"], unit))
 
-        if unit_only := _UNIT_RE.match(str(measurement_arg)):
+        if unit_only := _UNIT_RE.match(measurement_arg):
             unit = _UNIT_SPECIFIER2UNIT[unit_only["unit"]]
             return _parse_unit((0, unit))
 
-    except (ValueError, KeyError, IndexError) as e:
+    except (ValueError, KeyError, IndexError, TypeError) as e:
         raise ValueError(failure_msg) from e
 
     raise ValueError(failure_msg)
@@ -258,6 +258,13 @@ class Measurement:
         :return: the measurement divided by the scalar in self native unit
         """
         return self.__mul__(1.0 / scalar)
+
+    def __neg__(self) -> Measurement:
+        """Negate a measurement.
+
+        :return: the negated measurement in self native unit
+        """
+        return self.__mul__(-1)
 
 
 def to_user_units(measurement_arg: MeasurementArg) -> float:
