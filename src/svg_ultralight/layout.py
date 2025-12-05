@@ -7,12 +7,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
 from svg_ultralight.string_conversion import format_number
-from svg_ultralight.unit_conversion import Measurement, MeasurementArg
+from svg_ultralight.unit_conversion import Measurement, MeasurementArg, is_unit_specifier, Unit, is_measurement_arg
 
-PadArg: TypeAlias = float | str | Measurement | Sequence[float | str | Measurement]
+PadArg: TypeAlias = Measurement | MeasurementArg | Sequence[Measurement | MeasurementArg]
+
 
 
 def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
@@ -39,14 +40,19 @@ def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
     >>> expand_pad_arg((Measurement("1in"), Measurement("2in")))
     (96.0, 192.0, 96.0, 192.0)
     """
-    if isinstance(pad, str) or not isinstance(pad, Sequence):
+    if isinstance(pad, Measurement):
         return expand_pad_arg([pad])
-    as_ms = [m if isinstance(m, Measurement) else Measurement(m) for m in pad]
+    if is_measurement_arg(pad):
+        return expand_pad_arg([pad])
+    pad = cast("Sequence[Measurement | MeasurementArg]", pad)
+    as_ms = (m if isinstance(m, Measurement) else Measurement(m) for m in pad)
     as_units = [m.value for m in as_ms]
-    if len(as_units) == 3:
+    if len(as_units) == 1:
+        as_units = as_units * 4
+    elif len(as_units) == 2:
+        as_units = as_units * 2
+    elif len(as_units) == 3:
         as_units = [*as_units, as_units[1]]
-    else:
-        as_units = [as_units[i % len(as_units)] for i in range(4)]
     return as_units[0], as_units[1], as_units[2], as_units[3]
 
 

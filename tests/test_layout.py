@@ -160,7 +160,7 @@ class TestLayout:
         """
         viewbox = (0, 0, 100, 50)
         pad = ("1in", "1in", "1in", "1in")
-        padded, width_attribs = layout.pad_and_scale(viewbox, pad, "pt")
+        padded, width_attribs = layout.pad_and_scale(viewbox, pad, "0pt")
         assert padded == (-72.0, -72.0, 244.0, 194.0)
         assert width_attribs == {"width": "244pt", "height": "194pt"}
 

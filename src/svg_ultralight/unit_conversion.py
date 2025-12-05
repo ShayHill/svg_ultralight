@@ -14,7 +14,7 @@ from __future__ import annotations
 import dataclasses
 import enum
 import re
-from typing import Literal, TypeAlias, TypeGuard
+from typing import Literal, TypeAlias, TypeGuard, cast, Any
 
 from svg_ultralight.string_conversion import format_number
 
@@ -80,6 +80,24 @@ def is_unit_specifier(obj: object) -> TypeGuard[_UnitSpecifier]:
     """
     return isinstance(obj, str) and obj in _UNIT_SPECIFIER2UNIT
 
+def is_measurement_arg(obj: object) -> TypeGuard[MeasurementArg]:
+    """Determine if an object is a valid measurement argument.
+
+    :param obj: object to check
+    :return: True if the object is a valid measurement argument
+    """
+    if isinstance(obj, (int, float, str, Unit)):
+        return True
+    if isinstance(obj, tuple):
+        obj = cast('tuple[Any, Any]', obj)
+        if len(obj) != 2:
+            return False
+        first, second = obj
+        if isinstance(first, (int, float, str)):
+            if is_unit_specifier(second) or isinstance(second, Unit):
+                return True
+    return False
+
 
 def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     """Split the value and unit from a string.
@@ -100,7 +118,6 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     | float         | 55.32              | (55.32, Unit.USER) |
     | str           | "55.32px"          | (55.32, Unit.PX)   |
     | str           | "55.32"            | (55.32, Unit.USER) |
-    | str           | "px"               | (0.0, Unit.PX)     |
     | (str, str)    | ("55.32", "px")    | (55.32, Unit.PX)   |
     | (float, str)  | (55.32, "px")      | (55.32, Unit.PX)   |
     | (str, Unit)   | ("55.32", Unit.PX) | (55.32, Unit.PX)   |
@@ -127,10 +144,6 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
         if number_unit := _NUMBER_AND_UNIT.match(str(measurement_arg)):
             unit = _UNIT_SPECIFIER2UNIT[number_unit["unit"]]
             return _parse_unit((number_unit["number"], unit))
-
-        if unit_only := _UNIT_RE.match(str(measurement_arg)):
-            unit = _UNIT_SPECIFIER2UNIT[unit_only["unit"]]
-            return _parse_unit((0, unit))
 
     except (ValueError, KeyError) as e:
         raise ValueError(failure_msg) from e
@@ -206,11 +219,11 @@ class Measurement:
     def get_svg(self, unit: Unit | None = None) -> str:
         """Get the measurement in the specified unit as it would be written in svg.
 
-        :param optional unit: the unit to convert to
+        :param optional unit: the unit to convert to (defaults to native unit)
         :return: the measurement in the specified unit, always as a string
 
         Rounds values to 6 decimal places as recommended by svg guidance online.
-        Higher precision just changes file size without imroving quality.
+        Higher resolution just changes file size without imroving quality.
         """
         _, unit = self.get_tuple(unit or self.native_unit)
         value_as_str = format_number(self.get_value(unit))
