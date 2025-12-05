@@ -63,7 +63,8 @@ def expand_pad_arg(pad: PadArg) -> tuple[float, float, float, float]:
     (96.0, 192.0, 96.0, 192.0)
     """
     if is_measurement_arg(pad):
-        return _expand_pad_args((pad,))
+        pads = cast("_MeasurementArgs", (pad,))
+        return _expand_pad_args(pads)
     pads = cast("_MeasurementArgs", pad)
     return _expand_pad_args(pads)
 

@@ -122,6 +122,7 @@ repos:
   # PGH003 Use specific rule codes when ignoring type issues (multipe for *args to etree.tostring)
   # FLY Consider f-string ...
   # N802 function name should be lowercase (need for some magic in font_info)
+  # PLR0911 Too many return statements (to parse MeasurementArgs)
 
   rev: 'v0.14.2'
   hooks:
@@ -130,7 +131,7 @@ repos:
       args:
       - --target-version=py310
       - --select=ALL
-      - --ignore=COM812,D203,D213,ISC003,ANN401,BLE001,S301,PLR2004,S603,SIM108,PTH108,PLR0913,PGH003,FLY,N802
+      - --ignore=COM812,D203,D213,ISC003,ANN401,BLE001,S301,PLR2004,S603,SIM108,PTH108,PLR0913,PGH003,FLY,N802,PLR0911
       - --fix
       - --fixable=RUF022
     - id: ruff

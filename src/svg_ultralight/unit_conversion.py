@@ -15,7 +15,7 @@ import dataclasses
 import enum
 import re
 from contextlib import suppress
-from typing import Any, Literal, TypeAlias, TypeGuard, cast
+from typing import Any, Literal, TypeAlias, cast
 
 from svg_ultralight.string_conversion import format_number
 
@@ -63,16 +63,7 @@ _NUMBER_RE = re.compile(rf"(?P<number>{_NUMBER})")
 _NUMBER_AND_UNIT = re.compile(rf"^{_NUMBER_RE.pattern}{_UNIT_RE.pattern}$")
 
 
-def is_unit_specifier(obj: object) -> TypeGuard[_UnitSpecifier]:
-    """Determine if an object is a valid unit specifier.
-
-    :param obj: object to check
-    :return: True if the object is a valid unit specifier
-    """
-    return isinstance(obj, str) and obj in _UNIT_SPECIFIER2UNIT
-
-
-def is_measurement_arg(obj: object) -> TypeGuard[MeasurementArg]:
+def is_measurement_arg(obj: object) -> bool:
     """Determine if an object is a valid measurement argument.
 
     :param obj: object to check
@@ -104,6 +95,7 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
     | float         | 55.32              | (55.32, Unit.USER) |
     | str           | "55.32px"          | (55.32, Unit.PX)   |
     | str           | "55.32"            | (55.32, Unit.USER) |
+    | str           | "px"               | (0.0, Unit.PX)     |
     | (str, str)    | ("55.32", "px")    | (55.32, Unit.PX)   |
     | (float, str)  | (55.32, "px")      | (55.32, Unit.PX)   |
     | (str, Unit)   | ("55.32", Unit.PX) | (55.32, Unit.PX)   |
@@ -132,6 +124,10 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
         if number_unit := _NUMBER_AND_UNIT.match(str(measurement_arg)):
             unit = _UNIT_SPECIFIER2UNIT[number_unit["unit"]]
             return _parse_unit((number_unit["number"], unit))
+
+        if unit_only := _UNIT_RE.match(str(measurement_arg)):
+            unit = _UNIT_SPECIFIER2UNIT[unit_only["unit"]]
+            return _parse_unit((0, unit))
 
     except (ValueError, KeyError, IndexError) as e:
         raise ValueError(failure_msg) from e
