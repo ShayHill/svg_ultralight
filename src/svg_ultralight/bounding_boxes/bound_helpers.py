@@ -17,7 +17,7 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoun
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
 from svg_ultralight.layout import PadArg, expand_pad_arg
-from svg_ultralight.unit_conversion import to_user_units, MeasurementArg
+from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 
 if TYPE_CHECKING:
     import os
@@ -171,7 +171,7 @@ def new_bound_rect(bbox: BoundingBox, **kwargs: ElemAttrib) -> BoundElement:
     return BoundElement(elem, bbox)
 
 
-def _get_view_box(
+def get_bounding_box_from_root(
     elem: EtreeElement,
 ) -> tuple[float, float, MeasurementArg, MeasurementArg]:
     """Return the view box of an element as a tuple of floats.
@@ -213,5 +213,5 @@ def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
     elem.extend(list(root))
     if len(elem) == 1:
         elem = elem[0]
-    bbox = BoundingBox(*_get_view_box(root))
+    bbox = BoundingBox(*get_bounding_box_from_root(root))
     return BoundElement(elem, bbox)

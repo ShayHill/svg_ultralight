@@ -7,6 +7,7 @@
 from svg_ultralight.bounding_boxes.bound_helpers import (
     bbox_dict,
     cut_bbox,
+    get_bounding_box_from_root,
     new_bbox_rect,
     new_bbox_union,
     new_bound_union,
@@ -48,7 +49,6 @@ from svg_ultralight.query import (
     get_bounding_box,
     get_bounding_boxes,
 )
-from svg_ultralight.read_svg import get_bounding_box_from_root, parse
 from svg_ultralight.root_elements import new_svg_root_around_bounds
 from svg_ultralight.string_conversion import (
     format_attr_dict,
@@ -98,7 +98,6 @@ __all__ = [
     "pad_text",
     "pad_text_ft",
     "pad_text_mix",
-    "parse",
     "parse_bound_element",
     "transform_element",
     "update_element",
