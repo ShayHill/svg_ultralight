@@ -14,6 +14,7 @@ from __future__ import annotations
 import dataclasses
 import enum
 import re
+from typing import Literal, TypeAlias, TypeGuard
 
 from svg_ultralight.string_conversion import format_number
 
@@ -47,12 +48,16 @@ class Unit(enum.Enum):
     USER = "", 1  # "user units" without a unit specifier
 
 
+_UnitSpecifier: TypeAlias = Literal[
+    "in", "pt", "px", "mm", "cm", "m", "km", "Q", "pc", "yd", "ft", ""
+]
+
 # the arguments this module will attempt to interpret as a string with a unit specifier
 MeasurementArg = (
     float
     | str
-    | tuple[str, str]
-    | tuple[float, str]
+    | tuple[str, _UnitSpecifier]
+    | tuple[float, _UnitSpecifier]
     | tuple[str, Unit]
     | tuple[float, Unit]
     | Unit
@@ -65,6 +70,15 @@ _NUMBER = r"([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?"
 _UNIT_RE = re.compile(rf"(?P<unit>{'|'.join(_UNIT_SPECIFIERS)})")
 _NUMBER_RE = re.compile(rf"(?P<number>{_NUMBER})")
 _NUMBER_AND_UNIT = re.compile(rf"^{_NUMBER_RE.pattern}{_UNIT_RE.pattern}$")
+
+
+def is_unit_specifier(obj: object) -> TypeGuard[_UnitSpecifier]:
+    """Determine if an object is a valid unit specifier.
+
+    :param obj: object to check
+    :return: True if the object is a valid unit specifier
+    """
+    return isinstance(obj, str) and obj in _UNIT_SPECIFIER2UNIT
 
 
 def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
@@ -96,7 +110,7 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
 
     """
     failure_msg = f"Cannot parse value and unit from {measurement_arg}"
-    unit: str | Unit
+    unit: _UnitSpecifier | Unit
     try:
         if isinstance(measurement_arg, tuple):
             number, unit = float(measurement_arg[0]), measurement_arg[1]
@@ -111,10 +125,12 @@ def _parse_unit(measurement_arg: MeasurementArg) -> tuple[float, Unit]:
             return _parse_unit((0, measurement_arg))
 
         if number_unit := _NUMBER_AND_UNIT.match(str(measurement_arg)):
-            return _parse_unit((number_unit["number"], number_unit["unit"]))
+            unit = _UNIT_SPECIFIER2UNIT[number_unit["unit"]]
+            return _parse_unit((number_unit["number"], unit))
 
         if unit_only := _UNIT_RE.match(str(measurement_arg)):
-            return _parse_unit((0, unit_only["unit"]))
+            unit = _UNIT_SPECIFIER2UNIT[unit_only["unit"]]
+            return _parse_unit((0, unit))
 
     except (ValueError, KeyError) as e:
         raise ValueError(failure_msg) from e
@@ -175,7 +191,7 @@ class Measurement:
         single measurements. Single measurements can be defined by something like
         `(1, "in")`, but groups can be passed as single or tuples, so there is no way
         to differentiate between (1, "in") and "1in" or (1, "in") as ("1", "0in").
-        That is a limitation, but doint it that way preserved the flexibility (and
+        That is a limitation, but doing it that way preserved the flexibility (and
         backwards compatibility) of being able to define padding as "1in" everywhere
         or (1, 2, 3, 4) for top, right, bottom, left.
 
@@ -196,7 +212,7 @@ class Measurement:
         Rounds values to 6 decimal places as recommended by svg guidance online.
         Higher precision just changes file size without imroving quality.
         """
-        _, unit = self.get_tuple(unit)
+        _, unit = self.get_tuple(unit or self.native_unit)
         value_as_str = format_number(self.get_value(unit))
         return f"{value_as_str}{unit.value[0]}"
 
@@ -256,3 +272,12 @@ def to_user_units(measurement_arg: MeasurementArg) -> float:
     if isinstance(measurement_arg, (int, float)):
         return float(measurement_arg)
     return Measurement(measurement_arg).value
+
+
+def to_svg_str(measurement_arg: MeasurementArg) -> str:
+    """Convert a measurement argument to an svg string.
+
+    :param measurement_arg: The measurement argument to convert
+    :return: The measurement as an svg string
+    """
+    return Measurement(measurement_arg).get_svg()

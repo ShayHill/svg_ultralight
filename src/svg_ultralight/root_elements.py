@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
     from svg_ultralight.layout import PadArg
+    from svg_ultralight.unit_conversion import MeasurementArg
 
 
 def _viewbox_args_from_bboxes(*bboxes: BoundingBox) -> dict[str, float]:
@@ -41,9 +42,9 @@ def _viewbox_args_from_bboxes(*bboxes: BoundingBox) -> dict[str, float]:
 def new_svg_root_around_bounds(
     *bounded: SupportsBounds | EtreeElement,
     pad_: PadArg = 0,
-    print_width_: float | str | None = None,
-    print_height_: float | str | None = None,
-    dpu_: float = 1,
+    print_width_: MeasurementArg | None = None,
+    print_height_: MeasurementArg | None = None,
+    dpu_: float | None = None,
     nsmap: dict[str | None, str] | None = None,
     attrib: OptionalElemAttribMapping = None,
     **attributes: ElemAttrib,

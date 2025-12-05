@@ -22,6 +22,7 @@ from svg_ultralight.constructors import update_element
 from svg_ultralight.layout import pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import get_view_box_str, svg_tostring
+from svg_ultralight.unit_conversion import MeasurementArg, to_svg_str, to_user_units
 
 if TYPE_CHECKING:
     import os
@@ -44,14 +45,14 @@ def _is_io_bytes(obj: object) -> TypeGuard[IO[bytes]]:
 
 
 def new_svg_root(
-    x_: float | None = None,
-    y_: float | None = None,
-    width_: float | None = None,
-    height_: float | None = None,
+    x_: MeasurementArg | None = None,
+    y_: MeasurementArg | None = None,
+    width_: MeasurementArg | None = None,
+    height_: MeasurementArg | None = None,
     *,
     pad_: PadArg = 0,
-    print_width_: float | str | None = None,
-    print_height_: float | str | None = None,
+    print_width_: MeasurementArg | None = None,
+    print_height_: MeasurementArg | None = None,
     dpu_: float | None = None,
     nsmap: dict[str | None, str] | None = None,
     attrib: OptionalElemAttribMapping | None = None,
@@ -92,13 +93,9 @@ def new_svg_root(
         nsmap = NSMAP
 
     inferred_attribs: dict[str, ElemAttrib] = {}
-    if (
-        isinstance(x_, (float, int))
-        and isinstance(y_, (float, int))
-        and isinstance(width_, (float, int))
-        and isinstance(height_, (float, int))
-    ):
+    if x_ is not None and y_ is not None and width_ is not None and height_ is not None:
         dpu = dpu_ or 1
+        x_, y_, width_, height_ = map(to_user_units, (x_, y_, width_, height_))
         padded_viewbox, scale_attribs = pad_and_scale(
             (x_, y_, width_, height_), pad_, print_width_, print_height_, dpu
         )
@@ -112,8 +109,10 @@ def new_svg_root(
         and pad_ == 0
         and dpu_ is None
     ):
-        inferred_attribs["width"] = print_width_ if width_ is None else width_
-        inferred_attribs["height"] = print_height_ if height_ is None else height_
+        width = print_width_ if width_ is None else width_
+        height = print_height_ if height_ is None else height_
+        inferred_attribs["width"] = to_svg_str(width or 0)
+        inferred_attribs["height"] = to_svg_str(height or 0)
 
     inferred_attribs.update(attributes)
     # can only pass nsmap on instance creation
