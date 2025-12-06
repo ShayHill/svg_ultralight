@@ -79,6 +79,30 @@ class TestParseUnit:
 
 
 class TestMeasurement:
+    def test_add_float(self):
+        """Test that adding a float increases value."""
+        m = Measurement("1in")
+        m2 = m + 1.0
+        assert math.isclose(m2.value, m.value + 1.0)
+
+    def test_radd_float(self):
+        """Test that adding a float increases value."""
+        m = Measurement("1in")
+        m2 = 1.0 + m
+        assert math.isclose(m2.value, m.value + 1.0)
+
+    def test_subtract_float(self):
+        """Test that subtracting a float decreases value."""
+        m = Measurement("1in")
+        m2 = m - 1.0
+        assert math.isclose(m2.value, m.value - 1.0)
+
+    def test_rsubtract_float(self):
+        """Test that subtracting a float decreases value."""
+        m = Measurement("1in")
+        m2 = 1.0 - m
+        assert math.isclose(m2.value, 1.0 - m.value)
+
     def test_mistyped_string(self):
         """Test that mistyped string raises ValueError.
 

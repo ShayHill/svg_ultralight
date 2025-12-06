@@ -213,25 +213,42 @@ class Measurement:
         value_as_str = format_number(self.get_value(unit))
         return f"{value_as_str}{unit.value[0]}"
 
-    def __add__(self, other: Measurement) -> Measurement:
+    def __add__(self, other: Measurement | float) -> Measurement:
         """Add two measurements.
 
         :param other: the other measurement
         :return: the sum of the two measurements in self native unit
         """
         result = Measurement(self.native_unit)
-        result.value = self.value + other.value
+        if isinstance(other, Measurement):
+            result.value = self.value + other.value
+        else:
+            result.value = self.value + other
         return result
 
-    def __sub__(self, other: Measurement) -> Measurement:
+    def __radd__(self, other: float) -> Measurement:
+        """Add a measurement to a float.
+
+        :param other: the other measurement
+        :return: the sum of the two measurements in self native unit
+        """
+        return self.__add__(other)
+
+    def __sub__(self, other: Measurement | float) -> Measurement:
         """Subtract two measurements.
 
         :param other: the other measurement
         :return: the difference of the two measurements in self native unit
         """
-        result = Measurement(self.native_unit)
-        result.value = self.value - other.value
-        return result
+        return self.__add__(-other)
+
+    def __rsub__(self, other: float) -> Measurement:
+        """Subtract a measurement from a float.
+
+        :param other: the other measurement
+        :return: the difference of the two measurements in self native unit
+        """
+        return self.__mul__(-1).__add__(other)
 
     def __mul__(self, scalar: float) -> Measurement:
         """Multiply a measurement by a scalar.
