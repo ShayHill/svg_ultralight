@@ -155,6 +155,16 @@ class Measurement:
         value, self.native_unit = _parse_unit(measurement_arg)
         self.value = value * self.native_unit.value[1]
 
+    def __float__(self) -> float:
+        """Get the measurement in user units.
+
+        :return: value in user units
+
+        It's best to do all math with self.value, but this is here for conversion
+        with less precision loss.
+        """
+        return self.value
+
     def get_value(self, unit: Unit | None = None) -> float:
         """Get the measurement in the specified unit.
 
@@ -220,10 +230,7 @@ class Measurement:
         :return: the sum of the two measurements in self native unit
         """
         result = Measurement(self.native_unit)
-        if isinstance(other, Measurement):
-            result.value = self.value + other.value
-        else:
-            result.value = self.value + other
+        result.value = self.value + float(other)
         return result
 
     def __radd__(self, other: float) -> Measurement:
