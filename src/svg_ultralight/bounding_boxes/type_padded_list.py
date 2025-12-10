@@ -32,7 +32,7 @@ from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
 from svg_ultralight.constructors import update_element
 from svg_ultralight.transformations import new_transformation_matrix
 
@@ -123,12 +123,7 @@ class PaddedList:
 
     def padded_union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a PaddedText inst where the elem is a `g` of all the padded text."""
-        union = self.tunion(**attribs)
-        tpad = self.tbox.y - self.bbox.y
-        rpad = self.bbox.x2 - self.tbox.x2
-        bpad = self.bbox.y2 - self.tbox.y2
-        lpad = self.tbox.x - self.bbox.x
-        return PaddedText(union.elem, union.bbox, tpad, rpad, bpad, lpad)
+        return new_padded_union(*self.plems, **attribs)
 
     def get_dim(self, dim: str) -> float:
         """Get a dimension from bbox or tbox."""

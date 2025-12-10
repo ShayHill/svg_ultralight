@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes import bound_helpers as bound
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.main import new_svg_root
 
 if TYPE_CHECKING:
@@ -76,7 +77,7 @@ def new_svg_root_around_bounds(
     bbox = bound.new_bbox_union(*bounded)
     elem: EtreeElement | None = None
     with suppress(ValueError):
-        elem = bound.new_element_union(*bounded)
+        elem = new_element_union(*bounded)
     viewbox = _viewbox_args_from_bboxes(bbox)
     root = new_svg_root(
         x_=viewbox["x_"],

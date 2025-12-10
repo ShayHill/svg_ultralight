@@ -58,12 +58,15 @@ from paragraphs import par
 
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
 if TYPE_CHECKING:
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
+
+    from svg_ultralight.attrib_hints import ElemAttrib
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -500,3 +503,23 @@ class PaddedText(BoundElement):
         :param value: The bottom of this line of text.
         """
         self.transform(dy=value - self.bpad - self.tbox.y2)
+
+
+def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:
+    """Create a new PaddedText instance that is the union of multiple PaddedText.
+
+    :param plems: The PaddedText instances to union.
+    :return: A new PaddedText instance that is the union of the input instances.
+    """
+    bbox = BoundingBox.union(*(t.bbox for t in plems))
+    tbox = BoundingBox.union(*(t.tbox for t in plems))
+    tpad = tbox.y - bbox.y
+    rpad = bbox.x2 - tbox.x2
+    bpad = bbox.y2 - tbox.y2
+    lpad = tbox.x - bbox.x
+    elem = new_element_union(*(t.elem for t in plems), **attributes)
+    line_gaps = {t._line_gap for t in plems}  # pyright: ignore[reportPrivateUsage]
+    font_sizes = {t._font_size for t in plems}  # pyright: ignore[reportPrivateUsage]
+    line_gap = next(iter(line_gaps)) if len(line_gaps) == 1 else None
+    font_size = next(iter(font_sizes)) if len(font_sizes) == 1 else None
+    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, line_gap, font_size)

@@ -11,11 +11,11 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     new_bbox_rect,
     new_bbox_union,
     new_bound_union,
-    new_element_union,
     pad_bbox,
     parse_bound_element,
 )
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
+    join_tspans,
     pad_text,
     pad_text_ft,
     pad_text_mix,
@@ -26,10 +26,11 @@ from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
 from svg_ultralight.constructors.new_element import (
     deepcopy_element,
     new_element,
+    new_element_union,
     new_sub_element,
     update_element,
 )
@@ -81,6 +82,7 @@ __all__ = [
     "get_bounding_box",
     "get_bounding_box_from_root",
     "get_bounding_boxes",
+    "join_tspans",
     "mat_apply",
     "mat_dot",
     "mat_invert",
@@ -90,6 +92,7 @@ __all__ = [
     "new_element",
     "new_element_union",
     "new_metadata",
+    "new_padded_union",
     "new_qname",
     "new_sub_element",
     "new_svg_root",

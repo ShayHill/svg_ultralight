@@ -9,56 +9,26 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
+from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 
 if TYPE_CHECKING:
     import os
 
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
+
     from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 
 _Matrix = tuple[float, float, float, float, float, float]
-
-
-def new_element_union(
-    *elems: EtreeElement | SupportsBounds, **attributes: ElemAttrib
-) -> EtreeElement:
-    """Get the union of any elements found in the given arguments.
-
-    :param elems: BoundElements, PaddedTexts, or EtreeElements.
-        Other arguments will be ignored.
-    :return: a new group element containing all elements.
-
-    This does not support consolidating attributes. E.g., if all elements have the
-    same fill color, this will not be recognized and consilidated into a single
-    attribute for the group. Too many attributes change their behavior when applied
-    to a group.
-    """
-    elements_found: list[EtreeElement] = []
-    for elem in elems:
-        if isinstance(elem, (BoundElement, PaddedText)):
-            elements_found.append(elem.elem)
-        elif isinstance(elem, EtreeElement):
-            elements_found.append(elem)
-
-    if not elements_found:
-        msg = (
-            "Cannot find any elements to union. "
-            + "At least one argument must be a "
-            + "BoundElement, PaddedText, or EtreeElement."
-        )
-        raise ValueError(msg)
-    group = new_element("g", **attributes)
-    group.extend(elements_found)
-    return group
 
 
 def new_bbox_union(*blems: SupportsBounds | EtreeElement) -> BoundingBox:

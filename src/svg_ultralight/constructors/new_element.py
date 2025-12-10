@@ -16,15 +16,13 @@ import warnings
 from typing import TYPE_CHECKING
 
 from lxml import etree
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.string_conversion import set_attributes
 
 if TYPE_CHECKING:
     from lxml.etree import (
         QName,
-    )
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
     from svg_ultralight.attrib_hints import ElemAttrib
@@ -115,3 +113,39 @@ def deepcopy_element(elem: EtreeElement, **attributes: ElemAttrib) -> EtreeEleme
     elem = copy.deepcopy(elem)
     _ = update_element(elem, **attributes)
     return elem
+
+
+def new_element_union(
+    *elems: EtreeElement | object, **attributes: ElemAttrib
+) -> EtreeElement:
+    """Get the union of any elements found in the given arguments.
+
+    :param elems: EtreeElements or containers like BoundElements, PaddedTexts, or
+        others that have an `elem` attribute that is an EtreeElement. Other arguments
+        will be ignored.
+    :return: a new group element containing all elements.
+
+    This does not support consolidating attributes. E.g., if all elements have the
+    same fill color, this will not be recognized and consolidated into a single
+    attribute for the group. Too many attributes change their behavior when applied
+    to a group.
+    """
+    elements_found: list[EtreeElement] = []
+    for elem in elems:
+        if isinstance(elem, EtreeElement):
+            elements_found.append(elem)
+            continue
+        elem_elem = getattr(elem, "elem", None)
+        if isinstance(elem_elem, EtreeElement):
+            elements_found.append(elem_elem)
+
+    if not elements_found:
+        msg = (
+            "Cannot find any elements to union. "
+            + "At least one argument must be a "
+            + "BoundElement, PaddedText, or EtreeElement."
+        )
+        raise ValueError(msg)
+    group = new_element("g", **attributes)
+    group.extend(elements_found)
+    return group

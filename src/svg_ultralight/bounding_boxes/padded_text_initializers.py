@@ -22,22 +22,20 @@ to 16px.
 
 from __future__ import annotations
 
+import itertools as it
 from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
-import itertools as it
-
 from svg_ultralight.attrib_hints import ElemAttrib
-from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox, new_element_union
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
+    DATA_TEXT_ESCAPE_CHARS,
     FTFontInfo,
     get_padded_text_info,
     get_svg_font_attributes,
-    DATA_TEXT_ESCAPE_CHARS,
 )
 from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
@@ -232,17 +230,7 @@ def join_tspans(
         r_name = font_info.get_glyph_name(r_joint)
         kern = font_info.kern_table.get((l_name, r_name), 0)
         right.x = left.x2 + kern
-
-    bbox = BoundingBox.union(*(t.bbox for t in tspans))
-    tbox = BoundingBox.union(*(t.tbox for t in tspans))
-    tpad = tbox.y - bbox.y
-    rpad = bbox.x2 - tbox.x2
-    bpad = bbox.y2 - tbox.y2
-    lpad = tbox.x - bbox.x
-    elem = new_element_union(*(t.elem for t in tspans), **(attrib or {}))
-    return PaddedText(
-        elem, tbox, tpad, rpad, bpad, lpad, tspans[0].line_gap, tspans[0].font_size
-    )
+    return new_padded_union(*tspans, **attrib or {})
 
 
 def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
