@@ -127,7 +127,7 @@ if TYPE_CHECKING:
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
-_ESCAPE_CHARS = {
+DATA_TEXT_ESCAPE_CHARS = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -144,7 +144,7 @@ def _sanitize_svg_data_text(text: str) -> str:
     :param text: The input string to sanitize.
     :return: The sanitized string with XML characters escaped.
     """
-    for char, escape_seq in _ESCAPE_CHARS.items():
+    for char, escape_seq in DATA_TEXT_ESCAPE_CHARS.items():
         text = text.replace(char, escape_seq)
     return text
 
@@ -549,6 +549,7 @@ class FTTextInfo:
         else:
             self._font = FTFontInfo(font)
         self._text = text.rstrip(" ")
+        self._text = text
         self._font_size = font_size or self._font.units_per_em
         self._ascent = ascent
         self._descent = descent

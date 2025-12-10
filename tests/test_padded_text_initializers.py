@@ -14,6 +14,7 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text_ft,
     pad_chars_ft,
     wrap_text_ft,
+    join_tspans,
 )
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 
@@ -65,14 +66,35 @@ class TestPadText:
         assert padded.leading == padded.height + 5
 
 
+def _random_string(length: int) -> str:
+    """Generate a random string of fixed length."""
+    import random
+    import string
+
+    letters = string.ascii_letters + string.digits + " "
+    return "".join(random.choice(letters) for _ in range(length))
+
+
 class TestPadTextFt:
-    def test_has_line_gap(self) -> None:
-        """Test pad_text_ft with a font file."""
+    def test_join_tspan(self) -> None:
+        """Test jad_text_ft with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = pad_text_ft(font, "Lorem ipsum dolor")
+        words = [_random_string(5) for _ in range(50)]
+        words.append("".join(words))
+        plems = pad_text_ft(font, words)
+        joined = join_tspans(font, plems[:-1])
+        assert joined.width == plems[-1].width
+
+    def test_has_line_gap(self) -> None:
+        """Test jad_text_ft with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text_ft(font, "Lorem ipsum dolor  ")
         assert padded.line_gap > 0
 
     def test_has_leading(self) -> None:

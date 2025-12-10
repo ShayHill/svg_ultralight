@@ -25,15 +25,19 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
+import itertools as it
+
 from svg_ultralight.attrib_hints import ElemAttrib
-from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox
-from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.bound_helpers import pad_bbox, new_element_union
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
     get_padded_text_info,
     get_svg_font_attributes,
+    DATA_TEXT_ESCAPE_CHARS,
 )
 from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
@@ -52,6 +56,17 @@ DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 # A default font size for pad_text if font-size is not specified in the reference
 # element.
 DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text if not specified
+
+
+def _desanitize_svg_data_text(text: str) -> str:
+    """Desanitize a string from an SVG data-text attribute.
+
+    :param text: The input string to desanitize.
+    :return: The desanitized string with XML characters unescaped.
+    """
+    for char, escape_seq in DATA_TEXT_ESCAPE_CHARS.items():
+        text = text.replace(escape_seq, char)
+    return text
 
 
 def pad_text(
@@ -192,6 +207,42 @@ def pad_chars_ft(
     if input_one_text_item:
         return elems[0]
     return elems
+
+
+def join_tspans(
+    font: str | os.PathLike[str],
+    tspans: list[PaddedText],
+    attrib: OptionalElemAttribMapping = None,
+) -> PaddedText:
+    """Join multiple PaddedText elements into a single BoundElement.
+
+    :param font: the one font file used for kerning.
+    :param tspans: list of tspan elements to join (each an output from pad_chars_ft).
+
+    This is limited and will not handle arbitrary text elements (only `g` elements
+    with a "data-text" attribute equal to the character(s) in the tspan). Will also
+    not handle scaled PaddedText instances. This is for joining tspans originally
+    after they are created and all using similar fonts.
+    """
+    font_info = FTFontInfo(font)
+    for left, right in it.pairwise(tspans):
+        l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
+        r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
+        l_name = font_info.get_glyph_name(l_joint)
+        r_name = font_info.get_glyph_name(r_joint)
+        kern = font_info.kern_table.get((l_name, r_name), 0)
+        right.x = left.x2 + kern
+
+    bbox = BoundingBox.union(*(t.bbox for t in tspans))
+    tbox = BoundingBox.union(*(t.tbox for t in tspans))
+    tpad = tbox.y - bbox.y
+    rpad = bbox.x2 - tbox.x2
+    bpad = bbox.y2 - tbox.y2
+    lpad = tbox.x - bbox.x
+    elem = new_element_union(*(t.elem for t in tspans), **(attrib or {}))
+    return PaddedText(
+        elem, tbox, tpad, rpad, bpad, lpad, tspans[0].line_gap, tspans[0].font_size
+    )
 
 
 def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
