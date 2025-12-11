@@ -74,8 +74,8 @@ _no_line_gap_msg = par(
     """No line_gap defined. Line gap is an inherent font attribute defined within a
     font file. If this PaddedText instance was created with `pad_text` from reference
     elements, a line_gap was not defined. Reading line_gap from the font file
-    requires creating a PaddedText instance with `pad_text_ft` or `pad_text_mixed`.
-    You can set an arbitrary line_gap after init with `instance.line_gap = value`."""
+    requires creating a PaddedText instance with `pad_text_ft`. You can set an
+    arbitrary line_gap after init with `instance.line_gap = value`."""
 )
 
 _no_font_size_msg = par(

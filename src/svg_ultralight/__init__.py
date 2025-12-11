@@ -18,7 +18,6 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     join_tspans,
     pad_text,
     pad_text_ft,
-    pad_text_mix,
     wrap_text_ft,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -100,7 +99,6 @@ __all__ = [
     "pad_bbox",
     "pad_text",
     "pad_text_ft",
-    "pad_text_mix",
     "parse_bound_element",
     "transform_element",
     "update_element",

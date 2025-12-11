@@ -1,9 +1,9 @@
 """Compare results between Inkscape and fontTools.
 
 Function `check_font_tools_alignment` will let you know if it's relatively safe to
-use `pad_text_mix` or `pad_text_ft`, which improve `pad_text` by assigning `line_gap`
-values to the resulting PaddedText instance and by aligning with the actual descent
-and ascent of a font instead of by attempting to infer these from a referenve string.
+use `pad_text_ft`, which improves `pad_text` by assigning `line_gap` values to the
+resulting PaddedText instance and by aligning with the actual descent and ascent of a
+font instead of by attempting to infer these from a referenve string.
 
 See Enum `FontBboxError` for the possible error codes and their meanings returned by
 `check_font`.
@@ -52,7 +52,7 @@ class FontBboxError(enum.Enum):
     around the TEXT_TEXT. You can only use the `pad_text` PaddedText constructor.
     This font may work with other or ascii-only text.
 
-    ELEM_Y: Use `pad_text` or `pad_text_mix` with cautions.
+    ELEM_Y: Use `pad_text` with cautions.
 
     The y coordinate of the element bounding box is off by more than 1% of
     the height. This error matters, because the y coordinates are used by
@@ -60,21 +60,21 @@ class FontBboxError(enum.Enum):
     y_bounds_reference element and accept some potential error in `line_gap` or
     explicitly pass `ascent` and `descent` values to `pad_text_ft` or `pad_text_mix`.
 
-    SAFE_ELEM_X: Use `pad_text_mix`.
+    SAFE_ELEM_X:
 
     The y bounds are accurate, but the x coordinate of the element
     bounding box is off by more than 1%. This is called "safe" because it is not used
     by pad_bbox_mix, but you cannot use `pad_text_ft` without expecting BoundingBox
     inaccuracies.
 
-    LINE_Y: Use `pad_text` or `pad_text_mix` with caution.
+    LINE_Y: Use `pad_text` with caution.
 
     All of the above match, but the y coordinate of the line bounding box
     (the padded bounding box) is off by more than 1% of the height. This error
     matters as does ELEM_Y, but it does not exist for any font on my system. Fonts
     without ELEM_Y errors should not have LINE_Y errors.
 
-    SAFE_LINE_X: Use `pad_text_mix`.
+    SAFE_LINE_X:
 
     All of the above match, but the x coordinate of the line bounding
     box (the padded bounding box) is off by more than 1%. This is safe or unsafe as
@@ -82,9 +82,9 @@ class FontBboxError(enum.Enum):
 
     NO_ERROR: Use `pad_text_ft`.
 
-    No errors were found. The bounding boxes match within 1% of the height.
-    You can use `pad_text_ft` to get the same result as `pad_text` or `pad_text_mix`
-    without the delay caused by an Inkscape call.
+    No errors were found. The bounding boxes match within 1% of the height. You can
+    use `pad_text_ft` to get the same result as `pad_text` without the delay caused
+    by an Inkscape call.
     """
 
     INIT = enum.auto()

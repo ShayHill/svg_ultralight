@@ -36,10 +36,7 @@ installed on my system.
 - 7 of 389 have y-bounds differences from Pango, but the line_gap values may still be
   useful.
 
-- 4 of 389 have x-bounds differences from Pango. A hybrid function `pad_text_mix`
-  uses the x-bounds from Inkscape/Pango and the y-bounds from this module. The 11
-  total mismatched font bounds appear to all be from fonts with liguatures, which I
-  have not implemented.
+- 4 of 389 have x-bounds differences from Pango.
 
 I have provided the `check_font_tools_alignment` function to check an existing font
 for compatilibilty with Inkscape's text layout. If that returns (NO_ERROR, None),
