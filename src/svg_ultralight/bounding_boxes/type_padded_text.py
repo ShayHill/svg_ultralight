@@ -240,7 +240,7 @@ class PaddedText(BoundElement):
             transformed by tmat.
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        self.unpadded_bbox.transform(tmat, reverse=reverse)
+        self.tbox.transform(tmat, reverse=reverse)
         _ = transform_element(self.elem, tmat, reverse=reverse)
         x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
         self.lpad *= x_norm
@@ -379,7 +379,7 @@ class PaddedText(BoundElement):
 
         :return: The baseline y value of this line of text.
         """
-        return mat_apply(self.bbox.transformation, (0, 0))[1]
+        return mat_apply(self.tbox.transformation, (0, 0))[1]
         return self.y2 + (self.metrics.descent)
 
     @baseline.setter
