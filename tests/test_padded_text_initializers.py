@@ -12,8 +12,8 @@ from conftest import INKSCAPE, has_inkscape
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     join_tspans,
-    new_pad_text,
     pad_text,
+    pad_text_inkscape,
     wrap_text_ft,
 )
 from svg_ultralight.constructors import new_element
@@ -28,8 +28,8 @@ class TestPadText:
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
         test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
-        no_font = pad_text(INKSCAPE, test_elem)
-        with_font = pad_text(INKSCAPE, test_elem, font=font)
+        no_font = pad_text_inkscape(INKSCAPE, test_elem)
+        with_font = pad_text_inkscape(INKSCAPE, test_elem, font=font)
         assert no_font.bbox.height != with_font.bbox.height
 
 
@@ -51,34 +51,34 @@ class TestPadTextFt:
             pytest.skip(msg)
         words = [_random_string(5) for _ in range(50)]
         words.append("".join(words))
-        plems = new_pad_text(font, words)
+        plems = pad_text(font, words)
         joined = join_tspans(font, plems[:-1])
         assert joined.width == plems[-1].width
 
     def test_do_not_share_metrics(self) -> None:
         """Test do not share metrics instances."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
-        plems = new_pad_text(font, ["one", "two", "three"])
+        plems = pad_text(font, ["one", "two", "three"])
         for i, p in enumerate(plems, start=1):
             p.font_size = i
         assert math.isclose(plems[0].height * 2, plems[1].height)
 
     def test_has_leading(self) -> None:
-        """Test new_pad_text with a font file."""
+        """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = new_pad_text(font, "Lorem ipsum dolor")
+        padded = pad_text(font, "Lorem ipsum dolor")
         assert padded.leading == padded.height + padded.metrics.line_gap
 
     def test_multiple_text_args(self) -> None:
-        """Test new_pad_text a list of strings."""
+        """Test pad_text a list of strings."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = new_pad_text(font, ["Lorem", "ipsum", "dolor"])
+        padded = pad_text(font, ["Lorem", "ipsum", "dolor"])
         assert len(padded) == 3
 
 

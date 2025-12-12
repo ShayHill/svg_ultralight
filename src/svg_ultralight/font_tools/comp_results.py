@@ -1,9 +1,9 @@
 """Compare results between Inkscape and fontTools.
 
 Function `check_font_tools_alignment` will let you know if it's relatively safe to
-use `pad_text_ft`, which improves `pad_text` by assigning `line_gap` values to the
-resulting PaddedText instance and by aligning with the actual descent and ascent of a
-font instead of by attempting to infer these from a referenve string.
+use `pad_text_ft`, which improves `pad_text_inkscape` by assigning `line_gap` values
+to the resulting PaddedText instance and by aligning with the actual descent and
+ascent of a font instead of by attempting to infer these from a referenve string.
 
 See Enum `FontBboxError` for the possible error codes and their meanings returned by
 `check_font`.
@@ -27,8 +27,8 @@ from typing import TYPE_CHECKING
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_rect, pad_bbox
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     DEFAULT_Y_BOUNDS_REFERENCE,
-    pad_text,
     pad_text_ft,
+    pad_text_inkscape,
 )
 from svg_ultralight.constructors import new_element
 from svg_ultralight.font_tools.font_info import FTFontInfo, get_svg_font_attributes
@@ -45,14 +45,14 @@ if TYPE_CHECKING:
 class FontBboxError(enum.Enum):
     """Classify the type of error between Inkscape and fontTools bounding boxes.
 
-    INIT: Use `pad_text`.
+    INIT: Use `pad_text_inkscape`.
 
-    FontTools failed to run. This can happen with fonts that, inentionally or
-    not, do not have the required tables or character sets to build a bounding box
-    around the TEXT_TEXT. You can only use the `pad_text` PaddedText constructor.
-    This font may work with other or ascii-only text.
+    FontTools failed to run. This can happen with fonts that, inentionally or not, do
+    not have the required tables or character sets to build a bounding box around the
+    TEXT_TEXT. You can only use the `pad_text_inkscape` PaddedText constructor. This
+    font may work with other or ascii-only text.
 
-    ELEM_Y: Use `pad_text` with cautions.
+    ELEM_Y: Use `pad_text_inkscape` with cautions.
 
     The y coordinate of the element bounding box is off by more than 1% of
     the height. This error matters, because the y coordinates are used by
@@ -67,7 +67,7 @@ class FontBboxError(enum.Enum):
     by pad_bbox_mix, but you cannot use `pad_text_ft` without expecting BoundingBox
     inaccuracies.
 
-    LINE_Y: Use `pad_text` with caution.
+    LINE_Y: Use `pad_text_inkscape` with caution.
 
     All of the above match, but the y coordinate of the line bounding box
     (the padded bounding box) is off by more than 1% of the height. This error
@@ -83,8 +83,8 @@ class FontBboxError(enum.Enum):
     NO_ERROR: Use `pad_text_ft`.
 
     No errors were found. The bounding boxes match within 1% of the height. You can
-    use `pad_text_ft` to get the same result as `pad_text` without the delay caused
-    by an Inkscape call.
+    use `pad_text_ft` to get the same result as `pad_text_inkscape` without the delay
+    caused by an Inkscape call.
     """
 
     INIT = enum.auto()
@@ -154,7 +154,7 @@ def check_font_tools_alignment(
     try:
         svg_attribs = get_svg_font_attributes(font)
         text_elem = new_element("text", **svg_attribs, text=text)
-        rslt_pt = pad_text(inkscape, text_elem)
+        rslt_pt = pad_text_inkscape(inkscape, text_elem)
         rslt_ft = pad_text_ft(
             font,
             text,
@@ -212,7 +212,7 @@ def draw_comparison(
         stroke="green",
         stroke_width=0.1,
     )
-    padded_pt = pad_text(inkscape, text_elem)
+    padded_pt = pad_text_inkscape(inkscape, text_elem)
     padded_ft = pad_text_ft(
         font,
         text,

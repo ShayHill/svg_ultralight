@@ -73,7 +73,7 @@ Disadvantages:
   test to see how well your bounding boxes fit if you're using an unfamiliar font.
 
 - does not support `font-variant`, `font-kerning`, `text-anchor`, and other
-  attributes that `pad_text` would through Inkscape.
+  attributes that `pad_text_inkscape` would through Inkscape.
 
 See the padded_text_initializers module for how to create a PaddedText instance using
 fontTools and this module.
@@ -108,11 +108,7 @@ from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_fro
 from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.constructors.new_element import (
-    new_element,
-    new_sub_element,
-    update_element,
-)
+from svg_ultralight.constructors.new_element import new_element, new_sub_element
 from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
@@ -801,8 +797,9 @@ def get_padded_text_info(
     :param y_bounds_reference: optional character or string to use as a reference
         for the ascent and descent. If provided, the ascent and descent will be the y
         extents of the capline reference. This argument is provided to mimic the
-        behavior of the query module's `pad_text` function. `pad_text` does no
-        inspect font files and relies on Inkscape to measure reference characters.
+        behavior of the query module's `pad_text_inkscape` function.
+        `pad_text_inkscape` does not inspect font files and relies on Inkscape to
+        measure reference characters.
     :return: A FTTextInfo object with the information necessary to create a
         PaddedText instance: bbox, tpad, rpad, bpad, lpad.
     """

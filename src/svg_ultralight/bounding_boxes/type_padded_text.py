@@ -55,8 +55,6 @@ import dataclasses
 import math
 from typing import TYPE_CHECKING
 
-from paragraphs import par
-
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element_union
@@ -74,20 +72,6 @@ if TYPE_CHECKING:
     from svg_ultralight.attrib_hints import ElemAttrib
 
 _Matrix = tuple[float, float, float, float, float, float]
-
-_no_line_gap_msg = par(
-    """No line_gap defined. Line gap is an inherent font attribute defined within a
-    font file. If this PaddedText instance was created with `pad_text` from reference
-    elements, a line_gap was not defined. Reading line_gap from the font file
-    requires creating a PaddedText instance with `pad_text_ft`. You can set an
-    arbitrary line_gap after init with `instance.line_gap = value`."""
-)
-
-_no_font_size_msg = par(
-    """No font_size defined. Font size is an inherent font attribute defined within a
-    font file or an argument passed to `pad_text`. Any instance created with a padded
-    text initializer should have this property."""
-)
 
 
 @dataclasses.dataclass

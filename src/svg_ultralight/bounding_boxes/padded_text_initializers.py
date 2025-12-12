@@ -2,15 +2,15 @@
 
 Three variants:
 
-- `pad_text`: uses Inkscape to measure text bounds
+- `pad_text_inkscape`: uses Inkscape to measure text bounds
 
 - `pad_text_ft`: uses fontTools to measure text bounds (faster, and you get line_gap)
 
-There is a default font size for pad_text if an element is passed. There is also a
-default for the other pad_text_ functions, but it taken from the font file and is
-usually 1024, so it won't be easy to miss. The default for standard pad_text is to
-prevent surprises if Inksape defaults to font-size 12pt while your browser defaults
-to 16px.
+There is a default font size for pad_text_inkscape if an element is passed. There is
+also a default for the other pad_text_ functions, but it taken from the font file and
+is usually 1024, so it won't be easy to miss. The default for standard
+pad_text_inkscape is to prevent surprises if Inksape defaults to font-size 12pt while
+your browser defaults to 16px.
 
 :author: Shay Hill
 :created: 2025-06-09
@@ -50,9 +50,9 @@ if TYPE_CHECKING:
 
 DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 
-# A default font size for pad_text if font-size is not specified in the reference
-# element.
-DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text if not specified
+# A default font size for pad_text_inkscape if font-size is not specified in the
+# reference element.
+DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text_inkscape
 
 
 def _desanitize_svg_data_text(text: str) -> str:
@@ -66,7 +66,7 @@ def _desanitize_svg_data_text(text: str) -> str:
     return text
 
 
-def pad_text(
+def pad_text_inkscape(
     inkscape: str | os.PathLike[str],
     text_elem: EtreeElement,
     y_bounds_reference: str | None = None,
@@ -89,7 +89,8 @@ def pad_text(
         This is going to conflict with any font-family, font-style, or other
         font-related attributes *except* font-size. You likely want to use
         `font_tools.new_padded_text` if you're going to pass a font path, but you can
-        use it here to compare results between `pad_text` and `new_padded_text`.
+        use it here to compare results between `pad_text_inkscape` and
+        `new_padded_text`.
     :return: a PaddedText instance
     """
     if y_bounds_reference is None:
@@ -166,7 +167,7 @@ def join_tspans(
 
 
 @overload
-def new_pad_text(
+def pad_text(
     font: str | os.PathLike[str] | FTFontInfo,
     text: str,
     font_size: float | None = None,
@@ -175,7 +176,7 @@ def new_pad_text(
 
 
 @overload
-def new_pad_text(
+def pad_text(
     font: str | os.PathLike[str] | FTFontInfo,
     text: list[str],
     font_size: float | None = None,
@@ -183,7 +184,7 @@ def new_pad_text(
 ) -> list[PaddedText]: ...
 
 
-def new_pad_text(
+def pad_text(
     font: str | os.PathLike[str] | FTFontInfo,
     text: str | list[str],
     font_size: float | None = None,
@@ -276,8 +277,9 @@ def pad_text_ft(
     :param y_bounds_reference: optional character or string to use as a reference
         for the ascent and descent. If provided, the ascent and descent will be the y
         extents of the capline reference. This argument is provided to mimic the
-        behavior of the query module's `pad_text` function. `pad_text` does no
-        inspect font files and relies on Inkscape to measure reference characters.
+        behavior of the query module's `pad_text_inkscape` function.
+        `pad_text_inkscape` does not inspect font files and relies on Inkscape to
+        measure reference characters.
     :param attrib: optionally pass additional attributes as a mapping instead of as
         anonymous kwargs. This is useful for pleasing the linter when unpacking a
         dictionary into a function call.
