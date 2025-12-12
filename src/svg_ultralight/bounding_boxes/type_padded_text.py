@@ -378,7 +378,7 @@ class PaddedText(BoundElement):
 
         :return: The baseline y value of this line of text.
         """
-        return self.y2 - self.metrics.descent
+        return self.y2 + self.metrics.descent
 
     @baseline.setter
     def baseline(self, value: float) -> None:
