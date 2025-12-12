@@ -398,6 +398,64 @@ class FTFontInfo:
             msg = f"Font '{self.path}' does not have a 'hhea' table: {e}"
             raise ValueError(msg) from e
 
+    @property
+    def ascent(self) -> int:
+        """Get the ascent for the font.
+
+        :return: The ascent for the font.
+        """
+        with suppress(KeyError, AttributeError):
+            return self.font["os2"].sTypoAscender
+        with suppress(KeyError, AttributeError):
+            return self.font["hhea"].ascent
+        msg = f"Failed to find ascent for font '{self.path}'."
+        raise AttributeError(msg)
+
+    @property
+    def descent(self) -> int:
+        """Get the descent for the font.
+
+        :return: The descent for the font.
+        """
+        with suppress(KeyError, AttributeError):
+            return self.font["os2"].sTypoDescender
+        with suppress(KeyError, AttributeError):
+            return self.font["hhea"].descent
+        msg = f"Failed to find descent for font '{self.path}'."
+        raise AttributeError(msg)
+
+    @property
+    def line_gap(self) -> int:
+        """Get the cap height for the font.
+
+        :return: The (often 0) line gap for the font.
+        """
+        with suppress(KeyError, AttributeError):
+            return self.font["os2"].sTypoLineGap
+        with suppress(KeyError, AttributeError):
+            return self.font["hhea"].lineGap
+        return 0
+
+    @property
+    def cap_height(self) -> int:
+        """Get the cap height for the font.
+
+        :return: The cap height for the font.
+        """
+        with suppress(KeyError, AttributeError):
+            return self.font["os2"].sCapHeight
+        return self.get_char_bounds("H")[3]
+
+    @property
+    def x_height(self) -> int:
+        """Get the x-height for the font.
+
+        :return: The x-height for the font.
+        """
+        with suppress(KeyError, AttributeError):
+            return self.font["os2"].sxHeight  # rare
+        return self.get_char_bounds("x")[3]
+
     def get_glyph_name(self, char: str) -> str:
         """Get the glyph name for a character in the font.
 

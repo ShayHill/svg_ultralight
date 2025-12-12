@@ -51,6 +51,7 @@ PaddedText instances with sensible defaults.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from typing import TYPE_CHECKING
 
@@ -85,6 +86,18 @@ _no_font_size_msg = par(
 )
 
 
+@dataclasses.dataclass
+class FontMetrics:
+    """Font metrics."""
+
+    units_per_em: int
+    ascent: int
+    descent: int
+    cap_height: int
+    x_height: int
+    line_gap: int
+
+
 class PaddedText(BoundElement):
     """A line of text with a bounding box and padding."""
 
@@ -98,6 +111,7 @@ class PaddedText(BoundElement):
         lpad: float,
         line_gap: float | None = None,
         font_size: float | None = None,
+        metrics: FontMetrics | None = None,
     ) -> None:
         """Initialize a PaddedText instance.
 
@@ -118,6 +132,18 @@ class PaddedText(BoundElement):
         self.lpad = lpad
         self._line_gap = line_gap
         self._font_size = font_size
+        self._metrics = metrics
+
+    @property
+    def metrics(self) -> FontMetrics:
+        """The font metrics for this PaddedText.
+
+        :return: The font metrics for this PaddedText.
+        """
+        if self._metrics is None:
+            msg = "No font metrics defined for this PaddedText."
+            raise AttributeError(msg)
+        return self._metrics
 
     @property
     def tbox(self) -> BoundingBox:

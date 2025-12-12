@@ -23,7 +23,11 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
 from svg_ultralight.attrib_hints import ElemAttrib
-from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
+from svg_ultralight.bounding_boxes.type_padded_text import (
+    FontMetrics,
+    PaddedText,
+    new_padded_union,
+)
 from svg_ultralight.constructors import update_element
 from svg_ultralight.font_tools.font_info import (
     DATA_TEXT_ESCAPE_CHARS,
@@ -163,7 +167,7 @@ def join_tspans(
 
 @overload
 def pad_text_ft(
-    font: str | os.PathLike[str],
+    font: str | os.PathLike[str] | FTFontInfo,
     text: str,
     font_size: float | None = None,
     ascent: float | None = None,
@@ -177,7 +181,7 @@ def pad_text_ft(
 
 @overload
 def pad_text_ft(
-    font: str | os.PathLike[str],
+    font: str | os.PathLike[str] | FTFontInfo,
     text: list[str],
     font_size: float | None = None,
     ascent: float | None = None,
@@ -190,7 +194,7 @@ def pad_text_ft(
 
 
 def pad_text_ft(
-    font: str | os.PathLike[str],
+    font: str | os.PathLike[str] | FTFontInfo,
     text: str | list[str],
     font_size: float | None = None,
     ascent: float | None = None,
@@ -232,23 +236,33 @@ def pad_text_ft(
         text = [text]
 
     font_info = FTFontInfo(font)
+    metrics = FontMetrics(
+        units_per_em=font_info.units_per_em,
+        ascent=font_info.ascent,
+        descent=font_info.descent,
+        line_gap=font_info.line_gap,
+        cap_height=font_info.cap_height,
+        x_height=font_info.x_height,
+    )
 
-    try:
-        elems: list[PaddedText] = []
-        for text_item in text:
-            ti = get_padded_text_info(
-                font_info,
-                text_item,
-                font_size,
-                ascent,
-                descent,
-                y_bounds_reference=y_bounds_reference,
-            )
-            elem = ti.new_element(**attributes_)
-            plem = PaddedText(elem, ti.bbox, *ti.padding, ti.line_gap, ti.font_size)
-            elems.append(plem)
-    finally:
-        font_info.font.close()
+    elems: list[PaddedText] = []
+    for text_item in text:
+        ti = get_padded_text_info(
+            font_info,
+            text_item,
+            font_size,
+            ascent,
+            descent,
+            y_bounds_reference=y_bounds_reference,
+        )
+        elem = ti.new_element(**attributes_)
+        plem = PaddedText(
+            elem, ti.bbox, *ti.padding, ti.line_gap, ti.font_size, metrics
+        )
+        elems.append(plem)
+
+    font_info.maybe_close()
+
     if input_one_text_item:
         return elems[0]
     return elems
