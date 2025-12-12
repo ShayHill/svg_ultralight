@@ -204,9 +204,9 @@ def pad_text(
         font.units_per_em,
         font.ascent,
         font.descent,
-        font.line_gap,
         font.cap_height,
         font.x_height,
+        font.line_gap,
     )
 
     plems: list[PaddedText] = []
@@ -302,9 +302,9 @@ def pad_text_ft(
         font_info.units_per_em,
         font_info.ascent,
         font_info.descent,
-        font_info.line_gap,
         font_info.cap_height,
         font_info.x_height,
+        font_info.line_gap,
     )
 
     elems: list[PaddedText] = []
