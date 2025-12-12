@@ -59,7 +59,6 @@ from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.transformations import (
-    mat_apply,
     new_transformation_matrix,
     transform_element,
 )
@@ -145,7 +144,7 @@ class PaddedText(BoundElement):
         :param rpad: Right padding.
         :param bpad: Bottom padding.
         :param lpad: Left padding.
-        :param line_gap: The line gap between this line of text and the next. This is
+        :param line_gap: The line gap between this line of text and the next. This ises
             an inherent font attribute sometimes defined within a font file.
         """
         self.elem = elem
@@ -195,9 +194,9 @@ class PaddedText(BoundElement):
 
     @property
     def bbox(self) -> BoundingBox:
-        """Return a BoundingBox around the margins and cap/baseline.
+        """Return a BoundingBox around the margins and ascent/descent.
 
-        :return: A BoundingBox around the margins and cap/baseline.
+        :return: A BoundingBox around the margins and ascentf/descent.
 
         This is useful for creating a merged bounding box with
         `svg_ultralight.BoundingBox.merged`. The merged bbox and merged_bbox
@@ -379,8 +378,7 @@ class PaddedText(BoundElement):
 
         :return: The baseline y value of this line of text.
         """
-        return mat_apply(self.tbox.transformation, (0, 0))[1]
-        return self.y2 + (self.metrics.descent)
+        return self.y2 - self.metrics.descent
 
     @baseline.setter
     def baseline(self, value: float) -> None:
@@ -686,4 +684,19 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
     elem = new_element_union(*(t.elem for t in plems), **attributes)
-    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, plems[0]._metrics)  # pyright: ignore[reportPrivateUsage]
+    min_font_size = min(t.metrics.font_size for t in plems)
+    max_y_extent = max(t.metrics.ascent for t in plems)
+    min_y_extent = min(t.metrics.descent for t in plems)
+    max_caps_extent = max(t.metrics.cap_height for t in plems)
+    max_x_extent = max(t.metrics.x_height for t in plems)
+    min_line_gap = min(t.metrics.line_gap for t in plems)
+    baseline = min(t.baseline for t in plems)
+    metrics = FontMetrics(
+        min_font_size,
+        max_y_extent - baseline,
+        min_y_extent - baseline,
+        max_caps_extent - baseline,
+        max_x_extent - baseline,
+        min_line_gap,
+    )
+    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, metrics)
