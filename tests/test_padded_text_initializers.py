@@ -4,18 +4,18 @@
 :created: 2025-06-09
 """
 
+import math
 from pathlib import Path
 
 import pytest
 from conftest import INKSCAPE, has_inkscape
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
-    pad_text,
-    new_pad_text,
-    wrap_text_ft,
     join_tspans,
+    new_pad_text,
+    pad_text,
+    wrap_text_ft,
 )
-
 from svg_ultralight.constructors import new_element
 
 
@@ -32,6 +32,7 @@ class TestPadText:
         with_font = pad_text(INKSCAPE, test_elem, font=font)
         assert no_font.bbox.height != with_font.bbox.height
 
+
 def _random_string(length: int) -> str:
     """Generate a random string of fixed length."""
     import random
@@ -43,7 +44,7 @@ def _random_string(length: int) -> str:
 
 class TestPadTextFt:
     def test_join_tspan(self) -> None:
-        """Test jad_text_ft with a font file."""
+        """Test pad_text_ft with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
@@ -54,14 +55,13 @@ class TestPadTextFt:
         joined = join_tspans(font, plems[:-1])
         assert joined.width == plems[-1].width
 
-    def test_has_line_gap(self) -> None:
-        """Test jad_text_ft with a font file."""
+    def test_do_not_share_metrics(self) -> None:
+        """Test do not share metrics instances."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
-        if not font.exists():
-            msg = "Test font file does not exist on system."
-            pytest.skip(msg)
-        padded = new_pad_text(font, "Lorem ipsum dolor  ")
-        assert padded.metrics.line_gap > 0
+        plems = new_pad_text(font, ["one", "two", "three"])
+        for i, p in enumerate(plems, start=1):
+            p.font_size = i
+        assert math.isclose(plems[0].height * 2, plems[1].height)
 
     def test_has_leading(self) -> None:
         """Test new_pad_text with a font file."""
@@ -101,5 +101,3 @@ class TestWrapTextFt:
         ]
         result = wrap_text_ft(font, text, width=15000)
         assert result == expect
-
-

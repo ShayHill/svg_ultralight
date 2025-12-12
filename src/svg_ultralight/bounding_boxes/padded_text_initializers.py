@@ -18,8 +18,8 @@ to 16px.
 
 from __future__ import annotations
 
+import copy
 import itertools as it
-from copy import deepcopy
 from typing import TYPE_CHECKING, overload
 
 from svg_ultralight.attrib_hints import ElemAttrib
@@ -98,8 +98,8 @@ def pad_text(
         _ = update_element(text_elem, **get_svg_font_attributes(font))
     if "font-size" not in text_elem.attrib:
         text_elem.attrib["font-size"] = format_number(DEFAULT_FONT_SIZE_FOR_PAD_TEXT)
-    rmargin_ref = deepcopy(text_elem)
-    capline_ref = deepcopy(text_elem)
+    rmargin_ref = copy.deepcopy(text_elem)
+    capline_ref = copy.deepcopy(text_elem)
     _ = rmargin_ref.attrib.pop("id", None)
     _ = capline_ref.attrib.pop("id", None)
     rmargin_ref.attrib["text-anchor"] = "end"
@@ -212,7 +212,9 @@ def new_pad_text(
     for t in [text] if isinstance(text, str) else text:
         text_info = FTTextInfo(font, t)
         elem = text_info.new_element(**attributes_)
-        plem = PaddedText(elem, text_info.bbox, *text_info.padding, metrics=metrics)
+        plem = PaddedText(
+            elem, text_info.bbox, *text_info.padding, metrics=copy.copy(metrics)
+        )
         if font_size:
             plem.font_size = font_size
         plems.append(plem)
@@ -314,7 +316,7 @@ def pad_text_ft(
             y_bounds_reference=y_bounds_reference,
         )
         elem = ti.new_element(**attributes_)
-        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=metrics)
+        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=copy.copy(metrics))
         if font_size:
             plem.font_size = font_size
         elems.append(plem)
