@@ -11,7 +11,7 @@ from conftest import INKSCAPE, has_inkscape
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text,
-    pad_text_ft,
+    new_pad_text,
     wrap_text_ft,
     join_tspans,
 )
@@ -50,7 +50,7 @@ class TestPadTextFt:
             pytest.skip(msg)
         words = [_random_string(5) for _ in range(50)]
         words.append("".join(words))
-        plems = pad_text_ft(font, words)
+        plems = new_pad_text(font, words)
         joined = join_tspans(font, plems[:-1])
         assert joined.width == plems[-1].width
 
@@ -60,25 +60,25 @@ class TestPadTextFt:
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = pad_text_ft(font, "Lorem ipsum dolor  ")
+        padded = new_pad_text(font, "Lorem ipsum dolor  ")
         assert padded.metrics.line_gap > 0
 
     def test_has_leading(self) -> None:
-        """Test pad_text_ft with a font file."""
+        """Test new_pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = pad_text_ft(font, "Lorem ipsum dolor")
+        padded = new_pad_text(font, "Lorem ipsum dolor")
         assert padded.leading == padded.height + padded.metrics.line_gap
 
     def test_multiple_text_args(self) -> None:
-        """Test pad_text_ft a list of strings."""
+        """Test new_pad_text a list of strings."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        padded = pad_text_ft(font, ["Lorem", "ipsum", "dolor"])
+        padded = new_pad_text(font, ["Lorem", "ipsum", "dolor"])
         assert len(padded) == 3
 
 

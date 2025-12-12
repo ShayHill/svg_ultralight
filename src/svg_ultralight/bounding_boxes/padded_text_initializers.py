@@ -32,6 +32,7 @@ from svg_ultralight.constructors import update_element
 from svg_ultralight.font_tools.font_info import (
     DATA_TEXT_ESCAPE_CHARS,
     FTFontInfo,
+    FTTextInfo,
     get_padded_text_info,
     get_svg_font_attributes,
 )
@@ -165,6 +166,64 @@ def join_tspans(
 
 
 @overload
+def new_pad_text(
+    font: str | os.PathLike[str] | FTFontInfo,
+    text: str,
+    font_size: float | None = None,
+    **attributes: ElemAttrib,
+) -> PaddedText: ...
+
+
+@overload
+def new_pad_text(
+    font: str | os.PathLike[str] | FTFontInfo,
+    text: list[str],
+    font_size: float | None = None,
+    **attributes: ElemAttrib,
+) -> list[PaddedText]: ...
+
+
+def new_pad_text(
+    font: str | os.PathLike[str] | FTFontInfo,
+    text: str | list[str],
+    font_size: float | None = None,
+    **attributes: ElemAttrib,
+) -> PaddedText | list[PaddedText]:
+    """Create a new PaddedText instance using fontTools.
+
+    :param font: path to a font file.
+    :param text: the text of the text element or a list of text strings.
+    :param font_size: the font size to use. Skip for default font size. This can
+        always be set later, but the argument is useful if you're working with fonts
+        that have different native font sizes (usually 1000, 1024, or 2048).
+    """
+    attributes_ = _remove_svg_font_attributes(attributes)
+    font = font if isinstance(font, FTFontInfo) else FTFontInfo(font)
+    metrics = FontMetrics(
+        font.units_per_em,
+        font.ascent,
+        font.descent,
+        font.line_gap,
+        font.cap_height,
+        font.x_height,
+    )
+
+    plems: list[PaddedText] = []
+    for t in [text] if isinstance(text, str) else text:
+        text_info = FTTextInfo(font, t)
+        elem = text_info.new_element(**attributes_)
+        plem = PaddedText(elem, text_info.bbox, *text_info.padding, metrics=metrics)
+        if font_size:
+            plem.font_size = font_size
+        plems.append(plem)
+    font.maybe_close()
+
+    if isinstance(text, str):
+        return plems[0]
+    return plems
+
+
+@overload
 def pad_text_ft(
     font: str | os.PathLike[str] | FTFontInfo,
     text: str,
@@ -249,13 +308,15 @@ def pad_text_ft(
         ti = get_padded_text_info(
             font_info,
             text_item,
-            font_size,
+            None,  # font_size
             ascent,
             descent,
             y_bounds_reference=y_bounds_reference,
         )
         elem = ti.new_element(**attributes_)
         plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=metrics)
+        if font_size:
+            plem.font_size = font_size
         elems.append(plem)
 
     font_info.maybe_close()
