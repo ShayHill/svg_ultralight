@@ -684,11 +684,11 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
     elem = new_element_union(*(t.elem for t in plems), **attributes)
-    min_font_size = min(t.metrics.font_size for t in plems)
-    max_y_extent = max(t.metrics.ascent for t in plems)
-    min_y_extent = min(t.metrics.descent for t in plems)
-    max_caps_extent = max(t.metrics.cap_height for t in plems)
-    max_x_extent = max(t.metrics.x_height for t in plems)
+    min_font_size = min(t.font_size for t in plems)
+    max_y_extent = max(t.y for t in plems)
+    min_y_extent = min(t.y2 for t in plems)
+    max_caps_extent = max(t.capline for t in plems)
+    max_x_extent = max(t.xline for t in plems)
     min_line_gap = min(t.metrics.line_gap for t in plems)
     baseline = min(t.baseline for t in plems)
     metrics = FontMetrics(
