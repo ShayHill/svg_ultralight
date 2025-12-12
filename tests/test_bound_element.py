@@ -100,25 +100,6 @@ class TestPaddedText:
         blem.transform(scale=5)
         assert blem.scale == (5.0, 5.0)
 
-    def test_scale_scales_line_gap(self) -> None:
-        elem = new_element("rect", width=100, height=100)
-        bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2)
-        blem.transform(scale=3)
-        assert blem.line_gap == 6.0
-
-    def test_font_size_setter_scales_padding(self) -> None:
-        elem = new_element("rect", width=100, height=100)
-        bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4, line_gap=2, font_size=2)
-        blem.font_size = 20
-        assert blem.font_size == 20
-        assert blem.tpad == 10
-        assert blem.rpad == 20
-        assert blem.bpad == 30
-        assert blem.lpad == 40
-        assert blem.line_gap == 20
-
     def test_vpad_scales(self) -> None:
         """Test that vertical padding scales."""
         elem = new_element("rect", width=100, height=100)

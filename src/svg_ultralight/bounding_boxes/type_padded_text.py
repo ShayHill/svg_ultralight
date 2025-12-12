@@ -60,7 +60,11 @@ from paragraphs import par
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element_union
-from svg_ultralight.transformations import new_transformation_matrix, transform_element
+from svg_ultralight.transformations import (
+    mat_apply,
+    new_transformation_matrix,
+    transform_element,
+)
 
 if TYPE_CHECKING:
     from lxml.etree import (
@@ -90,12 +94,50 @@ _no_font_size_msg = par(
 class FontMetrics:
     """Font metrics."""
 
-    units_per_em: int
-    ascent: int
-    descent: int
-    cap_height: int
-    x_height: int
-    line_gap: int
+    _font_size: float
+    _ascent: float
+    _descent: float
+    _cap_height: float
+    _x_height: float
+    _line_gap: float
+    _scalar: float = dataclasses.field(default=1.0, init=False)
+
+    def scale(self, scalar: float) -> None:
+        """Scale the font metrics by a scalar.
+
+        :param scalar: The scaling factor.
+        """
+        self._scalar *= scalar
+
+    @property
+    def font_size(self) -> float:
+        """The font size."""
+        return self._font_size * self._scalar
+
+    @property
+    def ascent(self) -> float:
+        """Return the ascent."""
+        return self._ascent * self._scalar
+
+    @property
+    def descent(self) -> float:
+        """Return the descent."""
+        return self._descent * self._scalar
+
+    @property
+    def cap_height(self) -> float:
+        """Return the cap height."""
+        return self._cap_height * self._scalar
+
+    @property
+    def x_height(self) -> float:
+        """Return the x height."""
+        return self._x_height * self._scalar
+
+    @property
+    def line_gap(self) -> float:
+        """Return the line gap."""
+        return self._line_gap * self._scalar
 
 
 class PaddedText(BoundElement):
@@ -109,8 +151,6 @@ class PaddedText(BoundElement):
         rpad: float,
         bpad: float,
         lpad: float,
-        line_gap: float | None = None,
-        font_size: float | None = None,
         metrics: FontMetrics | None = None,
     ) -> None:
         """Initialize a PaddedText instance.
@@ -130,8 +170,6 @@ class PaddedText(BoundElement):
         self.rpad = rpad
         self.base_bpad = bpad
         self.lpad = lpad
-        self._line_gap = line_gap
-        self._font_size = font_size
         self._metrics = metrics
 
     @property
@@ -144,6 +182,14 @@ class PaddedText(BoundElement):
             msg = "No font metrics defined for this PaddedText."
             raise AttributeError(msg)
         return self._metrics
+
+    @metrics.setter
+    def metrics(self, value: FontMetrics) -> None:
+        """Set the font metrics for this PaddedText.
+
+        :param value: The new font metrics.
+        """
+        self._metrics = value
 
     @property
     def tbox(self) -> BoundingBox:
@@ -215,12 +261,9 @@ class PaddedText(BoundElement):
         x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
         self.lpad *= x_norm
         self.rpad *= x_norm
-        if self._line_gap or self._font_size:
+        if self._metrics:
             y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
-            if self._line_gap:
-                self._line_gap *= y_norm
-            if self._font_size:
-                self._font_size *= y_norm
+            self._metrics.scale(y_norm)
 
     def transform_preserve_sidebearings(
         self,
@@ -251,22 +294,152 @@ class PaddedText(BoundElement):
         self.y2 = y2
 
     @property
-    def line_gap(self) -> float:
-        """The line gap between this line of text and the next.
+    def tx(self) -> float:
+        """The x value of the tight element bounding box.
 
-        :return: The line gap between this line of text and the next.
+        :return: The x value of the tight element bounding box.
         """
-        if self._line_gap is None:
-            raise AttributeError(_no_line_gap_msg)
-        return self._line_gap
+        return self.tbox.x
 
-    @line_gap.setter
-    def line_gap(self, value: float) -> None:
-        """Set the line gap between this line of text and the next.
+    @tx.setter
+    def tx(self, value: float) -> None:
+        """Set the x value of the tight element bounding box.
 
-        :param value: The new line gap.
+        :param value: The new x value of the tight element bounding box.
         """
-        self._line_gap = value
+        self.transform(dx=value - self.tbox.x)
+
+    @property
+    def tx2(self) -> float:
+        """The x2 value of the tight element bounding box.
+
+        :return: The x2 value of the tight element bounding box.
+        """
+        return self.tbox.x2
+
+    @tx2.setter
+    def tx2(self, value: float) -> None:
+        """Set the x2 value of the tight element bounding box.
+
+        :param value: The new x2 value of the tight element bounding box.
+        """
+        self.transform(dx=value - self.tbox.x2)
+
+    @property
+    def ty(self) -> float:
+        """The y value of the tight element bounding box.
+
+        :return: The y value of the tight element bounding box.
+        """
+        return self.tbox.y
+
+    @ty.setter
+    def ty(self, value: float) -> None:
+        """Set the y value of the tight element bounding box.
+
+        :param value: The new y value of the tight element bounding box.
+        """
+        self.transform(dy=value - self.tbox.y)
+
+    @property
+    def ty2(self) -> float:
+        """The y2 value of the tight element bounding box.
+
+        :return: The y2 value of the tight element bounding box.
+        """
+        return self.tbox.y2
+
+    @ty2.setter
+    def ty2(self, value: float) -> None:
+        """Set the y2 value of the tight element bounding box.
+
+        :param value: The new y2 value of the tight element bounding box.
+        """
+        self.transform(dy=value - self.tbox.y2)
+
+    @property
+    def twidth(self) -> float:
+        """The width of the tight element bounding box.
+
+        :return: The width of the tight element bounding box.
+        """
+        return self.tbox.width
+
+    @twidth.setter
+    def twidth(self, value: float) -> None:
+        """Set the width of the tight element bounding box.
+
+        :param value: The new width of the tight element bounding box.
+        """
+        self.transform(scale=value / self.tbox.width)
+
+    @property
+    def theight(self) -> float:
+        """The height of the tight element bounding box.
+
+        :return: The height of the tight element bounding box.
+        """
+        return self.tbox.height
+
+    @theight.setter
+    def theight(self, value: float) -> None:
+        """Set the height of the tight element bounding box.
+
+        :param value: The new height of the tight element bounding box.
+        """
+        self.transform(scale=value / self.tbox.height)
+
+    @property
+    def baseline(self) -> float:
+        """The y value of the baseline for the font.
+
+        :return: The baseline y value of this line of text.
+        """
+        return mat_apply(self.bbox.transformation, (0, 0))[1]
+        return self.y2 + (self.metrics.descent)
+
+    @baseline.setter
+    def baseline(self, value: float) -> None:
+        """Set the y value of the baseline for the font.
+
+        :param value: The new baseline y value.
+        """
+        dy = value - self.baseline
+        self.transform(dy=dy)
+
+    @property
+    def capline(self) -> float:
+        """The y value of the top of flat-topped capital letters for the font.
+
+        :return: The capline y value of this line of text.
+        """
+        return self.baseline - self.metrics.cap_height
+
+    @capline.setter
+    def capline(self, value: float) -> None:
+        """Set the capline y value for the font.
+
+        :param value: The new capline y value.
+        """
+        dy = value - self.capline
+        self.transform(dy=dy)
+
+    @property
+    def xline(self) -> float:
+        """The y value of the x-height for the font.
+
+        :return: The xline y value of this line of text.
+        """
+        return self.baseline - self.metrics.x_height
+
+    @xline.setter
+    def xline(self, value: float) -> None:
+        """Set the xline y value for the font.
+
+        :param value: The new xline y value.
+        """
+        dy = value - self.xline
+        self.transform(dy=dy)
 
     @property
     def font_size(self) -> float:
@@ -274,9 +447,7 @@ class PaddedText(BoundElement):
 
         :return: The font size of this line of text.
         """
-        if self._font_size is None:
-            raise AttributeError(_no_font_size_msg)
-        return self._font_size
+        return self.metrics.font_size
 
     @font_size.setter
     def font_size(self, value: float) -> None:
@@ -292,7 +463,7 @@ class PaddedText(BoundElement):
 
         :return: The line gap plus the height of this line of text.
         """
-        return self.height + self.line_gap
+        return self.height + self.metrics.line_gap
 
     @property
     def tpad(self) -> float:
@@ -360,19 +531,6 @@ class PaddedText(BoundElement):
             value[1] / self.tbox.scale[1],
         )
         self.transform(scale=new_scale)
-
-    @property
-    def uniform_scale(self) -> float:
-        """Get uniform scale of the bounding box.
-
-        :return: uniform scale of the bounding box
-        :raises ValueError: if the scale is non-uniform.
-        """
-        scale = self.scale
-        if math.isclose(scale[0], scale[1]):
-            return scale[0]
-        msg = f"Non-uniform scale detected: sx={scale[0]}, sy={scale[1]}"
-        raise ValueError(msg)
 
     @property
     def width(self) -> float:
@@ -544,8 +702,4 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
     elem = new_element_union(*(t.elem for t in plems), **attributes)
-    line_gaps = {t._line_gap for t in plems}  # pyright: ignore[reportPrivateUsage]
-    font_sizes = {t._font_size for t in plems}  # pyright: ignore[reportPrivateUsage]
-    line_gap = next(iter(line_gaps)) if len(line_gaps) == 1 else None
-    font_size = next(iter(font_sizes)) if len(font_sizes) == 1 else None
-    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, line_gap, font_size)
+    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, plems[0]._metrics)  # pyright: ignore[reportPrivateUsage]

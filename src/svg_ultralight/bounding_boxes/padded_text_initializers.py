@@ -118,7 +118,6 @@ def pad_text(
         rpad,
         bpad,
         lpad,
-        font_size=float(text_elem.attrib["font-size"]),
     )
 
 
@@ -237,12 +236,12 @@ def pad_text_ft(
 
     font_info = FTFontInfo(font)
     metrics = FontMetrics(
-        units_per_em=font_info.units_per_em,
-        ascent=font_info.ascent,
-        descent=font_info.descent,
-        line_gap=font_info.line_gap,
-        cap_height=font_info.cap_height,
-        x_height=font_info.x_height,
+        font_info.units_per_em,
+        font_info.ascent,
+        font_info.descent,
+        font_info.line_gap,
+        font_info.cap_height,
+        font_info.x_height,
     )
 
     elems: list[PaddedText] = []
@@ -256,9 +255,7 @@ def pad_text_ft(
             y_bounds_reference=y_bounds_reference,
         )
         elem = ti.new_element(**attributes_)
-        plem = PaddedText(
-            elem, ti.bbox, *ti.padding, ti.line_gap, ti.font_size, metrics
-        )
+        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=metrics)
         elems.append(plem)
 
     font_info.maybe_close()

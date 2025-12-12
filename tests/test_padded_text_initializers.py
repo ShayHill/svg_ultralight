@@ -32,38 +32,6 @@ class TestPadText:
         with_font = pad_text(INKSCAPE, test_elem, font=font)
         assert no_font.bbox.height != with_font.bbox.height
 
-    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
-    def test_pad_text_line_gap(self) -> None:
-        """A PaddedText instance created by pad_text has no line gap by default."""
-        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
-        padded = pad_text(INKSCAPE, test_elem)
-        with pytest.raises(AttributeError):
-            _ = padded.line_gap
-
-    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
-    def test_pad_text_set_line_gap(self) -> None:
-        """A PaddedText instance created by pad_text has a line_gap if set."""
-        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
-        padded = pad_text(INKSCAPE, test_elem)
-        padded.line_gap = 5
-        assert padded.line_gap == 5
-
-    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
-    def test_pad_text_no_leading(self) -> None:
-        """A PaddedText instance created by pad_text has no leading by default."""
-        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
-        padded = pad_text(INKSCAPE, test_elem)
-        with pytest.raises(AttributeError):
-            _ = padded.leading
-
-    @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
-    def test_pad_text_set_leading_by_setting_line_gap(self) -> None:
-        test_elem = new_element("text", text="Lorem ipsum dolor", font_size=12)
-        padded = pad_text(INKSCAPE, test_elem)
-        padded.line_gap = 5
-        assert padded.leading == padded.height + 5
-
-
 def _random_string(length: int) -> str:
     """Generate a random string of fixed length."""
     import random
@@ -93,7 +61,7 @@ class TestPadTextFt:
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
         padded = pad_text_ft(font, "Lorem ipsum dolor  ")
-        assert padded.line_gap > 0
+        assert padded.metrics.line_gap > 0
 
     def test_has_leading(self) -> None:
         """Test pad_text_ft with a font file."""
@@ -102,7 +70,7 @@ class TestPadTextFt:
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
         padded = pad_text_ft(font, "Lorem ipsum dolor")
-        assert padded.leading == padded.height + padded.line_gap
+        assert padded.leading == padded.height + padded.metrics.line_gap
 
     def test_multiple_text_args(self) -> None:
         """Test pad_text_ft a list of strings."""
