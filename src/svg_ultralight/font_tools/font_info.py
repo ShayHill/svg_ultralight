@@ -95,6 +95,7 @@ from __future__ import annotations
 import functools as ft
 import itertools as it
 import logging
+import weakref
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -104,6 +105,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 from paragraphs import par
 from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_from_cpts
+from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import (
@@ -286,13 +288,45 @@ class PathPen(BasePen):
 class FTFontInfo:
     """Hide all the type kludging necessary to use fontTools."""
 
-    def __init__(self, font_path: str | os.PathLike[str]) -> None:
+    def __new__(cls, font: str | os.PathLike[str] | Self) -> Self:
+        """Create a new FTFontInfo instance as a context manager."""
+        if isinstance(font, FTFontInfo):
+            return font
+        instance = super().__new__(cls)
+        _ = weakref.finalize(instance, instance.__close__)
+        return instance
+
+    def __init__(self, font: str | os.PathLike[str] | Self) -> None:
         """Initialize the SUFont with a path to a TTF font file."""
-        self._path = Path(font_path)
+        if self is font:
+            return
+        if isinstance(font, FTFontInfo):
+            msg = "Unexpected Error, should have been caught in __new__."
+            raise TypeError(msg)
+        self._ttfont_local_to_instance = True
+        self._path = Path(font)
         if not self.path.exists():
             msg = f"Font file '{self.path}' does not exist."
             raise FileNotFoundError(msg)
         self._font = TTFont(self.path)
+
+    def __close__(self) -> None:
+        """Close the font file."""
+        self._font.close()
+
+    def maybe_close(self) -> None:
+        """Close the TTFont instance if it is was opened by this instance."""
+        if self._ttfont_local_to_instance:
+            self.__close__()
+
+    def __enter__(self) -> Self:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
+        """Exit the context manager."""
+        del exc_type, exc_value, traceback
+        self.maybe_close()
 
     @property
     def path(self) -> Path:
@@ -541,15 +575,24 @@ class FTTextInfo:
         descent: float | None = None,
     ) -> None:
         """Initialize the SUText with text, a SUFont instance, and font size."""
-        if isinstance(font, FTFontInfo):
-            self._font = font
-        else:
-            self._font = FTFontInfo(font)
-        self._text = text.rstrip(" ")
+        self._font = FTFontInfo(font)
         self._text = text
         self._font_size = font_size or self._font.units_per_em
         self._ascent = ascent
         self._descent = descent
+
+    def __close__(self) -> None:
+        """Close the font file."""
+        self._font.maybe_close()
+
+    def __enter__(self) -> Self:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
+        """Exit the context manager."""
+        del exc_type, exc_value, traceback
+        self.__close__()
 
     @property
     def font(self) -> FTFontInfo:
