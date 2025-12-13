@@ -122,6 +122,11 @@ class FontMetrics:
         """Return the line gap."""
         return self._line_gap * self._scalar
 
+    @property
+    def headroom(self) -> float:
+        """Return the headroom (ascent - cap_height)."""
+        return self.ascent - self.cap_height
+
 
 class PaddedText(BoundElement):
     """A line of text with a bounding box and padding."""
@@ -275,6 +280,23 @@ class PaddedText(BoundElement):
         self.rpad = rpad
         self.x = x
         self.y2 = y2
+
+    @property
+    def caps_cy(self) -> float:
+        """The vertical center of the capital letters.
+
+        :return: The cap height of this line of text.
+        """
+        return (self.baseline + self.capline) / 2
+
+    @caps_cy.setter
+    def caps_cy(self, value: float) -> None:
+        """Set the vertical center of the capital letters.
+
+        :param value: The new cap height y value.
+        """
+        dy = value - self.caps_cy
+        self.transform(dy=dy)
 
     @property
     def tx(self) -> float:
