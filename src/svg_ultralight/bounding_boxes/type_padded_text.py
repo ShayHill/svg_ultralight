@@ -282,6 +282,34 @@ class PaddedText(BoundElement):
         self.y2 = y2
 
     @property
+    def caps_bbox(self) -> BoundingBox:
+        """The bounding box around the capital letters.
+
+        :return: The bounding box around the capital letters.
+
+        This is for passing into BoundUnion or new_svg_root_around_bounds to treat
+        text elements as if they dot have ascenders or descenders. This is useful
+        when, for instance, stacking text elements vertically with non-text elements,
+        where few or no descenders will make the text look misaligned.
+        """
+        return BoundingBox(
+            self.x, self.capline, self.tbox.width, self.metrics.cap_height
+        )
+
+    @property
+    def caps_blem(self) -> BoundElement:
+        """The BoundElement around the capital letters.
+
+        :return: The BoundElement around the capital letters.
+
+        This is for passing into BoundUnion or new_svg_root_around_bounds to treat
+        text elements as if they dot have ascenders or descenders. This is useful
+        when, for instance, stacking text elements vertically with non-text elements,
+        where few or no descenders will make the text look misaligned.
+        """
+        return BoundElement(self.elem, self.caps_bbox)
+
+    @property
     def caps_cy(self) -> float:
         """The vertical center of the capital letters.
 
