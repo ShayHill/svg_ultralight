@@ -292,9 +292,7 @@ class PaddedText(BoundElement):
         when, for instance, stacking text elements vertically with non-text elements,
         where few or no descenders will make the text look misaligned.
         """
-        return BoundingBox(
-            self.x, self.capline, self.tbox.width, self.metrics.cap_height
-        )
+        return BoundingBox(self.x, self.capline, self.width, self.metrics.cap_height)
 
     @property
     def caps_blem(self) -> BoundElement:
