@@ -109,6 +109,7 @@ from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element, new_sub_element
+from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
     import os
@@ -640,6 +641,8 @@ class FTTextInfo:
 
     def new_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg text element with the appropriate font attributes."""
+        matrix_vals = (1, 0, 0, -1, 0, 0)
+        attributes["transform"] = svg_matrix(matrix_vals)
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", data_text=data_text, **attributes)
         for i, (svgd, tmat) in enumerate(self.font.get_text_svgds(self.text)):
