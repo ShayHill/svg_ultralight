@@ -4,7 +4,7 @@ Three variants:
 
 - `pad_text_inkscape`: uses Inkscape to measure text bounds
 
-- `pad_text_ft`: uses fontTools to measure text bounds (faster, and you get line_gap)
+- `pad_text`: uses fontTools to measure text bounds (faster, and you get line_gap)
 
 There is a default font size for pad_text_inkscape if an element is passed. There is
 also a default for the other pad_text_ functions, but it taken from the font file and
@@ -33,7 +33,6 @@ from svg_ultralight.font_tools.font_info import (
     DATA_TEXT_ESCAPE_CHARS,
     FTFontInfo,
     FTTextInfo,
-    get_padded_text_info,
     get_svg_font_attributes,
 )
 from svg_ultralight.query import get_bounding_boxes
@@ -227,119 +226,11 @@ def pad_text(
 
 
 @overload
-def pad_text_ft(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: str,
-    font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
-    attrib: OptionalElemAttribMapping = None,
-    **attributes: ElemAttrib,
-) -> PaddedText: ...
-
-
-@overload
-def pad_text_ft(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: list[str],
-    font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
-    attrib: OptionalElemAttribMapping = None,
-    **attributes: ElemAttrib,
-) -> list[PaddedText]: ...
-
-
-def pad_text_ft(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: str | list[str],
-    font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
-    attrib: OptionalElemAttribMapping = None,
-    **attributes: ElemAttrib,
-) -> PaddedText | list[PaddedText]:
-    """Create a new PaddedText instance using fontTools.
-
-    :param font: path to a font file.
-    :param text: the text of the text element or a list of text strings.
-    :param font_size: the font size to use.
-    :param ascent: the ascent of the font. If not provided, it will be calculated
-        from the font file.
-    :param descent: the descent of the font. If not provided, it will be calculated
-        from the font file.
-    :param y_bounds_reference: optional character or string to use as a reference
-        for the ascent and descent. If provided, the ascent and descent will be the y
-        extents of the capline reference. This argument is provided to mimic the
-        behavior of the query module's `pad_text_inkscape` function.
-        `pad_text_inkscape` does not inspect font files and relies on Inkscape to
-        measure reference characters.
-    :param attrib: optionally pass additional attributes as a mapping instead of as
-        anonymous kwargs. This is useful for pleasing the linter when unpacking a
-        dictionary into a function call.
-    :param attributes: additional attributes to set on the text element. There is a
-        chance these will cause the font element to exceed the BoundingBox of the
-        PaddedText instance.
-    :return: a PaddedText instance with a line_gap defined. If a list of strings is
-        given for parameter `text`, a list of PaddedText instances is returned.
-    """
-    attributes.update(attrib or {})
-    attributes_ = _remove_svg_font_attributes(attributes)
-
-    input_one_text_item = False
-    if isinstance(text, str):
-        input_one_text_item = True
-        text = [text]
-
-    font_info = FTFontInfo(font)
-    metrics = FontMetrics(
-        font_info.units_per_em,
-        font_info.ascent,
-        font_info.descent,
-        font_info.cap_height,
-        font_info.x_height,
-        font_info.line_gap,
-    )
-
-    elems: list[PaddedText] = []
-    for text_item in text:
-        ti = get_padded_text_info(
-            font_info,
-            text_item,
-            None,  # font_size
-            ascent,
-            descent,
-            y_bounds_reference=y_bounds_reference,
-        )
-        elem = ti.new_element(**attributes_)
-        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=copy.copy(metrics))
-        if font_size:
-            plem.font_size = font_size
-        elems.append(plem)
-
-    font_info.maybe_close()
-
-    if input_one_text_item:
-        return elems[0]
-    return elems
-
-
-@overload
 def wrap_text_ft(
     font: str | os.PathLike[str],
     text: str,
     width: float,
     font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
 ) -> list[str]: ...
 
 
@@ -349,10 +240,6 @@ def wrap_text_ft(
     text: list[str],
     width: float,
     font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
 ) -> list[list[str]]: ...
 
 
@@ -361,10 +248,6 @@ def wrap_text_ft(
     text: str | list[str],
     width: float,
     font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
 ) -> list[str] | list[list[str]]:
     """Wrap text to fit within the width of the font's bounding box."""
     input_one_text_item = False
@@ -374,17 +257,11 @@ def wrap_text_ft(
 
     all_wrapped: list[list[str]] = []
     font_info = FTFontInfo(font)
+    scale = font_size / font_info.units_per_em if font_size else 1.0
 
     def get_width(line: str) -> float:
-        ti = get_padded_text_info(
-            font_info,
-            line,
-            font_size,
-            ascent,
-            descent,
-            y_bounds_reference=y_bounds_reference,
-        )
-        return ti.bbox.width
+        ti = FTTextInfo(font_info, line)
+        return ti.bbox.width * scale
 
     try:
         for text_item in text:

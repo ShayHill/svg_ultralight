@@ -6,17 +6,18 @@ text element as if it were written on a ruled sheet of paper.
 
 Padding represents the space between the direction-most point of the text and the
 left margin, right margin, descent, and ascent of the text. Top and bottom padding
-may be less than zero if the constructor used a `y_bounds_reference` argument, as
-descenders and ascenders may extend below and above the bounds of that reference
-character.
+may be less than zero if the constructor `pad_text_inkscape` used a
+`y_bounds_reference` argument, as descenders and ascenders may extend below and above
+the bounds of that reference character.
 
 There is a getter and setter for each of the four padding values. These *do not* move
 the text element. For instance, if you decrease the left padding, the left margin
 will move, *not* the text element.
 
-There is a getter and setter for each of x, cx, x2, y, cy, and y2. These *do* move
-the element, but do not scale it. For instance, if you move the left margin (x value)
-to the left, the right margin (and the text element with it) will move to the left.
+There is a getter and setter for each of many handles (x, cx, x2, y, cy, and y2 are
+the most common). These *do* move the element, but do not scale it. For instance, if
+you move the left margin (x value) to the left, the right margin (and the text
+element with it) will move to the left.
 
 There are getters and setters for width, height, and scale. These scale the text and
 the padding values.
@@ -27,23 +28,8 @@ padding, but not the left or right padding. These also keep the text element anc
 on `x` and `y2`. These methods are useful for aligning text of different sizes on,
 for instance, a business card so that Ls or Hs of different sizes line up vertically.
 
-Building an honest instance of this class is fairly involved:
-
-1. Create a left-aligned text element.
-
-2. Create a BoundingBox around the left-aligned text element. The difference between
-   0 and that BoundingBox's left edge is the left padding.
-
-3. Create a right-aligned copy of the text element.
-
-4. Create a BoundingBox around the right-aligned text element. The difference between
-   the BoundingBox's right edge 0 is the right padding.
-
-5. Use a BoundingBox around a "normal" capital (e.g. "M") to infer the baseline and
-   capline and then calculate the top and bottom margins.
-
 The padded text initializers in bounding_boxes.padded_text_initializers create
-PaddedText instances with sensible defaults.
+PaddedText instances.
 
 :author: Shay Hill
 :created: 2021-11-28
@@ -724,6 +710,12 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
 
     :param plems: The PaddedText instances to union.
     :return: A new PaddedText instance that is the union of the input instances.
+
+    `.metrics` should be straghtforward. Ascent is the highest ascent any member,
+    descent is the lowest descent, etc. (SVG uses a right-handed coordinate system,
+    so higher y values are lower on the screen, and the 'highest' ascent is actually
+    the lowest y value.) The metric values and handles will be appropriate for
+    treating a stack (or bundle) of text elements as a single line of text.
     """
     bbox = BoundingBox.union(*(t.bbox for t in plems))
     tbox = BoundingBox.union(*(t.tbox for t in plems))

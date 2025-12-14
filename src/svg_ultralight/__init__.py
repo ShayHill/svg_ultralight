@@ -17,7 +17,6 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     join_tspans,
     pad_text,
-    pad_text_ft,
     pad_text_inkscape,
     wrap_text_ft,
 )
@@ -34,7 +33,6 @@ from svg_ultralight.constructors.new_element import (
     new_sub_element,
     update_element,
 )
-from svg_ultralight.font_tools.comp_results import check_font_tools_alignment
 from svg_ultralight.inkscape import (
     write_pdf,
     write_pdf_from_svg,
@@ -72,7 +70,6 @@ __all__ = [
     "PaddedText",
     "SupportsBounds",
     "bbox_dict",
-    "check_font_tools_alignment",
     "clear_svg_ultralight_cache",
     "cut_bbox",
     "deepcopy_element",
@@ -99,7 +96,6 @@ __all__ = [
     "new_svg_root_around_bounds",
     "pad_bbox",
     "pad_text",
-    "pad_text_ft",
     "pad_text_inkscape",
     "parse_bound_element",
     "transform_element",

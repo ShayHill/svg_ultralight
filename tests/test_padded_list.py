@@ -8,13 +8,13 @@ from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 import itertools as it
 import math
 from pathlib import Path
-from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text_ft
+from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
 import copy
 
 font = Path("C:/Windows/Fonts/bahnschrift.ttf")
 
 test_instance = PaddedList(
-    pad_text_ft(font, "a"), pad_text_ft(font, "b"), pad_text_ft(font, "c")
+    pad_text(font, "a"), pad_text(font, "b"), pad_text(font, "c")
 )
 
 

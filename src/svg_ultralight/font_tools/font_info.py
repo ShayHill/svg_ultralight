@@ -109,7 +109,6 @@ from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element, new_sub_element
-from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
     import os
@@ -381,19 +380,6 @@ class FTFontInfo:
 
         return kern
 
-    @ft.cached_property
-    def hhea(self) -> Any:
-        """Get the horizontal header table for the font.
-
-        :return: The horizontal header table for the font.
-        :raises ValueError: If the font does not have a 'hhea' table.
-        """
-        try:
-            return cast("Any", self.font["hhea"])
-        except KeyError as e:
-            msg = f"Font '{self.path}' does not have a 'hhea' table: {e}"
-            raise ValueError(msg) from e
-
     @property
     def ascent(self) -> int:
         """Get the ascent for the font.
@@ -624,16 +610,10 @@ class FTTextInfo:
         self,
         font: str | os.PathLike[str] | FTFontInfo,
         text: str,
-        font_size: float | None = None,
-        ascent: float | None = None,
-        descent: float | None = None,
     ) -> None:
         """Initialize the SUText with text, a SUFont instance, and font size."""
         self._font = FTFontInfo(font)
         self._text = text
-        self._font_size = font_size or self._font.units_per_em
-        self._ascent = ascent
-        self._descent = descent
 
     def __close__(self) -> None:
         """Close the font file."""
@@ -658,26 +638,8 @@ class FTTextInfo:
         """Return the text."""
         return self._text
 
-    @property
-    def font_size(self) -> float:
-        """Return the font size."""
-        return self._font_size
-
-    @property
-    def scale(self) -> float:
-        """Return the scale factor for the font size.
-
-        :return: The scale factor for the font size.
-        """
-        return self.font_size / self.font.units_per_em
-
     def new_element(self, **attributes: ElemAttrib) -> EtreeElement:
         """Return an svg text element with the appropriate font attributes."""
-        matrix_vals = (self.scale, 0, 0, -self.scale, 0, 0)
-        attributes["transform"] = svg_matrix(matrix_vals)
-        stroke_width = attributes.get("stroke-width")
-        if stroke_width:
-            attributes["stroke-width"] = float(stroke_width) / self.scale
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", data_text=data_text, **attributes)
         for i, (svgd, tmat) in enumerate(self.font.get_text_svgds(self.text)):
@@ -698,38 +660,12 @@ class FTTextInfo:
 
         :return: A BoundingBox in svg coordinates.
         """
-        bbox = self.font.get_text_bbox(self.text)
-        bbox.transform(scale=self.scale)
-        return BoundingBox(*bbox.values())
-
-    @property
-    def ascent(self) -> float:
-        """Return the ascent of the font."""
-        if self._ascent is None:
-            self._ascent = self.font.hhea.ascent * self.scale
-        return self._ascent
-
-    @property
-    def descent(self) -> float:
-        """Return the descent of the font."""
-        if self._descent is None:
-            self._descent = self.font.hhea.descent * self.scale
-        return self._descent
-
-    @property
-    def line_gap(self) -> float:
-        """Return the height of the capline for the font."""
-        return self.font.hhea.lineGap * self.scale
-
-    @property
-    def line_spacing(self) -> float:
-        """Return the line spacing for the font."""
-        return self.descent + self.ascent + self.line_gap
+        return self.font.get_text_bbox(self.text)
 
     @property
     def tpad(self) -> float:
         """Return the top padding for the text."""
-        return self.ascent + self.bbox.y
+        return self.font.ascent + self.bbox.y
 
     @property
     def rpad(self) -> float:
@@ -737,12 +673,12 @@ class FTTextInfo:
 
         This is the right side bearing of the last glyph in the text.
         """
-        return self.font.get_rsb(self.text[-1]) * self.scale
+        return self.font.get_rsb(self.text[-1])
 
     @property
     def bpad(self) -> float:
         """Return the bottom padding for the text."""
-        return -self.descent - self.bbox.y2
+        return -self.font.descent - self.bbox.y2
 
     @property
     def lpad(self) -> float:
@@ -750,7 +686,7 @@ class FTTextInfo:
 
         This is the left side bearing of the first glyph in the text.
         """
-        return self.font.get_lsb(self.text[0]) * self.scale
+        return self.font.get_lsb(self.text[0])
 
     @property
     def padding(self) -> tuple[float, float, float, float]:
@@ -758,68 +694,11 @@ class FTTextInfo:
         return self.tpad, self.rpad, self.bpad, self.lpad
 
 
-def get_font_size_given_height(font: str | os.PathLike[str], height: float) -> float:
-    """Return the font size that would give the given line height.
-
-    :param font: path to a font file.
-    :param height: desired line height in pixels.
-
-    Where line height is the distance from the longest possible descender to the
-    longest possible ascender.
-    """
-    font_info = FTFontInfo(font)
-    units_per_em = font_info.units_per_em
-    if units_per_em <= 0:
-        msg = f"Font '{font}' has invalid units per em: {units_per_em}"
-        raise ValueError(msg)
-    line_height = font_info.hhea.ascent - font_info.hhea.descent
-    return height / line_height * units_per_em
-
-
-def get_padded_text_info(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: str,
-    font_size: float | None = None,
-    ascent: float | None = None,
-    descent: float | None = None,
-    *,
-    y_bounds_reference: str | None = None,
-) -> FTTextInfo:
-    """Return a FTTextInfo object for the given text and font.
-
-    :param font: path to a font file.
-    :param text: the text to get the information for.
-    :param font_size: the font size to use.
-    :param ascent: the ascent of the font. If not provided, it will be calculated
-        from the font file.
-    :param descent: the descent of the font, usually a negative number. If not
-        provided, it will be calculated from the font file.
-    :param y_bounds_reference: optional character or string to use as a reference
-        for the ascent and descent. If provided, the ascent and descent will be the y
-        extents of the capline reference. This argument is provided to mimic the
-        behavior of the query module's `pad_text_inkscape` function.
-        `pad_text_inkscape` does not inspect font files and relies on Inkscape to
-        measure reference characters.
-    :return: A FTTextInfo object with the information necessary to create a
-        PaddedText instance: bbox, tpad, rpad, bpad, lpad.
-    """
-    if isinstance(font, FTFontInfo):
-        font_info = font
-    else:
-        font_info = FTFontInfo(font)
-    if y_bounds_reference:
-        capline_info = FTTextInfo(font_info, y_bounds_reference, font_size)
-        ascent = -capline_info.bbox.y
-        descent = -capline_info.bbox.y2
-
-    return FTTextInfo(font_info, text, font_size, ascent, descent)
-
-
 # ===================================================================================
 #   Infer svg font attributes from a ttf or otf file
 # ===================================================================================
 
-# This is the record nameID that most consistently reproduce the desired font
+# This is the record nameID that most consistently reproduces the desired font
 # characteristics in svg.
 _NAME_ID = 1
 _STYLE_ID = 2
