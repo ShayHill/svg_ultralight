@@ -56,7 +56,7 @@ if TYPE_CHECKING:
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
 
-    from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
+    from svg_ultralight.attrib_hints import ElemAttrib
 
 DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 
@@ -173,10 +173,8 @@ def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, 
 
 
 @open_font_info
-def join_tspans(
-    font: FontArg, tspans: list[PaddedText], attrib: OptionalElemAttribMapping = None
-) -> PaddedText:
-    """Join multiple PaddedText elements as if they were one long string.
+def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
+    """Arrange multiple PaddedText elements as if they were one long string.
 
     :param font: the one font file used for kerning.
     :param tspans: list of tspan elements to join (each an output from pad_chars_ft).
@@ -190,25 +188,46 @@ def join_tspans(
     for left, right in it.pairwise(tspans):
         l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
         r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
-        l_name = font_info.get_glyph_name(l_joint)
-        r_name = font_info.get_glyph_name(r_joint)
-        kern: float = font_info.kern_table.get((l_name, r_name), 0)
-        kern *= (left.scale[0] + right.scale[0]) / 2
+        l_name = font_info.try_glyph_name(l_joint)
+        r_name = font_info.try_glyph_name(r_joint)
+        kern = 0.0
+        if l_name and r_name:
+            kern = font_info.kern_table.get((l_name, r_name), 0)
+            kern *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + kern
-    return new_padded_union(*tspans, **attrib or {})
+
+
+def join_tspans(
+    font: FontArg, *tspans: PaddedText, **attributes: ElemAttrib
+) -> PaddedText:
+    """Join multiple PaddedText elements as if they were one long string.
+
+    :param font: the one font file used for kerning.
+    :param tspans: list of tspan elements to join (each an output from pad_chars_ft).
+
+    This is limited and will not handle arbitrary text elements (only `g` elements
+    with a "data-text" attribute equal to the character(s) in the tspan). Will also
+    not handle scaled PaddedText instances. This is for joining tspans immediately
+    after they are created and all using similar fonts.
+    """
+    align_tspans(font, *tspans)
+    return new_padded_union(*tspans, **attributes)
 
 
 @overload
 @open_font_info
 def pad_text(
-    font: FontArg, text: str, font_size: float | None, **attributes: ElemAttrib
+    font: FontArg, text: str, font_size: float | None = None, **attributes: ElemAttrib
 ) -> PaddedText: ...
 
 
 @overload
 @open_font_info
 def pad_text(
-    font: FontArg, text: list[str], font_size: float | None, **attributes: ElemAttrib
+    font: FontArg,
+    text: list[str],
+    font_size: float | None = None,
+    **attributes: ElemAttrib,
 ) -> list[PaddedText]: ...
 
 
@@ -272,14 +291,14 @@ def _wrap_one_text(font: FontArg, text: str, width: float) -> list[str]:
 @overload
 @open_font_info
 def wrap_text(
-    font: FontArg, text: str, width: float, font_size: float | None
+    font: FontArg, text: str, width: float, font_size: float | None = None
 ) -> list[str]: ...
 
 
 @overload
 @open_font_info
 def wrap_text(
-    font: FontArg, text: list[str], width: float, font_size: float | None
+    font: FontArg, text: list[str], width: float, font_size: float | None = None
 ) -> list[list[str]]: ...
 
 

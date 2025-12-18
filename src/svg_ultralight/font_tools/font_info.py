@@ -439,6 +439,18 @@ class FTFontInfo:
             return self.font["os2"].sxHeight  # rare
         return self.get_char_bounds("x")[3]
 
+    def try_glyph_name(self, char: str) -> str | None:
+        """Try to get the glyph name for a character in the font.
+
+        :param char: The character to get the glyph name for.
+        :return: The glyph name for the character, or None if not found.
+        """
+        ord_char = ord(char)
+        char_map = cast("dict[int, str]", self.font.getBestCmap())
+        if ord_char in char_map:
+            return char_map[ord_char]
+        return None
+
     def get_glyph_name(self, char: str) -> str:
         """Get the glyph name for a character in the font.
 
@@ -446,12 +458,11 @@ class FTFontInfo:
         :return: The glyph name for the character.
         :raises ValueError: If the character is not found in the font.
         """
-        ord_char = ord(char)
-        char_map = cast("dict[int, str]", self.font.getBestCmap())
-        if ord_char in char_map:
-            return char_map[ord_char]
-        msg = f"Character '{char}' not found in font '{self.path}'."
-        raise ValueError(msg)
+        ord_char = self.try_glyph_name(char)
+        if ord_char is None:
+            msg = f"Character '{char}' not found in font '{self.path}'."
+            raise ValueError(msg)
+        return ord_char
 
     def get_char_svgd(self, char: str, dx: float = 0) -> str:
         """Return the svg path data for a glyph.

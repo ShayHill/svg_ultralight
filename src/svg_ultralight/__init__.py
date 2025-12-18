@@ -15,7 +15,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     parse_bound_element,
 )
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
-    join_tspans,
+    align_tspans,
     pad_text,
     pad_text_inkscape,
     wrap_text,
@@ -69,6 +69,7 @@ __all__ = [
     "PaddedList",
     "PaddedText",
     "SupportsBounds",
+    "align_tspans",
     "bbox_dict",
     "clear_svg_ultralight_cache",
     "cut_bbox",
@@ -79,7 +80,6 @@ __all__ = [
     "get_bounding_box",
     "get_bounding_box_from_root",
     "get_bounding_boxes",
-    "join_tspans",
     "mat_apply",
     "mat_dot",
     "mat_invert",

@@ -52,7 +52,7 @@ class TestPadTextFt:
         words = [_random_string(5) for _ in range(50)]
         words.append("".join(words))
         plems = pad_text(font, words)
-        joined = join_tspans(font, plems[:-1])
+        joined = join_tspans(font, *plems[:-1])
         assert joined.width == plems[-1].width
 
     def test_do_not_share_metrics(self) -> None:
