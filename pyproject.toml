@@ -62,7 +62,7 @@ pythonVersion = "3.10"
 pythonPlatform = "Any"
 
 typeCheckingMode = "strict"
-reportShadowedImports = true
+# reportShadowedImports = true
 reportCallInDefaultInitializer = true
 reportImplicitStringConcatenation = true
 # reportMissingSuperCall = true

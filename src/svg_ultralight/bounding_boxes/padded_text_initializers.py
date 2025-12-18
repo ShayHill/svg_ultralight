@@ -1,13 +1,15 @@
 """Functions that create PaddedText instances.
 
-Three variants:
+Two variants:
 
-- `pad_text_inkscape`: uses Inkscape to measure text bounds
+- `pad_text_inkscape`: uses Inkscape to measure text bounds. This is a legacy
+  function and should not be used in new code.
 
-- `pad_text`: uses fontTools to measure text bounds (faster, and you get line_gap)
+- `pad_text`: uses fontTools to measure text bounds
+  (faster, and reveals font metrics)
 
 There is a default font size for pad_text_inkscape if an element is passed. There is
-also a default for the other pad_text_ functions, but it taken from the font file and
+also a default for the other pad_text functions, but it taken from the font file and
 is usually 1024, so it won't be easy to miss. The default for standard
 pad_text_inkscape is to prevent surprises if Inksape defaults to font-size 12pt while
 your browser defaults to 16px.
@@ -20,7 +22,16 @@ from __future__ import annotations
 
 import copy
 import itertools as it
-from typing import TYPE_CHECKING, overload
+import os
+from functools import wraps
+from typing import (
+    TYPE_CHECKING,
+    Concatenate,
+    ParamSpec,
+    TypeAlias,
+    TypeVar,
+    overload,
+)
 
 from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.type_padded_text import (
@@ -39,7 +50,7 @@ from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
 
 if TYPE_CHECKING:
-    import os
+    from collections.abc import Callable
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -52,6 +63,33 @@ DEFAULT_Y_BOUNDS_REFERENCE = "{[|gjpqyf"
 # A default font size for pad_text_inkscape if font-size is not specified in the
 # reference element.
 DEFAULT_FONT_SIZE_FOR_PAD_TEXT = 12.0  # Default font size for pad_text_inkscape
+
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
+FontArg: TypeAlias = str | os.PathLike[str] | FTFontInfo
+
+
+def open_font_info(
+    func: Callable[Concatenate[FontArg, P], R],
+) -> Callable[Concatenate[FontArg, P], R]:
+    """Decorate functions to open and close an FTFontInfo object.
+
+    If an FTFontInfo instance is provided as the first argument, use it directly
+    and leave it open. If a string or path is provided instead, create a local
+    FTFontInfo instance and close it after use.
+    """
+
+    @wraps(func)
+    def wrapper(font: FontArg, *args: P.args, **kwargs: P.kwargs) -> R:
+        font_info = FTFontInfo(font)
+        result = func(font_info, *args, **kwargs)
+        if not isinstance(font, FTFontInfo):
+            font_info.__close__()
+        return result
+
+    return wrapper
 
 
 def _desanitize_svg_data_text(text: str) -> str:
@@ -85,12 +123,14 @@ def pad_text_inkscape(
         string and want to center between the capline and baseline or if you'd like
         to center between the baseline and x-line.
     :param font: optionally add a path to a font file to use for the text element.
-        This is going to conflict with any font-family, font-style, or other
-        font-related attributes *except* font-size. You likely want to use
-        `font_tools.new_padded_text` if you're going to pass a font path, but you can
-        use it here to compare results between `pad_text_inkscape` and
-        `new_padded_text`.
+        This function will attempt a match to svg font attributes that will match that
+        font. This is going to conflict with any font-family, font-style, or other
+        font-related attributes *except* font-size. You likely want to use `pad_text`
+        if you're going to pass a font path, but you can use it here to compare
+        results between `pad_text_inkscape` and `pad_text`.
     :return: a PaddedText instance
+
+    This function is inferior to `pad_text` and should not be used in new code.
     """
     if y_bounds_reference is None:
         y_bounds_reference = DEFAULT_Y_BOUNDS_REFERENCE
@@ -112,14 +152,7 @@ def pad_text_inkscape(
     rpad = -rmargin_bbox.x2
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
-    return PaddedText(
-        text_elem,
-        bbox,
-        tpad,
-        rpad,
-        bpad,
-        lpad,
-    )
+    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
 
 
 def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
@@ -139,19 +172,18 @@ def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, 
     return {k: v for k, v in attributes_.items() if k not in keys_to_remove}
 
 
+@open_font_info
 def join_tspans(
-    font: str | os.PathLike[str],
-    tspans: list[PaddedText],
-    attrib: OptionalElemAttribMapping = None,
+    font: FontArg, tspans: list[PaddedText], attrib: OptionalElemAttribMapping = None
 ) -> PaddedText:
-    """Join multiple PaddedText elements into a single BoundElement.
+    """Join multiple PaddedText elements as if they were one long string.
 
     :param font: the one font file used for kerning.
     :param tspans: list of tspan elements to join (each an output from pad_chars_ft).
 
     This is limited and will not handle arbitrary text elements (only `g` elements
     with a "data-text" attribute equal to the character(s) in the tspan). Will also
-    not handle scaled PaddedText instances. This is for joining tspans originally
+    not handle scaled PaddedText instances. This is for joining tspans immediately
     after they are created and all using similar fonts.
     """
     font_info = FTFontInfo(font)
@@ -160,31 +192,29 @@ def join_tspans(
         r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
         l_name = font_info.get_glyph_name(l_joint)
         r_name = font_info.get_glyph_name(r_joint)
-        kern = font_info.kern_table.get((l_name, r_name), 0)
+        kern: float = font_info.kern_table.get((l_name, r_name), 0)
+        kern *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + kern
     return new_padded_union(*tspans, **attrib or {})
 
 
 @overload
+@open_font_info
 def pad_text(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: str,
-    font_size: float | None = None,
-    **attributes: ElemAttrib,
+    font: FontArg, text: str, font_size: float | None, **attributes: ElemAttrib
 ) -> PaddedText: ...
 
 
 @overload
+@open_font_info
 def pad_text(
-    font: str | os.PathLike[str] | FTFontInfo,
-    text: list[str],
-    font_size: float | None = None,
-    **attributes: ElemAttrib,
+    font: FontArg, text: list[str], font_size: float | None, **attributes: ElemAttrib
 ) -> list[PaddedText]: ...
 
 
+@open_font_info
 def pad_text(
-    font: str | os.PathLike[str] | FTFontInfo,
+    font: FontArg,
     text: str | list[str],
     font_size: float | None = None,
     **attributes: ElemAttrib,
@@ -193,12 +223,12 @@ def pad_text(
 
     :param font: path to a font file.
     :param text: the text of the text element or a list of text strings.
-    :param font_size: the font size to use. Skip for default font size. This can
+    :param font_size: the font size to use. Skip for native font size. This can
         always be set later, but the argument is useful if you're working with fonts
         that have different native font sizes (usually 1000, 1024, or 2048).
     """
     attributes_ = _remove_svg_font_attributes(attributes)
-    font = font if isinstance(font, FTFontInfo) else FTFontInfo(font)
+    font = FTFontInfo(font)
     metrics = FontMetrics(
         font.units_per_em,
         font.ascent,
@@ -210,76 +240,56 @@ def pad_text(
 
     plems: list[PaddedText] = []
     for t in [text] if isinstance(text, str) else text:
-        text_info = FTTextInfo(font, t)
-        elem = text_info.new_element(**attributes_)
-        plem = PaddedText(
-            elem, text_info.bbox, *text_info.padding, metrics=copy.copy(metrics)
-        )
+        ti = FTTextInfo(font, t)
+        elem = ti.new_element(**attributes_)
+        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=copy.copy(metrics))
         if font_size:
             plem.font_size = font_size
         plems.append(plem)
-    font.maybe_close()
 
     if isinstance(text, str):
         return plems[0]
     return plems
 
 
+@open_font_info
+def _wrap_one_text(font: FontArg, text: str, width: float) -> list[str]:
+    """Wrap one line of text."""
+    words = list(filter(None, (x.strip() for x in text.split())))
+    if not words:
+        return []
+    lines = [words.pop(0)]
+    while words:
+        next_word = words.pop(0)
+        line_plus_word = f"{lines[-1]} {next_word}"
+        if FTTextInfo(font, line_plus_word).bbox.width > width:
+            lines.append(next_word)
+            continue
+        lines[-1] = line_plus_word
+    return lines
+
+
 @overload
-def wrap_text_ft(
-    font: str | os.PathLike[str],
-    text: str,
-    width: float,
-    font_size: float | None = None,
+@open_font_info
+def wrap_text(
+    font: FontArg, text: str, width: float, font_size: float | None
 ) -> list[str]: ...
 
 
 @overload
-def wrap_text_ft(
-    font: str | os.PathLike[str],
-    text: list[str],
-    width: float,
-    font_size: float | None = None,
+@open_font_info
+def wrap_text(
+    font: FontArg, text: list[str], width: float, font_size: float | None
 ) -> list[list[str]]: ...
 
 
-def wrap_text_ft(
-    font: str | os.PathLike[str],
-    text: str | list[str],
-    width: float,
-    font_size: float | None = None,
+@open_font_info
+def wrap_text(
+    font: FontArg, text: str | list[str], width: float, font_size: float | None = None
 ) -> list[str] | list[list[str]]:
     """Wrap text to fit within the width of the font's bounding box."""
-    input_one_text_item = False
+    scale = font_size / FTFontInfo(font).units_per_em if font_size else 1.0
+    width /= scale
     if isinstance(text, str):
-        input_one_text_item = True
-        text = [text]
-
-    all_wrapped: list[list[str]] = []
-    font_info = FTFontInfo(font)
-    scale = font_size / font_info.units_per_em if font_size else 1.0
-
-    def get_width(line: str) -> float:
-        ti = FTTextInfo(font_info, line)
-        return ti.bbox.width * scale
-
-    try:
-        for text_item in text:
-            words = text_item.split()
-            if not words:
-                all_wrapped.append([])
-                continue
-            wrapped: list[str] = [words.pop(0)]
-            while words:
-                next_word = words.pop(0)
-                test_line = f"{wrapped[-1]} {next_word}"
-                if get_width(test_line) <= width:
-                    wrapped[-1] = test_line
-                else:
-                    wrapped.append(next_word)
-            all_wrapped.append(wrapped)
-    finally:
-        font_info.font.close()
-    if input_one_text_item:
-        return all_wrapped[0]
-    return all_wrapped
+        return _wrap_one_text(font, text=text, width=width)
+    return [_wrap_one_text(font, x, width) for x in text]

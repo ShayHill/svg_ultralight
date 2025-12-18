@@ -18,7 +18,7 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     join_tspans,
     pad_text,
     pad_text_inkscape,
-    wrap_text_ft,
+    wrap_text,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
@@ -100,7 +100,7 @@ __all__ = [
     "parse_bound_element",
     "transform_element",
     "update_element",
-    "wrap_text_ft",
+    "wrap_text",
     "write_pdf",
     "write_pdf_from_svg",
     "write_png",

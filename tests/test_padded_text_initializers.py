@@ -14,7 +14,7 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     join_tspans,
     pad_text,
     pad_text_inkscape,
-    wrap_text_ft,
+    wrap_text,
 )
 from svg_ultralight.constructors import new_element
 
@@ -47,8 +47,8 @@ class TestPadTextFt:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
-           msg = "Test font file does not exist on system."
-           pytest.skip(msg)
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
         words = [_random_string(5) for _ in range(50)]
         words.append("".join(words))
         plems = pad_text(font, words)
@@ -84,20 +84,20 @@ class TestPadTextFt:
 
 class TestWrapTextFt:
     def test_wraps_single(self) -> None:
-       """Test pad_text with a font file."""
-       font = Path("C:/Windows/Fonts/bahnschrift.ttf")
-       text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
-       expect = ["Lorem ipsum dolor sit", "amet, consectetur", "adipiscing elit, sed"]
-       result = wrap_text_ft(font, text, width=20000)
-       assert result == expect
+        """Test pad_text with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
+        expect = ["Lorem ipsum dolor sit", "amet, consectetur", "adipiscing elit, sed"]
+        result = wrap_text(font, text, width=20000)
+        assert result == expect
 
     def test_wraps_multi(self) -> None:
-       """Test pad_text with a font file."""
-       font = Path("C:/Windows/Fonts/bahnschrift.ttf")
-       text = ["Lorem ipsum dolor sit amet,", "consectetur adipiscing elit, sed"]
-       expect = [
+        """Test pad_text with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        text = ["Lorem ipsum dolor sit amet,", "consectetur adipiscing elit, sed"]
+        expect = [
             ["Lorem ipsum", "dolor sit amet,"],
             ["consectetur", "adipiscing elit,", "sed"],
-       ]
-       result = wrap_text_ft(font, text, width=15000)
-       assert result == expect
+        ]
+        result = wrap_text(font, text, width=15000)
+        assert result == expect
