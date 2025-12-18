@@ -24,7 +24,6 @@ from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
 from svg_ultralight.constructors.new_element import (
     deepcopy_element,
@@ -66,7 +65,6 @@ __all__ = [
     "BoundCollection",
     "BoundElement",
     "BoundingBox",
-    "PaddedList",
     "PaddedText",
     "SupportsBounds",
     "align_tspans",
