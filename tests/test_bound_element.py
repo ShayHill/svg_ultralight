@@ -5,13 +5,16 @@
 """
 
 import math
+from pathlib import Path
+
+from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.constructors import new_element
+from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
 from svg_ultralight.transformations import (
-    mat_dot,
     get_transform_matrix,
+    mat_dot,
     transform_element,
 )
 
@@ -142,3 +145,18 @@ class TestPaddedText:
         assert math.isclose(blem.width, 10.0)
         assert blem.rpad == 2.0
         assert blem.lpad == 4.0
+
+    def test_float_setters(self) -> None:
+        """All getters match setter(value)."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        blem = pad_text(font, "Test text")
+        # fmt: off
+        attrs = [
+            "caps_cy", "tx", "tx2", "ty", "ty2", "twidth", "theight", "baseline",
+            "capline", "xline", "font_size", "cap_height", "x_height", "tpad", "rpad",
+            "bpad", "lpad", "width", "height", "x", "cx", "x2", "y", "cy", "y2"
+        ]
+        # fmt: on
+        for attr in attrs:
+            setattr(blem, attr, 50)
+            assert math.isclose(getattr(blem, attr), 50)

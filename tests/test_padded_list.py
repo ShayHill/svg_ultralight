@@ -4,12 +4,13 @@
 :created: 2025-11-18
 """
 
-from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
+import copy
 import itertools as it
 import math
 from pathlib import Path
+
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
-import copy
+from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 
 font = Path("C:/Windows/Fonts/bahnschrift.ttf")
 
@@ -62,7 +63,10 @@ class TestPaddedList:
         for dim in ("x", "cx", "x2", "y", "cy", "y2", "width", "height"):
             plist = copy.deepcopy(test_instance)
             plist.set_dim(**{dim: 50})
-            assert getattr(plist.bbox, dim) == 50
+            try:
+                assert getattr(plist.bbox, dim) == 50
+            except:
+                breakpoint()
 
     def test_set_dim_tbox(self):
         for dim in ("tx", "tcx", "tx2", "ty", "tcy", "ty2", "twidth", "theight"):

@@ -19,7 +19,7 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
 from svg_ultralight.constructors import new_element
 
 
-class TestPadText:
+class TestPadTextInkscape:
     @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
     def test_font_arg(self) -> None:
         """Test to see that the font specification does *something*."""
@@ -42,7 +42,7 @@ def _random_string(length: int) -> str:
     return "".join(random.choice(letters) for _ in range(length))
 
 
-class TestPadTextFt:
+class TestPadText:
     def test_join_tspan(self) -> None:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
@@ -82,7 +82,7 @@ class TestPadTextFt:
         assert len(padded) == 3
 
 
-class TestWrapTextFt:
+class TestWrapText:
     def test_wraps_single(self) -> None:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")

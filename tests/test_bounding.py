@@ -158,14 +158,12 @@ class TestPaddedText:
         assert bound_element.width == 106.0
         bound_element.set_width_preserve_sidebearings(150.0)
         assert bound_element.width == 150.0
-        assert bound_element.x2 == 146.0
+        assert bound_element.x == -4
 
     def test_height(self, bound_element: PaddedText):
-        y2 = bound_element.y2
-        assert bound_element.height == 204.0
-        bound_element.set_height_preserve_sidebearings(250.0)
+        assert bound_element.height == 204
+        bound_element.set_height_preserve_sidebearings(250)
         assert math.isclose(bound_element.height, 250)
-        assert math.isclose(bound_element.y2, y2)
 
     def test_tpad_preserves_elem_moves_y(self, bound_element: PaddedText):
         """Alter bbox margins, but do no move text when setting tpad."""
