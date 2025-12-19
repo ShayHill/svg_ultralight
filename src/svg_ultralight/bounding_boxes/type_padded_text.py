@@ -472,7 +472,7 @@ class PaddedText(BoundElement):
 
         :return: The scaled headroom of this line of text.
         """
-        return self.ascent - self.x_height
+        return self.ascent - self.cap_height
 
     @property
     def line_gap(self) -> float:
