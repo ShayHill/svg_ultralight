@@ -24,9 +24,9 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import (
     FontMetrics,
     PaddedText,
+    new_empty_padded_union,
     new_padded_union,
 )
-from svg_ultralight.constructors import update_element
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -37,7 +37,7 @@ class PaddedList(PaddedText):
     def __init__(self, *plems: PaddedText) -> None:
         """Initialize with a list of padded text elements."""
         self.plems = list(plems)
-        self._union: PaddedText | None = None
+        self.__mock_union: PaddedText | None = None
 
     @overload
     def __getitem__(self, idx: slice) -> "PaddedList": ...
@@ -55,23 +55,30 @@ class PaddedList(PaddedText):
         """Append a padded text element to the list."""
         self.plems.append(ptext)
 
+    @property
+    def _mock_union(self) -> PaddedText:
+        """Return a mock union of plems for attribute calculations.
+
+        This is distinct from union to avoid stealing the elements each time it is
+        called.
+        """
+        if self.__mock_union is None:
+            self.__mock_union = new_empty_padded_union(*self.plems)
+        return self.__mock_union
+
     def union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a single bound element containing all the padded text elements."""
-        if self._union is None:
-            self._state = new_padded_union(*self.plems, **attribs)
-            return self._state
-        _ = update_element(self._state.elem, **attribs)
-        return self._state
+        return new_padded_union(*self.plems, **attribs)
 
     @property
     def metrics(self) -> FontMetrics:
         """The combined metrics of the padded text elements."""
-        return self.union().metrics
+        return self._mock_union.metrics
 
     @property
     def bbox(self) -> BoundingBox:
         """The bounding box of the padded text elements."""
-        return self.union().bbox
+        return self._mock_union.bbox
 
     @bbox.setter
     def bbox(self, value: BoundingBox) -> None:
@@ -83,12 +90,12 @@ class PaddedList(PaddedText):
     @property
     def tbox(self) -> BoundingBox:
         """The unpadded bounding box of the padded text elements."""
-        return self.union().tbox
+        return self._mock_union.tbox
 
     @property
     def caps_bbox(self) -> BoundingBox:
         """The caps bounding box of the padded text elements."""
-        return self.union().caps_bbox
+        return self._mock_union.caps_bbox
 
     def transform(
         self,
@@ -103,7 +110,7 @@ class PaddedList(PaddedText):
         self.ptmat = (transformation, scale, dx, dy, reverse)
         for p in self.plems:
             p.transform(transformation, scale=scale, dx=dx, dy=dy, reverse=reverse)
-        self._union = None
+        self.__mock_union = None
 
     def transform_preserve_sidebearings(
         self,
@@ -119,7 +126,7 @@ class PaddedList(PaddedText):
             p.transform_preserve_sidebearings(
                 transformation, scale=scale, dx=dx, dy=dy, reverse=reverse
             )
-        self._union = None
+        self.__mock_union = None
 
     def align(self, attr: str, value: float | None = None) -> None:
         """Align the specified handles of the padded text elements.
@@ -130,10 +137,10 @@ class PaddedList(PaddedText):
             text elements.
         """
         if value is None:
-            value = getattr(self.union(), attr)
+            value = getattr(self._mock_union, attr)
         for plem in self.plems:
             setattr(plem, attr, value)
-        self._union = None
+        self.__mock_union = None
 
     def stack(
         self, offset: float | None = None, bottom_handle: str = "baseline"

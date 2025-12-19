@@ -43,13 +43,12 @@ import dataclasses
 import math
 from typing import TYPE_CHECKING
 
+from lxml import etree
+
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import new_element_union
-from svg_ultralight.transformations import (
-    new_transformation_matrix,
-    transform_element,
-)
+from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
 if TYPE_CHECKING:
     from lxml.etree import (
@@ -640,17 +639,11 @@ class PaddedText(BoundElement):
         self.transform_preserve_sidebearings(scale=value / self.height)
 
 
-def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:
-    """Create a new PaddedText instance that is the union of multiple PaddedText.
+def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
+    """Use the new_padded_union mechanic to create an empty PaddedText instance.
 
-    :param plems: The PaddedText instances to union.
-    :return: A new PaddedText instance that is the union of the input instances.
-
-    `.metrics` should be straghtforward. Ascent is the highest ascent any member,
-    descent is the lowest descent, etc. (SVG uses a right-handed coordinate system,
-    so higher y values are lower on the screen, and the 'highest' ascent is actually
-    the lowest y value.) The metric values and handles will be appropriate for
-    treating a stack (or bundle) of text elements as a single line of text.
+    This is useful for mocking the bounding boxes and attributes of a PaddedText
+    union without moving the elements into that union.
     """
     bbox = BoundingBox.union(*(t.bbox for t in plems))
     tbox = BoundingBox.union(*(t.tbox for t in plems))
@@ -658,7 +651,6 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     rpad = bbox.x2 - tbox.x2
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
-    elem = new_element_union(*(t.elem for t in plems), **attributes)
     min_font_size = min(t.font_size for t in plems)
     max_y_extent = max(t.y2 for t in plems)
     min_y_extent = min(t.y for t in plems)
@@ -674,4 +666,21 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
         baseline - min_x_extent,
         min_line_gap,
     )
-    return PaddedText(elem, tbox, tpad, rpad, bpad, lpad, metrics)
+    return PaddedText(etree.Element("g"), tbox, tpad, rpad, bpad, lpad, metrics)
+
+
+def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:
+    """Create a new PaddedText instance that is the union of multiple PaddedText.
+
+    :param plems: The PaddedText instances to union.
+    :return: A new PaddedText instance that is the union of the input instances.
+
+    `.metrics` should be straghtforward. Ascent is the highest ascent any member,
+    descent is the lowest descent, etc. (SVG uses a right-handed coordinate system,
+    so higher y values are lower on the screen, and the 'highest' ascent is actually
+    the lowest y value.) The metric values and handles will be appropriate for
+    treating a stack (or bundle) of text elements as a single line of text.
+    """
+    union = new_empty_padded_union(*plems)
+    union.elem = new_element_union(*(t.elem for t in plems), **attributes)
+    return union
