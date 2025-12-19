@@ -158,7 +158,7 @@ class TestPaddedText:
         assert bound_element.width == 106.0
         bound_element.set_width_preserve_sidebearings(150.0)
         assert bound_element.width == 150.0
-        assert bound_element.x == -4
+        assert bound_element.x == -5.76
 
     def test_height(self, bound_element: PaddedText):
         assert bound_element.height == 204

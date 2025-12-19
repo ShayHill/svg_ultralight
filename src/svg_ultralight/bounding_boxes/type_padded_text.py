@@ -698,7 +698,7 @@ class PaddedText(BoundElement):
 
         :return: The left margin of this line of text.
         """
-        return self.tbox.x - self._lpad
+        return self.tbox.x - self.lpad
 
     @x.setter
     def x(self, value: float) -> None:
@@ -706,7 +706,7 @@ class PaddedText(BoundElement):
 
         :param value: The left margin of this line of text.
         """
-        self.transform(dx=value + self._lpad - self.tbox.x)
+        self.transform(dx=value + self.lpad - self.tbox.x)
 
     @property
     def cx(self) -> float:
@@ -730,7 +730,7 @@ class PaddedText(BoundElement):
 
         :return: The right margin of this line of text.
         """
-        return self.tbox.x2 + self._rpad
+        return self.tbox.x2 + self.rpad
 
     @x2.setter
     def x2(self, value: float) -> None:
@@ -738,7 +738,7 @@ class PaddedText(BoundElement):
 
         :param value: The right margin of this line of text.
         """
-        self.transform(dx=value - self._rpad - self.tbox.x2)
+        self.transform(dx=value - self.rpad - self.tbox.x2)
 
     @property
     def y(self) -> float:
