@@ -132,8 +132,7 @@ class PaddedText(BoundElement):
         :param rpad: Right padding.
         :param bpad: Bottom padding.
         :param lpad: Left padding.
-        :param line_gap: The line gap between this line of text and the next. This ises
-            an inherent font attribute sometimes defined within a font file.
+        :param metrics: The font metrics for this line of text (inferred from a font):
         """
         self.elem = elem
         self.unpadded_bbox = bbox
@@ -154,14 +153,6 @@ class PaddedText(BoundElement):
             raise AttributeError(msg)
         return self._metrics
 
-    @metrics.setter
-    def metrics(self, value: FontMetrics) -> None:
-        """Set the font metrics for this PaddedText.
-
-        :param value: The new font metrics.
-        """
-        self._metrics = value
-
     @property
     def tbox(self) -> BoundingBox:
         """Return the unpadded BoundingBox around the text element.
@@ -171,14 +162,6 @@ class PaddedText(BoundElement):
         :return: The unpadded BoundingBox around the text element.
         """
         return self.unpadded_bbox
-
-    @tbox.setter
-    def tbox(self, value: BoundingBox) -> None:
-        """Set the unpadded BoundingBox around the text element.
-
-        :param value: The new unpadded BoundingBox.
-        """
-        self.unpadded_bbox = value
 
     @property
     def bbox(self) -> BoundingBox:
@@ -192,21 +175,18 @@ class PaddedText(BoundElement):
         instance around multiple text elements (a <g> elem).
         """
         return BoundingBox(
-            self.x,
-            self.y,
-            self.width,
-            self.height,
+            self.tbox.x - self.lpad,
+            self.tbox.y - self.tpad,
+            self.tbox.width + self.lpad + self.rpad,
+            self.tbox.height + self.tpad + self.bpad,
         )
 
     @bbox.setter
     def bbox(self, value: BoundingBox) -> None:
-        """Set the bounding box of this PaddedText.
-
-        :param value: The new bounding box.
-        :effects: The text element is transformed to fit the new bounding box.
-        """
-        msg = "Cannot set bbox of PaddedText, use transform() instead."
-        raise NotImplementedError(msg)
+        """Forbid setting the bbox directly."""
+        del value
+        msg = "Cannot set bbox."
+        raise AttributeError(msg)
 
     def transform(
         self,
@@ -232,36 +212,6 @@ class PaddedText(BoundElement):
         if self._metrics:
             y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
             self._metrics.scale(y_norm)
-
-    def transform_preserve_sidebearings(
-        self,
-        transformation: _Matrix | None = None,
-        *,
-        scale: tuple[float, float] | float | None = None,
-        dx: float | None = None,
-        dy: float | None = None,
-        reverse: bool = False,
-    ) -> None:
-        """Transform the element and bounding box preserving sidebearings.
-
-        :param transformation: a 6-tuple transformation matrix
-        :param scale: a scaling factor
-        :param dx: the x translation
-        :param dy: the y translation
-        :param reverse: Transform the element as if it were in a <g> element
-            transformed by tmat.
-
-        Preserve x for the common use case when multiple PaddedText instances are
-        created. (They will all have x=0 and baseline=0.) Do not lose x alignment
-        when the sidebearings are preserved.
-        """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
-        self.transform(tmat, reverse=reverse)
-        x = self.x
-        self._lpad /= x_norm
-        self._rpad /= x_norm
-        self.x = x
 
     @property
     def caps_bbox(self) -> BoundingBox:
@@ -403,6 +353,22 @@ class PaddedText(BoundElement):
         self.transform(scale=value / self.tbox.height)
 
     @property
+    def font_size(self) -> float:
+        """The font size of this line of text.
+
+        :return: The font size of this line of text.
+        """
+        return self.metrics.font_size
+
+    @font_size.setter
+    def font_size(self, value: float) -> None:
+        """Set the font size of this line of text.
+
+        :param value: The new font size.
+        """
+        self.transform(scale=value / self.font_size)
+
+    @property
     def baseline(self) -> float:
         """The y value of the baseline for the font.
 
@@ -454,22 +420,6 @@ class PaddedText(BoundElement):
         self.transform(dy=dy)
 
     @property
-    def font_size(self) -> float:
-        """The font size of this line of text.
-
-        :return: The font size of this line of text.
-        """
-        return self.metrics.font_size
-
-    @font_size.setter
-    def font_size(self, value: float) -> None:
-        """Set the font size of this line of text.
-
-        :param value: The new font size.
-        """
-        self.transform(scale=value / self.font_size)
-
-    @property
     def ascent(self) -> float:
         """The ascent of this line of text.
 
@@ -499,7 +449,7 @@ class PaddedText(BoundElement):
 
         :param value: The new cap height.
         """
-        self.metrics.scale(value / self.metrics.cap_height)
+        self.transform(scale=value / self.cap_height)
 
     @property
     def x_height(self) -> float:
@@ -515,7 +465,7 @@ class PaddedText(BoundElement):
 
         :param value: The new x height.
         """
-        self.metrics.scale(value / self.metrics.x_height)
+        self.transform(scale=value / self.x_height)
 
     @property
     def headroom(self) -> float:
@@ -523,7 +473,15 @@ class PaddedText(BoundElement):
 
         :return: The scaled headroom of this line of text.
         """
-        return self.metrics.ascent - self.metrics.x_height
+        return self.ascent - self.x_height
+
+    @property
+    def line_gap(self) -> float:
+        """The line gap of this line of text.
+
+        :return: The line gap of this line of text.
+        """
+        return self.metrics.line_gap
 
     @property
     def leading(self) -> float:
@@ -531,7 +489,7 @@ class PaddedText(BoundElement):
 
         :return: The line gap plus the height of this line of text.
         """
-        return self.height + self.metrics.line_gap
+        return self.height + self.line_gap
 
     @property
     def tpad(self) -> float:
@@ -632,28 +590,35 @@ class PaddedText(BoundElement):
         )
         self.transform(scale=new_scale)
 
-    @property
-    def width(self) -> float:
-        """The width of this line of text with padding.
+    def transform_preserve_sidebearings(
+        self,
+        transformation: _Matrix | None = None,
+        *,
+        scale: tuple[float, float] | float | None = None,
+        dx: float | None = None,
+        dy: float | None = None,
+        reverse: bool = False,
+    ) -> None:
+        """Transform the element and bounding box preserving sidebearings.
 
-        :return: The scaled width of this line of text with padding.
+        :param transformation: a 6-tuple transformation matrix
+        :param scale: a scaling factor
+        :param dx: the x translation
+        :param dy: the y translation
+        :param reverse: Transform the element as if it were in a <g> element
+            transformed by tmat.
+
+        Preserve x for the common use case when multiple PaddedText instances are
+        created. (They will all have x=0 and baseline=0.) Do not lose x alignment
+        when the sidebearings are preserved.
         """
-        return self.tbox.width + self.lpad + self.rpad
-
-    @width.setter
-    def width(self, value: float) -> None:
-        """Scale to padded_width = width without scaling padding.
-
-        :param width: The new width of this line of text.
-        :effects: the text_element bounding box is scaled to width - lpad - rpad.
-
-        Svg_Ultralight BoundingBoxes preserve x and y when scaling. This is
-        consistent with how rectangles, viewboxes, and anything else defined by x, y,
-        width, height behaves in SVG. This is unintuitive for text, because the
-        baseline is near y2 (y + height) not y. So, we preserve baseline (alter y
-        *and* y2) when scaling.
-        """
-        self.transform(scale=value / self.width)
+        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
+        self.transform(tmat, reverse=reverse)
+        x = self.x
+        self._lpad /= x_norm
+        self._rpad /= x_norm
+        self.x = x
 
     def set_width_preserve_sidebearings(self, value: float) -> None:
         """Set the width of this line of text without scaling sidebearings.
@@ -666,24 +631,6 @@ class PaddedText(BoundElement):
         scale = no_margins_new / no_margins_old
         self.transform_preserve_sidebearings(scale=scale)
 
-    @property
-    def height(self) -> float:
-        """The height of this line of text with padding.
-
-        :return: The scaled height of this line of text with padding.
-        """
-        return self.tbox.height + self.tpad + self.bpad
-
-    @height.setter
-    def height(self, value: float) -> None:
-        """Scale to height without scaling padding.
-
-        :param height: The new height of this line of text.
-        :effects: the text_element bounding box is scaled to height - tpad - bpad.
-        """
-        scale = value / self.height
-        self.transform(scale=scale)
-
     def set_height_preserve_sidebearings(self, value: float) -> None:
         """Set the height of this line of text without scaling sidebearings.
 
@@ -691,102 +638,6 @@ class PaddedText(BoundElement):
         :effects: the text_element bounding box is scaled to height - tpad - bpad.
         """
         self.transform_preserve_sidebearings(scale=value / self.height)
-
-    @property
-    def x(self) -> float:
-        """The left margin of this line of text.
-
-        :return: The left margin of this line of text.
-        """
-        return self.tbox.x - self.lpad
-
-    @x.setter
-    def x(self, value: float) -> None:
-        """Set the left margin of this line of text.
-
-        :param value: The left margin of this line of text.
-        """
-        self.transform(dx=value + self.lpad - self.tbox.x)
-
-    @property
-    def cx(self) -> float:
-        """The horizontal center of this line of text.
-
-        :return: The horizontal center of this line of text.
-        """
-        return self.x + self.width / 2
-
-    @cx.setter
-    def cx(self, value: float) -> None:
-        """Set the horizontal center of this line of text.
-
-        :param value: The horizontal center of this line of text.
-        """
-        self.x += value - self.cx
-
-    @property
-    def x2(self) -> float:
-        """The right margin of this line of text.
-
-        :return: The right margin of this line of text.
-        """
-        return self.tbox.x2 + self.rpad
-
-    @x2.setter
-    def x2(self, value: float) -> None:
-        """Set the right margin of this line of text.
-
-        :param value: The right margin of this line of text.
-        """
-        self.transform(dx=value - self.rpad - self.tbox.x2)
-
-    @property
-    def y(self) -> float:
-        """The top of this line of text.
-
-        :return: The top of this line of text.
-        """
-        return self.tbox.y - self.tpad
-
-    @y.setter
-    def y(self, value: float) -> None:
-        """Set the top of this line of text.
-
-        :param value: The top of this line of text.
-        """
-        self.transform(dy=value + self.tpad - self.tbox.y)
-
-    @property
-    def cy(self) -> float:
-        """The horizontal center of this line of text.
-
-        :return: The horizontal center of this line of text.
-        """
-        return self.y + self.height / 2
-
-    @cy.setter
-    def cy(self, value: float) -> None:
-        """Set the horizontal center of this line of text.
-
-        :param value: The horizontal center of this line of text.
-        """
-        self.y += value - self.cy
-
-    @property
-    def y2(self) -> float:
-        """The bottom of this line of text.
-
-        :return: The bottom of this line of text.
-        """
-        return self.tbox.y2 + self.bpad
-
-    @y2.setter
-    def y2(self, value: float) -> None:
-        """Set the bottom of this line of text.
-
-        :param value: The bottom of this line of text.
-        """
-        self.transform(dy=value - self.bpad - self.tbox.y2)
 
 
 def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:

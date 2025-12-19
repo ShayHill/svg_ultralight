@@ -62,10 +62,10 @@ from svg_ultralight.transformations import (
 )
 
 __all__ = [
+    "NSMAP",
     "BoundCollection",
     "BoundElement",
     "BoundingBox",
-    "NSMAP",
     "PaddedText",
     "SupportsBounds",
     "align_tspans",
