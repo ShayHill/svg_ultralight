@@ -34,6 +34,7 @@ from svg_ultralight.constructors.new_element import (
     new_sub_element,
     update_element,
 )
+from svg_ultralight.font_tools.font_info import FTFontInfo
 from svg_ultralight.inkscape import (
     write_pdf,
     write_pdf_from_svg,
@@ -67,6 +68,7 @@ __all__ = [
     "BoundCollection",
     "BoundElement",
     "BoundingBox",
+    "FTFontInfo",
     "PaddedList",
     "PaddedText",
     "SupportsBounds",
