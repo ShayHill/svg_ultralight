@@ -17,6 +17,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
     align_tspans,
     join_tspans,
+    open_font_info,
     pad_text,
     pad_text_inkscape,
     wrap_text,
@@ -98,6 +99,7 @@ __all__ = [
     "new_sub_element",
     "new_svg_root",
     "new_svg_root_around_bounds",
+    "open_font_info",
     "pad_bbox",
     "pad_text",
     "pad_text_inkscape",
