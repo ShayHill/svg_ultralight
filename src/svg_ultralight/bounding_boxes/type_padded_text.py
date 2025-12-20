@@ -683,4 +683,5 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     """
     union = new_empty_padded_union(*plems)
     union.elem = new_element_union(*(t.elem for t in plems), **attributes)
+    union.elem.set("data-text", "".join(t.elem.get("data-text", "") for t in plems))
     return union
