@@ -9,9 +9,9 @@ Two variants:
   (faster, and reveals font metrics)
 
 There is a default font size for pad_text_inkscape if an element is passed. There is
-also a default for the other pad_text functions, but it taken from the font file and
+also a default for the other pad_text functions, but it is taken from the font file and
 is usually 1024, so it won't be easy to miss. The default for standard
-pad_text_inkscape is to prevent surprises if Inksape defaults to font-size 12pt while
+pad_text_inkscape is to prevent surprises if Inkscape defaults to font-size 12pt while
 your browser defaults to 16px.
 
 :author: Shay Hill
@@ -33,7 +33,6 @@ from typing import (
     overload,
 )
 
-from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.type_padded_text import (
     FontMetrics,
     PaddedText,
@@ -118,7 +117,7 @@ def pad_text_inkscape(
     :param text_elem: an etree element with a text tag
     :param y_bounds_reference: an optional string to use to determine the ascent and
         capline of the font. The default is a good choice, which approaches or even
-        meets the ascent of descent of most fonts without using utf-8 characters. You
+        meets the ascent or descent of most fonts without using utf-8 characters. You
         might want to use a letter like "M" or even "x" if you are using an all-caps
         string and want to center between the capline and baseline or if you'd like
         to center between the baseline and x-line.
@@ -177,7 +176,8 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     """Arrange multiple PaddedText elements as if they were one long string.
 
     :param font: the one font file used for kerning.
-    :param tspans: list of tspan elements to join (each an output from pad_chars_ft).
+    :param tspans: variable number of tspan elements (each a group element of
+        path elements) to join (each an output from pad_text).
 
     This is limited and will not handle arbitrary text elements (only `g` elements
     with a "data-text" attribute equal to the character(s) in the tspan). Will also
@@ -185,6 +185,10 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     after they are created and all using similar fonts.
     """
     font_info = FTFontInfo(font)
+    if not all("data-text" in t.elem.attrib for t in tspans):
+        msg = "All tspans must have a data-text attribute."
+        raise ValueError(msg)
+
     for left, right in it.pairwise(tspans):
         l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
         r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
@@ -240,11 +244,12 @@ def pad_text(
 ) -> PaddedText | list[PaddedText]:
     """Create a new PaddedText instance using fontTools.
 
-    :param font: path to a font file.
-    :param text: the text of the text element or a list of text strings.
+    :param font: path to a font file or an FTFontInfo instance
+    :param text: the text of the text element or a list of text strings
     :param font_size: the font size to use. Skip for native font size. This can
         always be set later, but the argument is useful if you're working with fonts
-        that have different native font sizes (usually 1000, 1024, or 2048).
+        that have different native font sizes (usually 1000, 1024, or 2048)
+    :return: a PaddedText instance or a list of PaddedText instances
     """
     attributes_ = _remove_svg_font_attributes(attributes)
     font = FTFontInfo(font)
@@ -277,9 +282,8 @@ def _wrap_one_text(font: FontArg, text: str, width: float) -> list[str]:
     words = list(filter(None, (x.strip() for x in text.split())))
     if not words:
         return []
-    lines = [words.pop(0)]
-    while words:
-        next_word = words.pop(0)
+    lines = [words[0]]
+    for next_word in words[1:]:
         line_plus_word = f"{lines[-1]} {next_word}"
         if FTTextInfo(font, line_plus_word).bbox.width > width:
             lines.append(next_word)
@@ -306,7 +310,20 @@ def wrap_text(
 def wrap_text(
     font: FontArg, text: str | list[str], width: float, font_size: float | None = None
 ) -> list[str] | list[list[str]]:
-    """Wrap text to fit within the width of the font's bounding box."""
+    """Wrap text to fit within the specified width.
+
+    :param font: path to a font file or an FTFontInfo instance
+    :param text: the text string(s) to wrap.
+    :param width: the maximum width for each line. This width is used to
+        determine where line breaks should occur based on the font's text
+        metrics.
+    :param font_size: optional font size to scale the width calculation. If
+        provided, the width is scaled relative to the font's units_per_em. If
+        None, uses the font's native size.
+    :return: If text is a string, returns a list of strings (wrapped lines).
+        If text is a list of strings, returns a list of lists of strings
+        (wrapped lines for each input string).
+    """
     scale = font_size / FTFontInfo(font).units_per_em if font_size else 1.0
     width /= scale
     if isinstance(text, str):
