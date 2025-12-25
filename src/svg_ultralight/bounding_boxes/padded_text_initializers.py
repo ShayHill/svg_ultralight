@@ -23,6 +23,7 @@ from __future__ import annotations
 import copy
 import itertools as it
 import os
+from contextlib import suppress
 from functools import wraps
 from typing import (
     TYPE_CHECKING,
@@ -190,14 +191,15 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
         raise ValueError(msg)
 
     for left, right in it.pairwise(tspans):
-        l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
-        r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
-        l_name = font_info.try_glyph_name(l_joint)
-        r_name = font_info.try_glyph_name(r_joint)
         kern = 0.0
-        if l_name and r_name:
-            kern = font_info.kern_table.get((l_name, r_name), 0)
-            kern *= (left.scale[0] + right.scale[0]) / 2
+        with suppress(IndexError):
+            l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
+            r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
+            l_name = font_info.try_glyph_name(l_joint)
+            r_name = font_info.try_glyph_name(r_joint)
+            if l_name and r_name:
+                kern = font_info.kern_table.get((l_name, r_name), 0)
+                kern *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + kern
 
 
@@ -214,8 +216,25 @@ def join_tspans(
     not handle scaled PaddedText instances. This is for joining tspans immediately
     after they are created and all using similar fonts.
     """
-    align_tspans(font, *tspans)
-    return new_padded_union(*tspans, **attributes)
+    # Filter out empty tspans (those with empty or missing data-text, or zero width)
+    non_empty = [
+        t
+        for t in tspans
+        if t.width > 0
+        and "data-text" in t.elem.attrib
+        and _desanitize_svg_data_text(t.elem.attrib["data-text"])
+    ]
+
+    if not non_empty:
+        # If all tspans are empty, return an empty union
+        if tspans:
+            # Use the first tspan's metrics for the empty result
+            return new_padded_union(*tspans[:1], **attributes)
+        msg = "Cannot join empty tspans."
+        raise ValueError(msg)
+
+    align_tspans(font, *non_empty)
+    return new_padded_union(*non_empty, **attributes)
 
 
 @overload

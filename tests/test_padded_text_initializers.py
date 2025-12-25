@@ -18,6 +18,8 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
 )
 from svg_ultralight.constructors import new_element
 
+import random
+
 
 class TestPadTextInkscape:
     @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")
@@ -35,7 +37,6 @@ class TestPadTextInkscape:
 
 def _random_string(length: int) -> str:
     """Generate a random string of fixed length."""
-    import random
     import string
 
     letters = string.ascii_letters + string.digits + " "
@@ -43,17 +44,55 @@ def _random_string(length: int) -> str:
 
 
 class TestPadText:
+    def test_space_only(self) -> None:
+        """Test pad_text with a font file."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text(font, " ")
+        assert len(padded.elem) == 0
+
+    def test_empty_string(self) -> None:
+        """Test pad_text with an empty string."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        padded = pad_text(font, "")
+        padded_ref = pad_text(font, "a")
+        assert len(padded.elem) == 0
+        assert padded.width == 0
+        assert padded.height == padded_ref.height
+        assert padded.leading == padded_ref.leading
+        assert padded.tpad == padded.ascent
+        assert padded.rpad == 0
+        assert padded.bpad == -padded.descent
+        assert padded.lpad == 0
+
     def test_join_tspan(self) -> None:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
-        words = [_random_string(5) for _ in range(50)]
+        words = [_random_string(random.randint(0, 5)) for _ in range(50)]
         words.append("".join(words))
         plems = pad_text(font, words)
         joined = join_tspans(font, *plems[:-1])
         assert joined.width == plems[-1].width
+
+    def test_join_tspan_all_empty(self) -> None:
+        """Test join_tspans with all empty tspans."""
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        empty_plems = [pad_text(font, "") for _ in range(3)]
+        joined = join_tspans(font, *empty_plems)
+        assert joined.width == 0
+        assert len(joined.elem) == 1
+        assert len(joined.elem[0]) == 0
 
     def test_do_not_share_metrics(self) -> None:
         """Test do not share metrics instances."""

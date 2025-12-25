@@ -578,6 +578,8 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the entire text.
         :return: A list of svg path data for each character in the text.
         """
+        if not text:
+            return []
         hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
         svgds: list[tuple[str, str]] = []
         for c_this, c_next in it.pairwise(text):
@@ -693,6 +695,8 @@ class FTTextInfo:
 
         This is the right side bearing of the last glyph in the text.
         """
+        if not self.text:
+            return 0.0
         return self.font.get_rsb(self.text[-1])
 
     @property
@@ -706,6 +710,8 @@ class FTTextInfo:
 
         This is the left side bearing of the first glyph in the text.
         """
+        if not self.text:
+            return 0.0
         return self.font.get_lsb(self.text[0])
 
     @property
