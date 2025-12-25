@@ -54,6 +54,32 @@ convention = "pep257"
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101", "D", "F401"]  # Ignore assertions, docstrings, unused imports in test files
 
+
+[tool.ruff]
+line-length = 88  # Or your preferred value; default is 88
+
+# Select more rule groups (add to defaults for broader linting)
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "B",   # flake8-bugbear
+    "C",   # mccabe complexity
+    "UP",  # pyupgrade
+    "I",   # isort
+    "N",   # pep8-naming
+    "ANN", # flake8-annotations
+    "S",   # flake8-bandit (security)
+    "BLE", # flake8-blind-except
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "TCH", # flake8-type-checking
+    "ERA", # eradicate commented-out code
+    "PL",  # Pylint (many sub-rules)
+    "SIM", # flake8-simplify
+    # Add more as needed; see full list: https://docs.astral.sh/ruff/rules/
+]
+
 [tool.pyright]
 include = ["src"]
 exclude = ["**/__pycache__.py"]
