@@ -4,9 +4,7 @@ version = "0.80.0"
 description = "a sensible way to create svg files with Python"
 readme = "README.md"
 license = "MIT"
-authors = [
-    { name = "Shay Hill", email = "shay_public@hotmail.com" }
-]
+authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "cssutils>=2.11.1",
@@ -24,11 +22,7 @@ requires = ["uv_build>=0.8.22,<0.9.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "commitizen",
-    "pre-commit",
-    "pytest",
-]
+dev = ["commitizen", "pre-commit", "pytest"]
 
 
 [tool.commitizen]
@@ -42,49 +36,42 @@ version_files = ["pyproject.toml:^version"]
 [tool.isort]
 profile = "black"
 
-
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
-pythonpath = ["tests"]
-log_cli = 1
+pythonpath = "tests"
+log_cli = true
+
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["S101", "D", "F401"]  # Ignore assertions, docstrings, unused imports in test files
+"tests/*.py" = [
+    "S101",
+    "D",
+    "F401",
+] # Ignore assertions, docstrings, unused imports in test files
 
 [tool.ruff.format]
 docstring-code-line-length = 88
 
 [tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes
-    "B",   # flake8-bugbear
-    "C",   # mccabe complexity
-    "UP",  # pyupgrade
-    "I",   # isort
-    "N",   # pep8-naming
-    "ANN", # flake8-annotations
-    "S",   # flake8-bandit (security)
-    "BLE", # flake8-blind-except
-    "A",   # flake8-builtins
-    "C4",  # flake8-comprehensiOns
-    "TCH", # flake8-type-checking
-    "ERA", # eradicate commented-out code
-    "PL",  # Pylint (many sub-rules)
-    "SIM", # flake8-simplify
-    # Add more as needed; see full list: https://docs.astral.sh/ruff/rules/
+
+select = ["ALL"]
+
+ignore = [
+    "PLR", # magic values
+    "COM", # trailing commas
+    "ANN", # forbid Any
 ]
+
 
 [tool.pyright]
 include = ["src"]
 exclude = ["**/__pycache__.py"]
 
 pythonVersion = "3.10"
-pythonPlatform = "Any"
+pythonPlatform = "All"
 
 typeCheckingMode = "strict"
 # reportShadowedImports = true
