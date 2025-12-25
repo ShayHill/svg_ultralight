@@ -1,6 +1,6 @@
 """Use fontTools to extract some font information and remove the problematic types.
 
-Svg_Ultralight uses Inkscape command-line calls to find binding boxes, rasterize
+Svg_Ultralight uses Inkscape command-line calls to find bounding boxes, rasterize
 images, and convert font objects to paths. This has some nice advantages:
 
 - it's free
@@ -20,15 +20,15 @@ Pango is a Linux / GTK library. You can get it working on Windows with some work
 it's definitely not a requirement I want for every project that uses Svg_Ultralight.
 
 This means I can only infer Pango's text layout by passing reference text elements to
-Inkscape and examining the results. That's not terribly, but it's slow and does not
+Inkscape and examining the results. That's not terrible, but it's slow and does not
 reveal line_gap, line_height, true ascent, or true descent, which I often want for
 text layout.
 
 FontTools is a Pango-like library that can get *similar* results. Maybe identical
-results you want to re-implement Pango's text layout. I have 389 ttf and otf fonts
+results if you want to re-implement Pango's text layout. I have 389 ttf and otf fonts
 installed on my system.
 
-- for 361 of 389, this module apears to lay out text exactly as Pango.
+- for 361 of 389, this module appears to lay out text exactly as Pango.
 
 - 17 of 389 raise an error when trying to examine them. Some of these are only issues
   with the test text, which may include characters not in the font.
@@ -38,18 +38,17 @@ installed on my system.
 
 - 4 of 389 have x-bounds differences from Pango.
 
-I have provided the `check_font_tools_alignment` function to check an existing font
-for compatilibilty with Inkscape's text layout. If that returns (NO_ERROR, None),
-then a font object created with
+The fonts that do not match Pango's layout appeat to match whatever MS Office
+produces.
 
 ```
 new_element("text", text="abc", **get_svg_font_attributes(path_to_font))
 ```
 
-... will lay out the element exactly as Inkscape would *if* Inkscape were able to
-read locally linked font files.
+... will often lay out the element exactly as Inkscape would *if* Inkscape were
+able to read locally linked font files.
 
-Advantages to using fontTools do predict how Inkscape will lay out text:
+Advantages to using fontTools to predict how Inkscape will lay out text:
 
 - does not require Inkscape to be installed.
 
@@ -203,8 +202,8 @@ _XYTuple = tuple[float, float]
 def _split_into_quadratic(*pts: _XYTuple) -> Iterator[tuple[_XYTuple, _XYTuple]]:
     """Connect a series of points with quadratic bezier segments.
 
-    :param points: a series of at least two (x, y) coordinates.
-    :return: an iterator of ((x, y), (x, y)) quadatic bezier control points (the
+    :param pts: a series of at least two (x, y) coordinates.
+    :return: an iterator of ((x, y), (x, y)) quadratic bezier control points (the
         second and third points)
 
     This is part of connecting a (not provided) current point to the last input
@@ -293,7 +292,7 @@ class FTFontInfo:
         return instance
 
     def __init__(self, font: str | os.PathLike[str] | Self) -> None:
-        """Initialize the SUFont with a path to a TTF font file."""
+        """Initialize the FTFontInfo with a path to a TTF font file."""
         if self is font:
             return
         if isinstance(font, FTFontInfo):
@@ -311,7 +310,7 @@ class FTFontInfo:
         self._font.close()
 
     def maybe_close(self) -> None:
-        """Close the TTFont instance if it is was opened by this instance."""
+        """Close the TTFont instance if it was opened by this instance."""
         if self._ttfont_local_to_instance:
             self.__close__()
 
@@ -361,7 +360,8 @@ class FTFontInfo:
         """Get the kerning pairs for the font.
 
         :return: A dictionary mapping glyph pairs to their kerning values.
-        :raises ValueError: If the font does not have a 'kern' table.
+            Returns an empty dictionary if the font does not have a 'kern' or
+            'GPOS' table.
 
         I haven't run across a font with multiple kern tables, but *if* a font had
         multiple tables and *if* the same pair were defined in multiple tables, this
@@ -409,7 +409,7 @@ class FTFontInfo:
 
     @property
     def line_gap(self) -> int:
-        """Get the cap height for the font.
+        """Get the line gap for the font.
 
         :return: The (often 0) line gap for the font.
         """
@@ -445,10 +445,10 @@ class FTFontInfo:
         :param char: The character to get the glyph name for.
         :return: The glyph name for the character, or None if not found.
         """
-        ord_char = ord(char)
+        char_code = ord(char)
         char_map = cast("dict[int, str]", self.font.getBestCmap())
-        if ord_char in char_map:
-            return char_map[ord_char]
+        if char_code in char_map:
+            return char_map[char_code]
         return None
 
     def get_glyph_name(self, char: str) -> str:
@@ -458,11 +458,11 @@ class FTFontInfo:
         :return: The glyph name for the character.
         :raises ValueError: If the character is not found in the font.
         """
-        ord_char = self.try_glyph_name(char)
-        if ord_char is None:
+        glyph_name = self.try_glyph_name(char)
+        if glyph_name is None:
             msg = f"Character '{char}' not found in font '{self.path}'."
             raise ValueError(msg)
-        return ord_char
+        return glyph_name
 
     def get_char_svgd(self, char: str, dx: float = 0) -> str:
         """Return the svg path data for a glyph.
@@ -515,7 +515,6 @@ class FTFontInfo:
     def get_text_bounds(self, text: str) -> tuple[int, int, int, int]:
         """Return bounds of a string as xmin, ymin, xmax, ymax.
 
-        :param font_path: path to a TTF font file
         :param text: a string to get the bounding box for
 
         The max x value of a string is the sum of the hmtx advances for each glyph
@@ -528,6 +527,8 @@ class FTFontInfo:
         These bounds are in Cartesian coordinates, not translated to SVGs screen
         coordinates, and not x, y, width, height.
         """
+        if not text:
+            return 0, 0, 0, 0
         hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
 
         names = [self.get_glyph_name(c) for c in text]
@@ -549,6 +550,8 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the entire text.
         :return: An iterator of svg path data for each character in the text.
         """
+        if not text:
+            return
         hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
         char_dx = dx
         for c_this, c_next in it.pairwise(text):
@@ -602,8 +605,8 @@ class FTFontInfo:
 
     def get_lsb(self, char: str) -> float:
         """Return the left side bearing of a character."""
-        hmtx = cast("Any", self.font["hmtx"])
-        _, lsb = hmtx.metrics[self.get_glyph_name(char)]
+        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
+        _, lsb = hmtx[self.get_glyph_name(char)]
         return lsb
 
     def get_rsb(self, char: str) -> float:
@@ -623,7 +626,7 @@ class FTTextInfo:
         font: str | os.PathLike[str] | FTFontInfo,
         text: str,
     ) -> None:
-        """Initialize the SUText with text, a SUFont instance, and font size."""
+        """Initialize the FTTextInfo with text and an FTFontInfo instance."""
         self._font = FTFontInfo(font)
         self._text = text
 
@@ -656,16 +659,19 @@ class FTTextInfo:
         attributes["transform"] = svg_matrix(matrix_vals)
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", data_text=data_text, **attributes)
-        for i, (svgd, tmat) in enumerate(self.font.get_text_svgds(self.text)):
+        char_index = 0
+        for svgd, tmat in self.font.get_text_svgds(self.text):
             if not svgd:
+                char_index += 1
                 continue
-            data_text = _sanitize_svg_data_text(self.text[i])
+            data_text = _sanitize_svg_data_text(self.text[char_index])
             if not tmat:
                 _ = new_sub_element(group, "path", data_text=data_text, d=svgd)
-                continue
-            _ = new_sub_element(
-                group, "path", data_text=data_text, d=svgd, transform=tmat
-            )
+            else:
+                _ = new_sub_element(
+                    group, "path", data_text=data_text, d=svgd, transform=tmat
+                )
+            char_index += 1
         return group
 
     @property
@@ -732,7 +738,7 @@ def _get_font_names(
         convention that semi-reliably works with Inkscape.
 
     These are loosely the font-family and font-style, but they will not usually work
-    in Inkscape without some transation (see translate_font_style).
+    in Inkscape without some translation (see translate_font_style).
     """
     font = TTFont(path_to_font)
     name_table = cast("Any", font["name"])
@@ -780,13 +786,13 @@ _FONT_STRETCH_TERMS = [
 
 
 def _translate_font_style(style: str | None) -> dict[str, str]:
-    """Translate the myriad font styles retured by ttLib into valid svg styles.
+    """Translate the myriad font styles returned by ttLib into valid svg styles.
 
     :param style: the style string from a ttf or otf file, extracted by
         _get_font_names(path_to_font)[1].
     :return: a dictionary with keys 'font-style', 'font-weight', and 'font-stretch'
 
-    Attempt to create a set of svg font attributes that will reprduce a desired ttf
+    Attempt to create a set of svg font attributes that will reproduce a desired ttf
     or otf font.
     """
     result: dict[str, str] = {}
