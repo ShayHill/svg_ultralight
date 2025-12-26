@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from lxml import etree
+from paragraphs import par
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
@@ -42,17 +43,18 @@ def new_bbox_union(*blems: SupportsBounds | EtreeElement) -> BoundingBox:
     """
     bboxes = [x.bbox for x in blems if isinstance(x, HasBoundingBox)]
     if not bboxes:
-        msg = (
-            "Cannot find any bounding boxes to union. "
-            + "At least one argument must be a "
-            + "BoundElement, BoundingBox, or PaddedText."
+        msg = par(
+            """Cannot find any bounding boxes to union. At least one argument
+            must be a BoundElement, BoundingBox, or PaddedText."""
         )
         raise ValueError(msg)
 
     return BoundingBox.union(*bboxes)
 
 
-def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:
+def new_bound_union(
+    *blems: SupportsBounds | EtreeElement, **attribs: ElemAttrib
+) -> BoundElement:
     """Get the union of the bounding boxes of the given elements.
 
     :param blems: BoundElements or EtreeElements.
@@ -61,7 +63,7 @@ def new_bound_union(*blems: SupportsBounds | EtreeElement) -> BoundElement:
 
     Will used the padded_box attribute of PaddedText instances.
     """
-    group = new_element_union(*blems)
+    group = new_element_union(*blems, **attribs)
     bbox = new_bbox_union(*blems)
     return BoundElement(group, bbox)
 
