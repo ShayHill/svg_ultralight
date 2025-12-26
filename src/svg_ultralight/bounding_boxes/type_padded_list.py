@@ -143,7 +143,11 @@ class PaddedList(PaddedText):
         self.__mock_union = None
 
     def stack(
-        self, offset: float | None = None, bottom_handle: str = "baseline"
+        self,
+        offset: float | None = None,
+        bottom_handle: str = "baseline",
+        *,
+        scale: float | None = None,
     ) -> None:
         """Stack the padded text elements vertically.
 
@@ -151,14 +155,27 @@ class PaddedList(PaddedText):
             attribute with some adjustment for potentially differing font sizes.
         :param bottom_handle: The handle on the lower text element to align to the
             offset above the upper text element's baseline. Default is 'baseline'.
+        :param scale: The scale factor to apply to the offset. Default is None, which
+            means to use the offset given in the function call (default p.leading), even
+            if the font size changes between elements. A scale of 1 will attempt to
+            alter the offset in an intuitive way as the font size changes. An offset !=
+            None and != 1 will scale the offset *and* alter it for font size.
 
-        If bottom_handle is set to 'capline', then the offset will be the fixed
+        If `bottom_handle` is set to 'capline', then the offset will be the fixed
         distance between the baseline of one element and the capline of the element
-        below. This will usually be a better choice than a fixed baseline-to-baseline
-        distance when stacking text elements of different font sizes.
+        below. This will usually be a better choice than a fixed baseline-to- baseline
+        distance when stacking text elements of different font sizes. For the most
+        intuitive result, do not use a scale argument when specifying a `bottom_handle`.
         """
+        offset = offset if offset is not None else self.plems[0].leading
+        if scale is None:
+            for above, below in it.pairwise(self.plems):
+                dy = getattr(below, bottom_handle) - (above.baseline + offset)
+                below.transform(dy=-dy)
+            return
+        offset *= scale
         for above, below in it.pairwise(self.plems):
-            if offset is None:
-                offset = above.leading + above.y + below.ascent
-            dy = getattr(below, bottom_handle) - (above.baseline + offset)
+            offset_ = offset * above.leading / self.plems[0].leading
+            offset_ = offset - above.ascent + below.ascent
+            dy = getattr(below, bottom_handle) - (above.baseline + offset_)
             below.transform(dy=-dy)
