@@ -272,6 +272,22 @@ class PaddedText(BoundElement):
         self.transform(dx=value - self.tbox.x)
 
     @property
+    def cx(self) -> float:
+        """The center x value of the tight element bounding box.
+
+        :return: The center x value of the tight element bounding box.
+        """
+        return self.tbox.cx
+
+    @cx.setter
+    def cx(self, value: float) -> None:
+        """Set the center x value of the tight element bounding box.
+
+        :param value: The new center x value of the tight element bounding box.
+        """
+        self.transform(dx=value - self.tbox.cx)
+
+    @property
     def tx2(self) -> float:
         """The x2 value of the tight element bounding box.
 
@@ -302,6 +318,22 @@ class PaddedText(BoundElement):
         :param value: The new y value of the tight element bounding box.
         """
         self.transform(dy=value - self.tbox.y)
+
+    @property
+    def cy(self) -> float:
+        """The center y value of the tight element bounding box.
+
+        :return: The center y value of the tight element bounding box.
+        """
+        return self.tbox.cy
+
+    @cy.setter
+    def cy(self, value: float) -> None:
+        """Set the center y value of the tight element bounding box.
+
+        :param value: The new center y value of the tight element bounding box.
+        """
+        self.transform(dy=value - self.tbox.cy)
 
     @property
     def ty2(self) -> float:
