@@ -69,13 +69,14 @@ class TestPaddedList:
     def test_float_setters(self) -> None:
         """All getters match setter(value)."""
         plist = copy.deepcopy(test_instance)
+        # fmt: off
         attrs = [
-            "caps_cy", "tx", "tx2", "ty", "ty2", "twidth", "theight", "baseline",
-            "capline", "xline", "font_size", "cap_height", "x_height", "tpad", "rpad",
-            "bpad", "lpad", "width", "height", "x", "cx", "x2", "y", "cy", "y2"
+            "caps_cy", "tx", "tcx", "tx2", "ty", "tcy", "ty2", "twidth",
+            "theight", "baseline", "capline", "xline", "font_size",
+            "cap_height", "caps_cy", "x_height", "tpad", "rpad", "bpad", "lpad",
+            "width", "height", "x", "cx", "x2", "y", "cy", "y2",
         ]
         # fmt: on
         for attr in attrs:
             setattr(plist, attr, 50)
             assert math.isclose(getattr(plist, attr), 50)
-
