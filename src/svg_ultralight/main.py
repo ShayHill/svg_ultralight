@@ -18,7 +18,7 @@ from typing import IO, TYPE_CHECKING, TypeGuard
 
 from lxml import etree
 
-from svg_ultralight.constructors import update_element
+from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.layout import PadArg, pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.string_conversion import get_view_box_str, svg_tostring
@@ -26,6 +26,7 @@ from svg_ultralight.unit_conversion import MeasurementArg, to_svg_str, to_user_u
 
 if TYPE_CHECKING:
     import os
+    from collections.abc import Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -181,6 +182,7 @@ def write_svg(
             root.insert(0, style)
 
     etree.cleanup_namespaces(root)
+    _reuse_paths(root)
 
     svg_contents = svg_tostring(root, **tostring_kwargs)
 
@@ -193,3 +195,63 @@ def write_svg(
         return str(svg)
     msg = f"svg must be a path-like object or a file-like object, not {type(svg)}"
     raise TypeError(msg)
+
+
+def _next_unique_id(d2id: dict[str, str], id_: str) -> str:
+    """Get the next unique ID for a given ID."""
+    seen = set(d2id.values())
+    if id_ != "path" and id_ not in seen:
+        return id_
+    for candidate in (f"{id_}_{i}" for i in range(1, 1000)):
+        if candidate not in seen:
+            return candidate
+    msg = f"No unique ID found for {id_}"
+    raise RuntimeError(msg)
+
+
+def _iter_non_defs_paths(root: EtreeElement) -> Iterator[EtreeElement]:
+    """Iterate over the path elements that are not in the defs section."""
+    if root.tag == "defs":
+        return
+    if root.tag == "path" and "d" in root.attrib:
+        yield root
+        return
+    for child in root:
+        yield from _iter_non_defs_paths(child)
+
+
+def _reuse_paths(root: EtreeElement) -> None:
+    """Define paths in the defs section of the SVG.
+
+    :param root: the root element of an svg
+    """
+    d2id: dict[str, str] = {}
+    try:
+        defs = next(x for x in root if x.tag == "defs")
+    except StopIteration:
+        defs = new_element("defs")
+        root.insert(0, defs)
+    for path in _iter_non_defs_paths(root):
+        svgd = path.attrib["d"]
+        if svgd == "":
+            continue
+        if svgd in d2id:
+            id_ = d2id[svgd]
+        else:
+            id_ = path.attrib.get("data-text", "path")
+            id_ = _next_unique_id(d2id, id_)
+            d2id[svgd] = id_
+        parent = path.getparent()
+        if parent is None:
+            msg = "Element has no parent, cannot replace."
+            raise RuntimeError(msg)
+        pass_attrib = {k: v for k, v in path.attrib.items() if k != "d"}
+        replacement = new_element("use", href=f"#{d2id[svgd]}", **pass_attrib)
+        ix = parent.index(path)
+        parent.insert(ix, replacement)
+        parent.remove(path)
+    for svgd, id_ in d2id.items():
+        path = new_element("path", id_=id_, d=svgd)
+        defs.append(path)
+    if len(defs) == 0:
+        root.remove(defs)
