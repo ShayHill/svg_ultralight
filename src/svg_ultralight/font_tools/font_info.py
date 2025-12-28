@@ -307,7 +307,8 @@ class FTFontInfo:
 
     def __close__(self) -> None:
         """Close the font file."""
-        self._font.close()
+        if hasattr(self, "_font"):
+            self._font.close()
 
     def maybe_close(self) -> None:
         """Close the TTFont instance if it was opened by this instance."""
@@ -345,9 +346,9 @@ class FTFontInfo:
         try:
             maybe_units_per_em = cast("int | None", self.font["head"].unitsPerEm)
         except (KeyError, AttributeError) as e:
-            msg = (
-                f"Font '{self.path}' does not have"
-                + " 'head' table or 'unitsPerEm' attribute: {e}"
+            msg = par(
+                f"""Font '{self.path}' does not have a 'head' table or
+                'unitsPerEm' attribute: {e}"""
             )
             raise ValueError(msg) from e
         if maybe_units_per_em is None:

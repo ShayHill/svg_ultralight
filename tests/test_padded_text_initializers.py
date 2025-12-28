@@ -5,6 +5,8 @@
 """
 
 import math
+import random
+import string
 from pathlib import Path
 
 import pytest
@@ -17,8 +19,6 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     wrap_text,
 )
 from svg_ultralight.constructors import new_element
-
-import random
 
 
 class TestPadTextInkscape:
@@ -37,13 +37,20 @@ class TestPadTextInkscape:
 
 def _random_string(length: int) -> str:
     """Generate a random string of fixed length."""
-    import string
 
     letters = string.ascii_letters + string.digits + " "
     return "".join(random.choice(letters) for _ in range(length))
 
 
 class TestPadText:
+    def test_bad_font_path(self) -> None:
+        """Do not attempt to close an FTFontInfo instance that was never opened."""
+        with pytest.raises(
+            FileNotFoundError,
+            match=r"Font file 'does\\not\\exist.ttf' does not exist.",
+        ):
+            _ = pad_text("does/not/exist.ttf", "test")
+
     def test_space_only(self) -> None:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")

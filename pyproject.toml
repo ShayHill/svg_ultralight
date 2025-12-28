@@ -63,6 +63,7 @@ ignore = [
     "PLR", # magic values
     "COM", # trailing commas
     "ANN", # forbid Any
+    "S",   # warnings about pickle, random, etc.
 ]
 
 
