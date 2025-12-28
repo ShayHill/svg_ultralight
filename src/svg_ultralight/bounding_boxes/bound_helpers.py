@@ -1,11 +1,20 @@
 """Helper functions for dealing with BoundElements.
 
+Parsing an existing svg file into a BoundElement will replace any `use` elements
+with the elements they use *if the used element is a `path`*, remove the used
+elements if they were only defs, then clean up
+ and empty defs sections.
+
+This is the most straightforward way to simplify optimization (finding paths that can be
+copied) when the same BoundElement is written into another file with write_svg.
+
 :author: Shay Hill
 :created: 2024-05-03
 """
 
 from __future__ import annotations
 
+import copy
 from typing import TYPE_CHECKING
 
 from lxml import etree
@@ -14,7 +23,7 @@ from paragraphs import par
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
-from svg_ultralight.constructors import new_element
+from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
@@ -178,12 +187,89 @@ def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
     """
     tree = etree.parse(svg_file)
     root = tree.getroot()
+    _remove_namespace_prefixes(root)
     if len(root) == 0:
         msg = "SVG file does not contain any elements."
         raise ValueError(msg)
+    _decopy_paths(root)
     elem = new_element("g")
     elem.extend(list(root))
     if len(elem) == 1:
         elem = elem[0]
     bbox = BoundingBox(*get_bounding_box_from_root(root))
     return BoundElement(elem, bbox)
+
+
+def _remove_namespace_prefixes(root: EtreeElement) -> None:
+    """Remove namespace prefixes from the root element."""
+    for elem in root.iter():
+        elem.tag = etree.QName(elem).localname
+
+
+def _decopy_paths(root: EtreeElement) -> None:
+    """Replace use elements with the elements they use."""
+    hrefs: set[str] = set()
+    for use in root.xpath('.//*[local-name() = "use"]'):
+        href = _get_href(use)
+        hrefs.add(href)
+        original = _find_href(root, href)
+        if etree.QName(original).localname != "path":
+            continue
+        new_elem = copy.deepcopy(original)
+        _ = new_elem.attrib.pop("id", None)
+        pass_attrib = {k: v for k, v in use.attrib.items() if k != "href"}
+        _ = update_element(new_elem, **pass_attrib)
+        _replace_use(use, new_elem)
+
+    _remove_no_longer_referenced_defs(root, hrefs)
+    _remove_empty_defs(root)
+
+
+def _get_href(use: EtreeElement) -> str:
+    """Get the href of a use element."""
+    href = use.get("href")
+    if href is None:
+        msg = "Use element has no href attribute."
+        raise ValueError(msg)
+    return href.lstrip("#")
+
+
+def _find_href(root: EtreeElement, href: str) -> EtreeElement:
+    """Find the element with the given href."""
+    referenced = root.xpath(f'.//*[@id = "{href}"]')
+    if len(referenced) != 1:
+        msg = f"Expected 1 referenced element for href {href}, got {len(referenced)}."
+        raise ValueError(msg)
+    return referenced[0]
+
+
+def _replace_use(use: EtreeElement, new_elem: EtreeElement) -> None:
+    """Replace a use element with a new element."""
+    parent = use.getparent()
+    if parent is None:
+        msg = "Use element has no parent."
+        raise RuntimeError(msg)
+    parent.replace(use, new_elem)
+
+
+def _remove_no_longer_referenced_defs(root: EtreeElement, hrefs: set[str]) -> None:
+    """Remove defs elements that are no longer referenced."""
+    for href in hrefs:
+        original = _find_href(root, href)
+        parent = original.getparent()
+        if parent is None:
+            msg = "Referenced element has no parent."
+            raise RuntimeError(msg)
+        if etree.QName(parent).localname == "defs":
+            parent.remove(original)
+
+
+def _remove_empty_defs(root: EtreeElement) -> None:
+    """Remove defs elements that are empty."""
+    for defs in root.xpath('.//*[local-name() = "defs"]'):
+        if len(defs) == 0:
+            parent = defs.getparent()
+            if parent is None:
+                msg = "Defs element has no parent."
+                raise RuntimeError(msg)
+            parent.remove(defs)

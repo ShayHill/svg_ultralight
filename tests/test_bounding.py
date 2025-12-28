@@ -278,8 +278,4 @@ def test_import_bound_element():
     assert blem.bbox == BoundingBox(
         x=0, y=0, width=10, height=10, transformation=(1, 0, 0, 1, 0, 0)
     )
-    assert (
-        etree.tostring(blem.elem)
-        == b'<ns0:rect xmlns:ns0="http://www.w3.org/2000/svg"'
-        + b' x="0" y="0" width="10" height="10"/>\n'
-    )
+    assert etree.tostring(blem.elem) == b'<rect x="0" y="0" width="10" height="10"/>\n'
