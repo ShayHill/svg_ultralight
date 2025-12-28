@@ -1,7 +1,7 @@
 ci:
   skip: [pyright]
 
-exclude: "tests|experiments"
+exclude: "experiments"
 
 repos:
 
@@ -41,7 +41,7 @@ repos:
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.18.2
+  rev: v1.19.1
   hooks:
   - id: mypy
     name: mypy
@@ -57,7 +57,7 @@ repos:
     # files: ^(src/|tests/)
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.0
+  rev: v3.21.2
   hooks:
   - args:
     - --py310-plus
@@ -125,7 +125,7 @@ repos:
   # PLR0911 Too many return statements (to parse MeasurementArgs)
   # SLF001 Private member accessed
 
-  rev: 'v0.14.2'
+  rev: 'v0.14.10'
   hooks:
     - id: ruff
       exclude: "tests"
