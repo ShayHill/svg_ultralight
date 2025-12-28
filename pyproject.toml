@@ -1,6 +1,6 @@
 [project]
 name = "svg-ultralight"
-version = "0.86.0"
+version = "0.86.1"
 description = "a sensible way to create svg files with Python"
 readme = "README.md"
 license = "MIT"
@@ -27,7 +27,7 @@ dev = ["commitizen", "pre-commit", "pytest"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.86.0"
+version = "0.86.1"
 tag_format = "$version"
 major-version-zero = true
 version_files = ["pyproject.toml:^version"]
