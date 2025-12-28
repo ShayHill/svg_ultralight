@@ -211,7 +211,6 @@ def _decopy_paths(root: EtreeElement) -> None:
     hrefs: set[str] = set()
     for use in root.xpath('.//*[local-name() = "use"]'):
         href = _get_href(use)
-        hrefs.add(href)
         original = _find_href(root, href)
         if etree.QName(original).localname != "path":
             continue
@@ -220,6 +219,7 @@ def _decopy_paths(root: EtreeElement) -> None:
         pass_attrib = {k: v for k, v in use.attrib.items() if k != "href"}
         _ = update_element(new_elem, **pass_attrib)
         _replace_use(use, new_elem)
+        hrefs.add(href)
 
     _remove_no_longer_referenced_defs(root, hrefs)
     _remove_empty_defs(root)
