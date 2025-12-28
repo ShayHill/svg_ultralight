@@ -180,6 +180,8 @@ def write_svg(
                 style.text = etree.CDATA("\n" + "".join(css_file.readlines()) + "\n")
             root.insert(0, style)
 
+    etree.cleanup_namespaces(root)
+
     svg_contents = svg_tostring(root, **tostring_kwargs)
 
     if _is_io_bytes(svg):
