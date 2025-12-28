@@ -23,7 +23,6 @@ from __future__ import annotations
 import copy
 import itertools as it
 import os
-from contextlib import suppress
 from functools import wraps
 from typing import (
     TYPE_CHECKING,
@@ -50,7 +49,7 @@ from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -186,20 +185,20 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     after they are created and all using similar fonts.
     """
     font_info = FTFontInfo(font)
-    if not all("data-text" in t.elem.attrib for t in tspans):
-        msg = "All tspans must have a data-text attribute."
-        raise ValueError(msg)
+    tspans_ = [x for x in tspans if _has_chars(x)]
 
-    for left, right in it.pairwise(tspans):
+    for left, right in it.pairwise(tspans_):
         kern = 0.0
-        with suppress(IndexError):
-            l_joint = _desanitize_svg_data_text(left.elem.attrib["data-text"])[-1]
-            r_joint = _desanitize_svg_data_text(right.elem.attrib["data-text"])[0]
-            l_name = font_info.try_glyph_name(l_joint)
-            r_name = font_info.try_glyph_name(r_joint)
-            if l_name and r_name:
-                kern = font_info.kern_table.get((l_name, r_name), 0)
-                kern *= (left.scale[0] + right.scale[0]) / 2
+        l_joint = list(_iter_chars(left))[-1].attrib["data-text"]
+        l_joint = _desanitize_svg_data_text(l_joint)
+        r_joint = next(_iter_chars(right)).attrib["data-text"]
+        r_joint = _desanitize_svg_data_text(r_joint)
+
+        l_name = font_info.try_glyph_name(l_joint)
+        r_name = font_info.try_glyph_name(r_joint)
+        if l_name and r_name:
+            kern = font_info.kern_table.get((l_name, r_name), 0)
+            kern *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + kern
 
 
@@ -216,25 +215,40 @@ def join_tspans(
     not handle scaled PaddedText instances. This is for joining tspans immediately
     after they are created and all using similar fonts.
     """
-    # Filter out empty tspans (those with empty or missing data-text, or zero width)
-    non_empty = [
-        t
-        for t in tspans
-        if t.width > 0
-        and "data-text" in t.elem.attrib
-        and _desanitize_svg_data_text(t.elem.attrib["data-text"])
-    ]
+    non_empty = list(filter(_has_chars, tspans))
 
     if not non_empty:
-        # If all tspans are empty, return an empty union
+        # If all tspans are empty, return the first
         if tspans:
-            # Use the first tspan's metrics for the empty result
             return new_padded_union(*tspans[:1], **attributes)
         msg = "Cannot join empty tspans."
         raise ValueError(msg)
 
     align_tspans(font, *non_empty)
     return new_padded_union(*non_empty, **attributes)
+
+
+def _iter_chars(tspan: PaddedText) -> Iterator[EtreeElement]:
+    """Iterate over the characters in a PaddedText element.
+
+    :param tspan: The PaddedText element to iterate over.
+    :return: An iterator over the characters in the PaddedText element.
+    """
+    for child in tspan.elem.iter():
+        if child.tag != "path":
+            continue
+        if not child.attrib.get("data-text"):
+            continue
+        yield child
+
+
+def _has_chars(tspan: PaddedText) -> bool:
+    try:
+        _ = next(_iter_chars(tspan))
+    except StopIteration:
+        return False
+    else:
+        return True
 
 
 @overload
