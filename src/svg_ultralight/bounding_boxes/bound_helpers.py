@@ -72,6 +72,8 @@ def new_bound_union(
 
     Will used the padded_box attribute of PaddedText instances.
     """
+    if not blems:
+        return BoundElement(new_element("g", **attribs), BoundingBox(0, 0, 0, 0))
     group = new_element_union(*blems, **attribs)
     bbox = new_bbox_union(*blems)
     return BoundElement(group, bbox)

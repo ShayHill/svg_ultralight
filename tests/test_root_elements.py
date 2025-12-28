@@ -54,8 +54,9 @@ class TestNewBoundUnion:
     def test_bounding_boxes_only(self):
         """Raise an error if no elements found."""
         bboxes = [BoundingBox(0, 0, 100, 100), BoundingBox(50, 50, 150, 150)]
-        with pytest.raises(ValueError, match="must be a BoundElement, PaddedText"):
-            _ = new_bound_union(*bboxes)
+        union = new_bound_union(*bboxes)
+        assert len(union.elem) == 0
+        assert union.elem.tag == "g"
 
     def test_elements_only(self):
         """Raise an error if no elements found."""

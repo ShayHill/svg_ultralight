@@ -47,6 +47,7 @@ from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.constructors import new_element
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
@@ -677,6 +678,13 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     This is useful for mocking the bounding boxes and attributes of a PaddedText
     union without moving the elements into that union.
     """
+    if not plems:
+        # fmt: off
+        return PaddedText(
+            new_element("g"), BoundingBox(0, 0, 0, 0),
+            0, 0, 0, 0, FontMetrics(0, 0, 0, 0, 0, 0),
+        )
+        # fmt: on
     bbox = BoundingBox.union(*(t.bbox for t in plems))
     tbox = BoundingBox.union(*(t.tbox for t in plems))
     tpad = tbox.y - bbox.y

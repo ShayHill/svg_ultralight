@@ -139,13 +139,6 @@ def new_element_union(
         if isinstance(elem_elem, EtreeElement):
             elements_found.append(elem_elem)
 
-    if not elements_found:
-        msg = (
-            "Cannot find any elements to union. "
-            + "At least one argument must be a "
-            + "BoundElement, PaddedText, or EtreeElement."
-        )
-        raise ValueError(msg)
     group = new_element("g", **attributes)
     group.extend(elements_found)
     return group
