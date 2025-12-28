@@ -209,15 +209,20 @@ def _next_unique_id(d2id: dict[str, str], id_: str) -> str:
     raise RuntimeError(msg)
 
 
-def _iter_non_defs_paths(root: EtreeElement) -> Iterator[EtreeElement]:
-    """Iterate over the path elements that are not in the defs section."""
-    if root.tag == "defs":
+def _iter_paths(root: EtreeElement, exclude: EtreeElement) -> Iterator[EtreeElement]:
+    """Iterate over the path elements that are not the top defs section.
+
+    :param root: the root element of an svg
+    :param exclude: the element to exclude from the iteration (the top defs section)
+    :yield: the path elements that are not in the top defs section
+    """
+    if root is exclude:
         return
     if root.tag == "path" and "d" in root.attrib:
         yield root
         return
     for child in root:
-        yield from _iter_non_defs_paths(child)
+        yield from _iter_paths(child, exclude)
 
 
 def _reuse_paths(root: EtreeElement) -> None:
@@ -231,7 +236,7 @@ def _reuse_paths(root: EtreeElement) -> None:
     except StopIteration:
         defs = new_element("defs")
         root.insert(0, defs)
-    for path in _iter_non_defs_paths(root):
+    for path in _iter_paths(root, defs):
         svgd = path.attrib["d"]
         if svgd == "":
             continue
@@ -243,7 +248,7 @@ def _reuse_paths(root: EtreeElement) -> None:
             d2id[svgd] = id_
         parent = path.getparent()
         if parent is None:
-            msg = "Element has no parent, cannot replace."
+            msg = "Path element has no parent, cannot replace."
             raise RuntimeError(msg)
         pass_attrib = {k: v for k, v in path.attrib.items() if k != "d"}
         replacement = new_element("use", href=f"#{d2id[svgd]}", **pass_attrib)
