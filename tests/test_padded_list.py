@@ -4,12 +4,13 @@
 :created: 2025-11-18
 """
 
-from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
+import copy
 import itertools as it
 import math
 from pathlib import Path
+
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
-import copy
+from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 
 font = Path("C:/Windows/Fonts/bahnschrift.ttf")
 
@@ -24,14 +25,14 @@ class TestPaddedList:
 
     def test_getitem_int(self):
         plem = test_instance[1]
-        assert plem.elem.attrib["data-text"] == "b"
+        assert plem.elem[0].attrib["data-text"] == "b"
 
     def test_getitem_slice(self):
         sublist = test_instance[0::2]
         assert isinstance(sublist, PaddedList)
         assert len(sublist.plems) == 2
-        assert sublist.plems[0].elem.attrib["data-text"] == "a"
-        assert sublist.plems[1].elem.attrib["data-text"] == "c"
+        assert sublist.plems[0].elem[0].attrib["data-text"] == "a"
+        assert sublist.plems[1].elem[0].attrib["data-text"] == "c"
 
     def test_transform(self):
         plist = copy.deepcopy(test_instance)

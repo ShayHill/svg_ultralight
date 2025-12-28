@@ -58,7 +58,11 @@ class TestPadText:
             msg = "Test font file does not exist on system."
             pytest.skip(msg)
         padded = pad_text(font, " ")
-        assert len(padded.elem) == 0
+        assert len(padded.elem) == 1
+        padded = pad_text(font, "  ")
+        assert len(padded.elem) == 2
+        padded = pad_text(font, "             ")
+        assert len(padded.elem) == 2
 
     def test_empty_string(self) -> None:
         """Test pad_text with an empty string."""

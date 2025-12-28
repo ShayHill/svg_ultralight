@@ -118,6 +118,7 @@ if TYPE_CHECKING:
 
     from svg_ultralight.attrib_hints import ElemAttrib
 
+
 logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 
@@ -262,7 +263,7 @@ class PathPen(BasePen):
         if len(pts) > 3:
             msg = par(
                 """I'm uncertain how to decompose these points into cubics (if the
-                goal is to match font rendering in Inkscape and elsewhere. There is
+                goal is to match font rendering in Inkscape and elsewhere). There is
                 function, decomposeSuperBezierSegment, in fontTools, but I cannot
                 find a reference for the algorithm. I'm hoping to run into one in a
                 font file so I have a test case."""
@@ -566,34 +567,32 @@ class FTFontInfo:
     def get_text_svgd(self, text: str, dx: float = 0) -> str:
         """Return the svg path data for a string.
 
-        :param text: The text to get the svg path data for.
-        :param dx: An optional x translation to apply to the entire text.
-        :return: The svg path data for the text.
+        :param text: The text to get the svg path data for
+        :param dx: An optional x translation to apply to the entire text
+        :return: The svg path data for the text
         """
         return "".join(self.get_text_svgd_by_char(text, dx))
 
-    def get_text_svgds(self, text: str, dx: float = 0) -> list[tuple[str, str]]:
+    def get_text_svgds(self, text: str, dx: float = 0) -> list[tuple[str, float]]:
         """Return a list of svg path data for each character in a string.
 
-        :param text: The text to get the svg path data for.
-        :param dx: An optional x translation to apply to the entire text.
-        :return: A list of svg path data for each character in the text.
+        :param text: The text to get the svg path data for
+        :param dx: An optional x translation to apply to the entire text
+        :return: A list of svg path data for each character in the text
         """
         if not text:
             return []
         hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
-        svgds: list[tuple[str, str]] = []
+        svgds: list[tuple[str, float]] = []
         for c_this, c_next in it.pairwise(text):
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)
             svgd = self.get_char_svgd(c_this)
-            tmat = "" if dx == 0 else f"matrix(1 0 0 1 {dx} 0)"
-            svgds.append((svgd, tmat))
+            svgds.append((svgd, dx))
             dx += hmtx[this_name][0]
             dx += self.kern_table.get((this_name, next_name), 0)
         svgd = self.get_char_svgd(text[-1])
-        tmat = "" if dx == 0 else f"matrix(1 0 0 1 {dx} 0)"
-        svgds.append((svgd, tmat))
+        svgds.append((svgd, dx))
         return svgds
 
     def get_text_bbox(self, text: str) -> BoundingBox:
@@ -657,24 +656,27 @@ class FTTextInfo:
         return self._text
 
     def new_element(self, **attributes: ElemAttrib) -> EtreeElement:
-        """Return an svg text element with the appropriate font attributes."""
-        matrix_vals = (1, 0, 0, -1, 0, 0)
-        attributes["transform"] = svg_matrix(matrix_vals)
+        """Return an svg text element with the appropriate font attributes.
+
+        Create a `g` element of character paths. Inserts an empty space path if it
+        occurs at the beginning or end of the text. This is for kerning reference later
+        if the elements are joined together as tspans.
+        """
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", data_text=data_text, **attributes)
-        char_index = 0
-        for svgd, tmat in self.font.get_text_svgds(self.text):
+
+        def add_char(svgd: str, data_text: str, dx: float) -> None:
+            """Add a character path to the group."""
+            path = new_sub_element(group, "path", data_text=data_text, d=svgd)
+            if svgd:
+                path.set("transform", svg_matrix((1, 0, 0, -1, dx, 0)))
+
+        for i, (svgd, dx) in enumerate(self.font.get_text_svgds(self.text)):
             if not svgd:
-                char_index += 1
+                if i in (0, len(self.text) - 1):
+                    add_char(svgd, " ", dx)
                 continue
-            data_text = _sanitize_svg_data_text(self.text[char_index])
-            if not tmat:
-                _ = new_sub_element(group, "path", data_text=data_text, d=svgd)
-            else:
-                _ = new_sub_element(
-                    group, "path", data_text=data_text, d=svgd, transform=tmat
-                )
-            char_index += 1
+            add_char(svgd, data_text[i], dx)
         return group
 
     @property

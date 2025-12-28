@@ -191,10 +191,9 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
         kern = 0.0
         l_joint = list(_iter_chars(left))[-1].attrib["data-text"]
         l_joint = _desanitize_svg_data_text(l_joint)
+        l_name = font_info.try_glyph_name(l_joint)
         r_joint = next(_iter_chars(right)).attrib["data-text"]
         r_joint = _desanitize_svg_data_text(r_joint)
-
-        l_name = font_info.try_glyph_name(l_joint)
         r_name = font_info.try_glyph_name(r_joint)
         if l_name and r_name:
             kern = font_info.kern_table.get((l_name, r_name), 0)
