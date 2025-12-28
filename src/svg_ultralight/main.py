@@ -127,7 +127,7 @@ def write_svg(
     *,
     do_link_css: bool = False,
     **tostring_kwargs: str | bool,
-) -> str:
+) -> Path:
     r"""Write an xml element as an svg file.
 
     :param svg: open binary file object or path to output file (include extension .svg)
@@ -188,11 +188,11 @@ def write_svg(
 
     if _is_io_bytes(svg):
         _ = svg.write(svg_contents)
-        return svg.name
+        return Path(svg.name)
     if isinstance(svg, (str, Path)):
         with Path(svg).open("wb") as svg_file:
             _ = svg_file.write(svg_contents)
-        return str(svg)
+        return Path(str(svg))
     msg = f"svg must be a path-like object or a file-like object, not {type(svg)}"
     raise TypeError(msg)
 
