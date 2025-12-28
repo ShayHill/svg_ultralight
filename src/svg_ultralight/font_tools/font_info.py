@@ -663,7 +663,7 @@ class FTTextInfo:
         if the elements are joined together as tspans.
         """
         data_text = _sanitize_svg_data_text(self.text)
-        group = new_element("g", data_text=data_text, **attributes)
+        group = new_element("g", **attributes)
 
         def add_char(svgd: str, data_text: str, dx: float) -> None:
             """Add a character path to the group."""
