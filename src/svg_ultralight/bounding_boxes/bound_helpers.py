@@ -27,6 +27,7 @@ from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
+from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
 
 if TYPE_CHECKING:
     import os
@@ -203,9 +204,16 @@ def parse_bound_element(svg_file: str | os.PathLike[str]) -> BoundElement:
 
 
 def _remove_namespace_prefixes(root: EtreeElement) -> None:
-    """Remove namespace prefixes from the root element."""
+    """Remove namespace prefixes from the root element and its attributes."""
     for elem in root.iter():
+        if isinstance(elem, EtreeComment):
+            continue
         elem.tag = etree.QName(elem).localname
+        # Process attributes with namespace prefixes (e.g., xlink:href -> href)
+        for key in list(elem.attrib.keys()):
+            if ":" in key:
+                localname = etree.QName(key).localname
+                elem.attrib[localname] = elem.attrib.pop(key)
 
 
 def _decopy_paths(root: EtreeElement) -> None:
