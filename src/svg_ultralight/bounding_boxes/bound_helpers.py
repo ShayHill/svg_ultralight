@@ -216,23 +216,39 @@ def _remove_namespace_prefixes(root: EtreeElement) -> None:
                 elem.attrib[localname] = elem.attrib.pop(key)
 
 
+def _combine_use_and_def(use_elem: EtreeElement, def_elem: EtreeElement) -> EtreeElement:
+    """Combine a use element and a defd path element.
+    
+    :param use: a use element that used a defd path element.
+    :param defd_path: the defd path element
+    :return: The combined element.
+    """
+    def_attrib = {k: v for k, v in def_elem.attrib.items() if k != "id"}
+    use_attrib = {k: v for k, v in use_elem.attrib.items() if k != "href"}
+    if not use_attrib:
+        return new_element("path", **def_attrib)
+    if not def_attrib:
+        return new_element("path", **use_attrib)
+    for key, val in tuple(use_attrib.items()):
+        if key in ("x", "y", "width", "height"):
+            _ = use_attrib.pop(key)
+            def_attrib[key] = val
+    if not use_attrib:
+        return new_element("path", **def_attrib)
+    new_elem = new_element("g", **use_attrib)
+    new_elem.append(update_element(def_elem, **def_attrib))
+    return new_elem
 def _decopy_paths(root: EtreeElement) -> None:
     """Replace use elements with the elements they use."""
     hrefs: set[str] = set()
-    for use in root.xpath('.//*[local-name() = "use"]'):
-        href = _get_href(use)
+    for use_elem in root.xpath('.//*[local-name() = "use"]'):
+        href = _get_href(use_elem)
         original = _find_href(root, href)
         if etree.QName(original).localname != "path":
             continue
-        copy_of_defd_path = copy.deepcopy(original)
-        _ = copy_of_defd_path.attrib.pop("id", None)
-        use_attrib = {k: v for k, v in use.attrib.items() if k != "href"}
-        if copy_of_defd_path.attrib and use_attrib:
-            new_elem = new_element("g", **use_attrib)
-            new_elem.append(copy_of_defd_path)
-        else:
-            new_elem = new_element("path", **use_attrib, **copy_of_defd_path.attrib)
-        _replace_use(use, new_elem)
+        def_elem = copy.deepcopy(original)
+        new_elem = _combine_use_and_def(use_elem, def_elem)
+        _replace_use(use_elem, new_elem)
         hrefs.add(href)
 
     _remove_no_longer_referenced_defs(root, hrefs)
@@ -251,9 +267,6 @@ def _get_href(use: EtreeElement) -> str:
 def _find_href(root: EtreeElement, href: str) -> EtreeElement:
     """Find the element with the given href."""
     referenced = root.xpath(f'.//*[@id = "{href}"]')
-    if len(referenced) != 1:
-        msg = f"Expected 1 referenced element for href {href}, got {len(referenced)}."
-        raise ValueError(msg)
     return referenced[0]
 
 
