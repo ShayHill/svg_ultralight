@@ -224,10 +224,14 @@ def _decopy_paths(root: EtreeElement) -> None:
         original = _find_href(root, href)
         if etree.QName(original).localname != "path":
             continue
-        new_elem = copy.deepcopy(original)
-        _ = new_elem.attrib.pop("id", None)
-        pass_attrib = {k: v for k, v in use.attrib.items() if k != "href"}
-        _ = update_element(new_elem, **pass_attrib)
+        copy_of_defd_path = copy.deepcopy(original)
+        _ = copy_of_defd_path.attrib.pop("id", None)
+        use_attrib = {k: v for k, v in use.attrib.items() if k != "href"}
+        if copy_of_defd_path.attrib and use_attrib:
+            new_elem = new_element("g", **use_attrib)
+            new_elem.append(copy_of_defd_path)
+        else:
+            new_elem = new_element("path", **use_attrib, **copy_of_defd_path.attrib)
         _replace_use(use, new_elem)
         hrefs.add(href)
 

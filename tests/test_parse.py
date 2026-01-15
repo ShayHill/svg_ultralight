@@ -15,4 +15,4 @@ def test_decopy_paths():
     """Replace any use elements with the elements they use."""
     blem = parse_bound_element(input_svg)
     assert len(blem.elem) == 7
-    assert all(e.tag == "path" for e in blem.elem)
+    assert all(e.tag == "g" for e in blem.elem)
