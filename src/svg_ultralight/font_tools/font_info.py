@@ -91,10 +91,8 @@ fontTools and this module.
 
 from __future__ import annotations
 
-import functools as ft
 import itertools as it
 import logging
-import weakref
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -120,6 +118,9 @@ if TYPE_CHECKING:
 
 
 logging.getLogger("fontTools").setLevel(logging.ERROR)
+
+# Cache for FTFontInfo instances keyed by font path
+_FONT_INFO_CACHE: dict[Path, FTFontInfo] = {}
 
 
 DATA_TEXT_ESCAPE_CHARS = {
@@ -285,79 +286,104 @@ class FTFontInfo:
     """Hide all the type kludging necessary to use fontTools."""
 
     def __new__(cls, font: str | os.PathLike[str] | Self) -> Self:
-        """Create a new FTFontInfo instance as a context manager."""
+        """Create a new FTFontInfo instance, using cache if available."""
         if isinstance(font, FTFontInfo):
             return font
-        instance = super().__new__(cls)
-        _ = weakref.finalize(instance, instance.__close__)
-        return instance
+        font_path = Path(font).resolve()
+        if font_path in _FONT_INFO_CACHE:
+            return cast("Self", _FONT_INFO_CACHE[font_path])
+        return super().__new__(cls)
 
     def __init__(self, font: str | os.PathLike[str] | Self) -> None:
         """Initialize the FTFontInfo with a path to a TTF font file."""
-        if self is font:
-            return
         if isinstance(font, FTFontInfo):
-            msg = "Unexpected Error, should have been caught in __new__."
-            raise TypeError(msg)
-        self._ttfont_local_to_instance = True
-        self._path = Path(font)
-        if not self.path.exists():
-            msg = f"Font file '{self.path}' does not exist."
-            raise FileNotFoundError(msg)
-        self._font = TTFont(self.path)
+            return
+        if hasattr(self, "path"):
+            # Instance is already initialized, returned from cache by __new__
+            return
+        self.path = Path(font).resolve()
+        font_obj = TTFont(self.path)
+        self._cache_font_data(font_obj)
+        font_obj.close()
+        _FONT_INFO_CACHE[self.path] = self
 
-    def __close__(self) -> None:
-        """Close the font file."""
-        if hasattr(self, "_font"):
-            self._font.close()
+    def _cache_font_data(self, font: TTFont) -> None:
+        """Cache all required font data and close the TTFont instance.
 
-    def maybe_close(self) -> None:
-        """Close the TTFont instance if it was opened by this instance."""
-        if self._ttfont_local_to_instance:
-            self.__close__()
+        :param font: The TTFont instance to extract data from
+        """
+        try:
+            head_table = font["head"]
+            self._units_per_em = cast("int | None", head_table.unitsPerEm)
+        except (KeyError, AttributeError):
+            self._units_per_em = None
 
-    def __enter__(self) -> Self:
-        """Enter the context manager."""
-        return self
+        try:
+            kern_tables = cast(
+                "list[dict[tuple[str, str], int]]",
+                [x.kernTable for x in font["kern"].kernTables],
+            )
+            kern = dict(x for d in reversed(kern_tables) for x in d.items())
+        except (KeyError, AttributeError):
+            kern = {}
+        with suppress(Exception):
+            kern.update(_get_gpos_kerning(font))
+        self._kern_table = kern
 
-    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
-        """Exit the context manager."""
-        del exc_type, exc_value, traceback
-        self.maybe_close()
+        try:
+            os2_table = font["os2"]
+            self._os2_sTypoAscender = getattr(os2_table, "sTypoAscender", None)
+            self._os2_sTypoDescender = getattr(os2_table, "sTypoDescender", None)
+            self._os2_sTypoLineGap = getattr(os2_table, "sTypoLineGap", None)
+            self._os2_sCapHeight = getattr(os2_table, "sCapHeight", None)
+            self._os2_sxHeight = getattr(os2_table, "sxHeight", None)
+        except (KeyError, AttributeError):
+            self._os2_sTypoAscender = None
+            self._os2_sTypoDescender = None
+            self._os2_sTypoLineGap = None
+            self._os2_sCapHeight = None
+            self._os2_sxHeight = None
+
+        try:
+            hhea_table = font["hhea"]
+            self._hhea_ascent = getattr(hhea_table, "ascent", None)
+            self._hhea_descent = getattr(hhea_table, "descent", None)
+            self._hhea_lineGap = getattr(hhea_table, "lineGap", None)
+        except (KeyError, AttributeError):
+            self._hhea_ascent = None
+            self._hhea_descent = None
+            self._hhea_lineGap = None
+
+        try:
+            self._hmtx = cast("dict[str, tuple[int, int]]", font["hmtx"])
+        except (KeyError, AttributeError):
+            self._hmtx = {}
+
+        try:
+            self._cmap = cast("dict[int, str]", font.getBestCmap())
+        except (KeyError, AttributeError):
+            self._cmap = {}
+
+        try:
+            self._glyph_set = font.getGlyphSet()
+        except (KeyError, AttributeError):
+            self._glyph_set = None
 
     @property
-    def path(self) -> Path:
-        """Return the path to the font file."""
-        return self._path
-
-    @property
-    def font(self) -> TTFont:
-        """Return the fontTools TTFont object."""
-        return self._font
-
-    @ft.cached_property
     def units_per_em(self) -> int:
         """Get the units per em for the font.
 
         :return: The units per em for the font. For a ttf, this will usually
-            (always?) be 2048.
+            be 2048, sometimes 1000 or 1024.
         :raises ValueError: If the font does not have a 'head' table or 'unitsPerEm'
             attribute.
         """
-        try:
-            maybe_units_per_em = cast("int | None", self.font["head"].unitsPerEm)
-        except (KeyError, AttributeError) as e:
-            msg = par(
-                f"""Font '{self.path}' does not have a 'head' table or
-                'unitsPerEm' attribute: {e}"""
-            )
-            raise ValueError(msg) from e
-        if maybe_units_per_em is None:
+        if self._units_per_em is None:
             msg = f"Font '{self.path}' does not have 'unitsPerEm' defined."
             raise ValueError(msg)
-        return maybe_units_per_em
+        return self._units_per_em
 
-    @ft.cached_property
+    @property
     def kern_table(self) -> dict[tuple[str, str], int]:
         """Get the kerning pairs for the font.
 
@@ -370,18 +396,7 @@ class FTFontInfo:
         method would give precedence to the first occurrence. That behavior is copied
         from examples found online.
         """
-        try:
-            kern_tables = cast(
-                "list[dict[tuple[str, str], int]]",
-                [x.kernTable for x in self.font["kern"].kernTables],
-            )
-            kern = dict(x for d in reversed(kern_tables) for x in d.items())
-        except (KeyError, AttributeError):
-            kern = {}
-        with suppress(Exception):
-            kern.update(_get_gpos_kerning(self.font))
-
-        return kern
+        return self._kern_table
 
     @property
     def ascent(self) -> int:
@@ -389,10 +404,10 @@ class FTFontInfo:
 
         :return: The ascent for the font.
         """
-        with suppress(KeyError, AttributeError):
-            return self.font["os2"].sTypoAscender
-        with suppress(KeyError, AttributeError):
-            return self.font["hhea"].ascent
+        if self._os2_sTypoAscender is not None:
+            return self._os2_sTypoAscender
+        if self._hhea_ascent is not None:
+            return self._hhea_ascent
         msg = f"Failed to find ascent for font '{self.path}'."
         raise AttributeError(msg)
 
@@ -402,10 +417,10 @@ class FTFontInfo:
 
         :return: The descent for the font.
         """
-        with suppress(KeyError, AttributeError):
-            return self.font["os2"].sTypoDescender
-        with suppress(KeyError, AttributeError):
-            return self.font["hhea"].descent
+        if self._os2_sTypoDescender is not None:
+            return self._os2_sTypoDescender
+        if self._hhea_descent is not None:
+            return self._hhea_descent
         msg = f"Failed to find descent for font '{self.path}'."
         raise AttributeError(msg)
 
@@ -415,10 +430,10 @@ class FTFontInfo:
 
         :return: The (often 0) line gap for the font.
         """
-        with suppress(KeyError, AttributeError):
-            return self.font["os2"].sTypoLineGap
-        with suppress(KeyError, AttributeError):
-            return self.font["hhea"].lineGap
+        if self._os2_sTypoLineGap is not None:
+            return self._os2_sTypoLineGap
+        if self._hhea_lineGap is not None:
+            return self._hhea_lineGap
         return 0
 
     @property
@@ -427,8 +442,8 @@ class FTFontInfo:
 
         :return: The cap height for the font.
         """
-        with suppress(KeyError, AttributeError):
-            return self.font["os2"].sCapHeight
+        if self._os2_sCapHeight is not None:
+            return self._os2_sCapHeight
         return self.get_char_bounds("H")[3]
 
     @property
@@ -437,8 +452,8 @@ class FTFontInfo:
 
         :return: The x-height for the font.
         """
-        with suppress(KeyError, AttributeError):
-            return self.font["os2"].sxHeight  # rare
+        if self._os2_sxHeight is not None:
+            return self._os2_sxHeight
         return self.get_char_bounds("x")[3]
 
     def try_glyph_name(self, char: str) -> str | None:
@@ -448,9 +463,8 @@ class FTFontInfo:
         :return: The glyph name for the character, or None if not found.
         """
         char_code = ord(char)
-        char_map = cast("dict[int, str]", self.font.getBestCmap())
-        if char_code in char_map:
-            return char_map[char_code]
+        if char_code in self._cmap:
+            return self._cmap[char_code]
         return None
 
     def get_glyph_name(self, char: str) -> str:
@@ -473,10 +487,12 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the glyph.
         :return: The svg path data for the character.
         """
+        if self._glyph_set is None:
+            msg = f"Font '{self.path}' does not have a glyph set."
+            raise AttributeError(msg)
         glyph_name = self.get_glyph_name(char)
-        glyph_set = self.font.getGlyphSet()
-        path_pen = PathPen(glyph_set)
-        _ = glyph_set[glyph_name].draw(path_pen)
+        path_pen = PathPen(self._glyph_set)
+        _ = self._glyph_set[glyph_name].draw(path_pen)
         svgd = path_pen.svgd
         if not dx or not svgd:
             return format_svgd_shortest(svgd)
@@ -494,10 +510,12 @@ class FTFontInfo:
         same, but when they disagree, this method is more accurate. Additionally,
         some fonts do not have a glyf table, so this method is more robust.
         """
+        if self._glyph_set is None:
+            msg = f"Font '{self.path}' does not have a glyph set."
+            raise AttributeError(msg)
         glyph_name = self.get_glyph_name(char)
-        glyph_set = self.font.getGlyphSet()
-        bounds_pen = BoundsPen(glyph_set)
-        _ = glyph_set[glyph_name].draw(bounds_pen)
+        bounds_pen = BoundsPen(self._glyph_set)
+        _ = self._glyph_set[glyph_name].draw(bounds_pen)
         pen_bounds = cast("None | tuple[int, int, int, int]", bounds_pen.bounds)
         if pen_bounds is None:
             return 0, 0, 0, 0
@@ -531,11 +549,10 @@ class FTFontInfo:
         """
         if not text:
             return 0, 0, 0, 0
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
 
         names = [self.get_glyph_name(c) for c in text]
         bounds = [self.get_char_bounds(c) for c in text]
-        total_advance = sum(hmtx[n][0] for n in names[:-1])
+        total_advance = sum(self._hmtx[n][0] for n in names[:-1])
         total_kern = sum(self.kern_table.get((x, y), 0) for x, y in it.pairwise(names))
         min_xs, min_ys, max_xs, max_ys = zip(*bounds, strict=True)
         min_x = min_xs[0]
@@ -554,13 +571,12 @@ class FTFontInfo:
         """
         if not text:
             return
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
         char_dx = dx
         for c_this, c_next in it.pairwise(text):
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)
             yield self.get_char_svgd(c_this, char_dx)
-            char_dx += hmtx[this_name][0]
+            char_dx += self._hmtx[this_name][0]
             char_dx += self.kern_table.get((this_name, next_name), 0)
         yield self.get_char_svgd(text[-1], char_dx)
 
@@ -582,14 +598,13 @@ class FTFontInfo:
         """
         if not text:
             return []
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
         svgds: list[tuple[str, float]] = []
         for c_this, c_next in it.pairwise(text):
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)
             svgd = self.get_char_svgd(c_this)
             svgds.append((svgd, dx))
-            dx += hmtx[this_name][0]
+            dx += self._hmtx[this_name][0]
             dx += self.kern_table.get((this_name, next_name), 0)
         svgd = self.get_char_svgd(text[-1])
         svgds.append((svgd, dx))
@@ -607,16 +622,14 @@ class FTFontInfo:
 
     def get_lsb(self, char: str) -> float:
         """Return the left side bearing of a character."""
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
-        _, lsb = hmtx[self.get_glyph_name(char)]
+        _, lsb = self._hmtx[self.get_glyph_name(char)]
         return lsb
 
     def get_rsb(self, char: str) -> float:
         """Return the right side bearing of a character."""
         glyph_name = self.get_glyph_name(char)
         glyph_width = self.get_char_bbox(char).width
-        hmtx = cast("dict[str, tuple[int, int]]", self.font["hmtx"])
-        advance, lsb = hmtx[glyph_name]
+        advance, lsb = self._hmtx[glyph_name]
         return advance - (lsb + glyph_width)
 
 
@@ -631,19 +644,6 @@ class FTTextInfo:
         """Initialize the FTTextInfo with text and an FTFontInfo instance."""
         self._font = FTFontInfo(font)
         self._text = text
-
-    def __close__(self) -> None:
-        """Close the font file."""
-        self._font.maybe_close()
-
-    def __enter__(self) -> Self:
-        """Enter the context manager."""
-        return self
-
-    def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> None:
-        """Exit the context manager."""
-        del exc_type, exc_value, traceback
-        self.__close__()
 
     @property
     def font(self) -> FTFontInfo:

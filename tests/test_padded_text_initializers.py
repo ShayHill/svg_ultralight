@@ -45,10 +45,7 @@ def _random_string(length: int) -> str:
 class TestPadText:
     def test_bad_font_path(self) -> None:
         """Do not attempt to close an FTFontInfo instance that was never opened."""
-        with pytest.raises(
-            FileNotFoundError,
-            match=r"Font file 'does\\not\\exist.ttf' does not exist.",
-        ):
+        with pytest.raises(FileNotFoundError, match=r"exist.ttf' does not exist."):
             _ = pad_text("does/not/exist.ttf", "test")
 
     def test_space_only(self) -> None:

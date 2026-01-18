@@ -23,10 +23,8 @@ from __future__ import annotations
 import copy
 import itertools as it
 import os
-from functools import wraps
 from typing import (
     TYPE_CHECKING,
-    Concatenate,
     ParamSpec,
     TypeAlias,
     TypeVar,
@@ -49,7 +47,7 @@ from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -68,27 +66,6 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 FontArg: TypeAlias = str | os.PathLike[str] | FTFontInfo
-
-
-def open_font_info(
-    func: Callable[Concatenate[FontArg, P], R],
-) -> Callable[Concatenate[FontArg, P], R]:
-    """Decorate functions to open and close an FTFontInfo object.
-
-    If an FTFontInfo instance is provided as the first argument, use it directly
-    and leave it open. If a string or path is provided instead, create a local
-    FTFontInfo instance and close it after use.
-    """
-
-    @wraps(func)
-    def wrapper(font: FontArg, *args: P.args, **kwargs: P.kwargs) -> R:
-        font_info = FTFontInfo(font)
-        result = func(font_info, *args, **kwargs)
-        if not isinstance(font, FTFontInfo):
-            font_info.__close__()
-        return result
-
-    return wrapper
 
 
 def _desanitize_svg_data_text(text: str) -> str:
@@ -171,7 +148,6 @@ def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, 
     return {k: v for k, v in attributes_.items() if k not in keys_to_remove}
 
 
-@open_font_info
 def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     """Arrange multiple PaddedText elements as if they were one long string.
 
@@ -251,14 +227,12 @@ def _has_chars(tspan: PaddedText) -> bool:
 
 
 @overload
-@open_font_info
 def pad_text(
     font: FontArg, text: str, font_size: float | None = None, **attributes: ElemAttrib
 ) -> PaddedText: ...
 
 
 @overload
-@open_font_info
 def pad_text(
     font: FontArg,
     text: list[str],
@@ -267,7 +241,6 @@ def pad_text(
 ) -> list[PaddedText]: ...
 
 
-@open_font_info
 def pad_text(
     font: FontArg,
     text: str | list[str],
@@ -308,7 +281,6 @@ def pad_text(
     return plems
 
 
-@open_font_info
 def _wrap_one_text(font: FontArg, text: str, width: float) -> list[str]:
     """Wrap one line of text."""
     words = list(filter(None, (x.strip() for x in text.split())))
@@ -325,20 +297,17 @@ def _wrap_one_text(font: FontArg, text: str, width: float) -> list[str]:
 
 
 @overload
-@open_font_info
 def wrap_text(
     font: FontArg, text: str, width: float, font_size: float | None = None
 ) -> list[str]: ...
 
 
 @overload
-@open_font_info
 def wrap_text(
     font: FontArg, text: list[str], width: float, font_size: float | None = None
 ) -> list[list[str]]: ...
 
 
-@open_font_info
 def wrap_text(
     font: FontArg, text: str | list[str], width: float, font_size: float | None = None
 ) -> list[str] | list[list[str]]:
