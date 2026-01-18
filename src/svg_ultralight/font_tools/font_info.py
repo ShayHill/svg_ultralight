@@ -337,12 +337,18 @@ class FTFontInfo:
             self._os2_sTypoLineGap = getattr(os2_table, "sTypoLineGap", None)
             self._os2_sCapHeight = getattr(os2_table, "sCapHeight", None)
             self._os2_sxHeight = getattr(os2_table, "sxHeight", None)
+            self._ySuperscriptXOffset = getattr(os2_table, "ySuperscriptXOffset", None)
+            self._ySuperscriptYOffset = getattr(os2_table, "ySuperscriptYOffset", None)
+            self._ySuperscriptYSize = getattr(os2_table, "ySuperscriptYSize", None)
         except (KeyError, AttributeError):
             self._os2_sTypoAscender = None
             self._os2_sTypoDescender = None
             self._os2_sTypoLineGap = None
             self._os2_sCapHeight = None
             self._os2_sxHeight = None
+            self._ySuperscriptXOffset = None
+            self._ySuperscriptYOffset = None
+            self._ySuperscriptYSize = None
 
         try:
             hhea_table = font["hhea"]
@@ -445,6 +451,36 @@ class FTFontInfo:
         if self._os2_sCapHeight is not None:
             return self._os2_sCapHeight
         return self.get_char_bounds("H")[3]
+
+    @property
+    def y_superscript_x_offset(self) -> int:
+        """Get the x offset for superscript text.
+
+        :return: The x offset for superscript text.
+        """
+        if self._ySuperscriptXOffset is not None:
+            return self._ySuperscriptXOffset
+        return 0
+
+    @property
+    def y_superscript_y_offset(self) -> int:
+        """Get the y offset for superscript text.
+
+        :return: The y offset for superscript text.
+        """
+        if self._ySuperscriptYOffset is not None:
+            return self._ySuperscriptYOffset
+        return 0
+
+    @property
+    def y_superscript_y_size(self) -> int:
+        """Get the y size for superscript text.
+
+        :return: The y size for superscript text.
+        """
+        if self._ySuperscriptYSize is not None:
+            return self._ySuperscriptYSize
+        return 0
 
     @property
     def x_height(self) -> int:
