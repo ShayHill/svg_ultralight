@@ -15,10 +15,12 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     parse_bound_element,
 )
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
-    align_tspans,
-    join_tspans,
     pad_text,
     pad_text_inkscape,
+)
+from svg_ultralight.font_tools.align_text import (
+    align_tspans,
+    join_tspans,
     wrap_text,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds

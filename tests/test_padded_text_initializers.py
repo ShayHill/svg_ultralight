@@ -13,9 +13,11 @@ import pytest
 from conftest import INKSCAPE, has_inkscape
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import (
-    join_tspans,
     pad_text,
     pad_text_inkscape,
+)
+from svg_ultralight.font_tools.align_text import (
+    join_tspans,
     wrap_text,
 )
 from svg_ultralight.constructors import new_element

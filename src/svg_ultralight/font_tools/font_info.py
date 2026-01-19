@@ -145,7 +145,7 @@ def _sanitize_svg_data_text(text: str) -> str:
     return text
 
 
-def _get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
+def _get_gpos_kerning(font: TTFont) -> dict[tuple[str | None, str | None], int]:
     """Extract kerning pairs from the GPOS table of a font.
 
     :param font: A fontTools TTFont object.
@@ -161,7 +161,7 @@ def _get_gpos_kerning(font: TTFont) -> dict[tuple[str, str], int]:
         raise ValueError(msg)
 
     gpos = font["GPOS"].table
-    kern_table: dict[tuple[str, str], int] = {}
+    kern_table: dict[tuple[str | None, str | None], int] = {}
 
     type2_lookups = (x for x in gpos.LookupList.Lookup if x.LookupType == 2)
     subtables = list(it.chain(*(x.SubTable for x in type2_lookups)))
@@ -320,7 +320,7 @@ class FTFontInfo:
 
         try:
             kern_tables = cast(
-                "list[dict[tuple[str, str], int]]",
+                "list[dict[tuple[str | None, str | None], int]]",
                 [x.kernTable for x in font["kern"].kernTables],
             )
             kern = dict(x for d in reversed(kern_tables) for x in d.items())
@@ -347,7 +347,7 @@ class FTFontInfo:
 
         self._hmtx = cast("dict[str, tuple[int, int]]", font.get("hmtx"))
         self._cmap = cast("dict[int, str]", font.getBestCmap())
-        self.glyph_set = font.getGlyphSet()
+        self._glyph_set = font.getGlyphSet()
 
     @property
     def units_per_em(self) -> int:
@@ -364,7 +364,7 @@ class FTFontInfo:
         return self._units_per_em
 
     @property
-    def kern_table(self) -> dict[tuple[str, str], int]:
+    def kern_table(self) -> dict[tuple[str | None, str | None], int]:
         """Get the kerning pairs for the font.
 
         :return: A dictionary mapping glyph pairs to their kerning values.
@@ -497,9 +497,6 @@ class FTFontInfo:
         :param dx: An optional x translation to apply to the glyph.
         :return: The svg path data for the character.
         """
-        if self._glyph_set is None:
-            msg = f"Font '{self.path}' does not have a glyph set."
-            raise AttributeError(msg)
         glyph_name = self.get_glyph_name(char)
         path_pen = PathPen(self._glyph_set)
         _ = self._glyph_set[glyph_name].draw(path_pen)
@@ -520,9 +517,6 @@ class FTFontInfo:
         same, but when they disagree, this method is more accurate. Additionally,
         some fonts do not have a glyf table, so this method is more robust.
         """
-        if self._glyph_set is None:
-            msg = f"Font '{self.path}' does not have a glyph set."
-            raise AttributeError(msg)
         glyph_name = self.get_glyph_name(char)
         bounds_pen = BoundsPen(self._glyph_set)
         _ = self._glyph_set[glyph_name].draw(bounds_pen)
