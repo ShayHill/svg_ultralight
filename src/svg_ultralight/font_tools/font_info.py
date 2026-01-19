@@ -330,50 +330,24 @@ class FTFontInfo:
             kern.update(_get_gpos_kerning(font))
         self._kern_table = kern
 
-        try:
-            os2_table = font["os2"]
-            self._os2_sTypoAscender = getattr(os2_table, "sTypoAscender", None)
-            self._os2_sTypoDescender = getattr(os2_table, "sTypoDescender", None)
-            self._os2_sTypoLineGap = getattr(os2_table, "sTypoLineGap", None)
-            self._os2_sCapHeight = getattr(os2_table, "sCapHeight", None)
-            self._os2_sxHeight = getattr(os2_table, "sxHeight", None)
-            self._ySuperscriptXOffset = getattr(os2_table, "ySuperscriptXOffset", None)
-            self._ySuperscriptYOffset = getattr(os2_table, "ySuperscriptYOffset", None)
-            self._ySuperscriptYSize = getattr(os2_table, "ySuperscriptYSize", None)
-        except (KeyError, AttributeError):
-            self._os2_sTypoAscender = None
-            self._os2_sTypoDescender = None
-            self._os2_sTypoLineGap = None
-            self._os2_sCapHeight = None
-            self._os2_sxHeight = None
-            self._ySuperscriptXOffset = None
-            self._ySuperscriptYOffset = None
-            self._ySuperscriptYSize = None
+        os2_table = font.get("OS/2")
+        self._os2_sTypoAscender = getattr(os2_table, "sTypoAscender", None)
+        self._os2_sTypoDescender = getattr(os2_table, "sTypoDescender", None)
+        self._os2_sTypoLineGap = getattr(os2_table, "sTypoLineGap", None)
+        self._os2_sCapHeight = getattr(os2_table, "sCapHeight", None)
+        self._os2_sxHeight = getattr(os2_table, "sxHeight", None)
+        self._ySuperscriptXOffset = getattr(os2_table, "ySuperscriptXOffset", None)
+        self._ySuperscriptYOffset = getattr(os2_table, "ySuperscriptYOffset", None)
+        self._ySuperscriptYSize = getattr(os2_table, "ySuperscriptYSize", None)
 
-        try:
-            hhea_table = font["hhea"]
-            self._hhea_ascent = getattr(hhea_table, "ascent", None)
-            self._hhea_descent = getattr(hhea_table, "descent", None)
-            self._hhea_lineGap = getattr(hhea_table, "lineGap", None)
-        except (KeyError, AttributeError):
-            self._hhea_ascent = None
-            self._hhea_descent = None
-            self._hhea_lineGap = None
+        hhea_table = font.get("hhea")
+        self._hhea_ascent = getattr(hhea_table, "ascent", None)
+        self._hhea_descent = getattr(hhea_table, "descent", None)
+        self._hhea_lineGap = getattr(hhea_table, "lineGap", None)
 
-        try:
-            self._hmtx = cast("dict[str, tuple[int, int]]", font["hmtx"])
-        except (KeyError, AttributeError):
-            self._hmtx = {}
-
-        try:
-            self._cmap = cast("dict[int, str]", font.getBestCmap())
-        except (KeyError, AttributeError):
-            self._cmap = {}
-
-        try:
-            self._glyph_set = font.getGlyphSet()
-        except (KeyError, AttributeError):
-            self._glyph_set = None
+        self._hmtx = cast("dict[str, tuple[int, int]]", font.get("hmtx"))
+        self._cmap = cast("dict[int, str]", font.getBestCmap())
+        self.glyph_set = font.getGlyphSet()
 
     @property
     def units_per_em(self) -> int:

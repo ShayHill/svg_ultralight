@@ -52,7 +52,7 @@ class TestPadText:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
-            msg = "Test font file does not exist on system."
+            # msg = "Test font file does not exist on system."
             pytest.skip(msg)
         padded = pad_text(font, " ")
         assert len(padded.elem) == 1
