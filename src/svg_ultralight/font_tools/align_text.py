@@ -6,29 +6,31 @@
 
 from __future__ import annotations
 
+import dataclasses
 import functools
 import itertools as it
 import os
-from typing import TYPE_CHECKING, TypeAlias, overload
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, NamedTuple, TypeAlias, overload
 
+import pyphen
+
+from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
     new_padded_union,
 )
 from svg_ultralight.font_tools.font_info import (
-    DATA_TEXT_ESCAPE_CHARS,
     FTFontInfo,
     FTTextInfo,
 )
+from svg_ultralight.main import write_svg
+from svg_ultralight.root_elements import new_svg_root_around_bounds
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
-
     from svg_ultralight.attrib_hints import ElemAttrib
+
+hyphenator = pyphen.Pyphen(lang="en_US")
 
 FontArg: TypeAlias = str | os.PathLike[str] | FTFontInfo
 
@@ -50,11 +52,16 @@ def _get_inner_text_advance(font: FontArg, *chars: str) -> float:
     `_get_inner_text_advance(font, "a", " ", "b")`
     would be the distance between a and b in "a b".
     """
+    if len(chars) < 2:
+        return 0
     font_info = FTFontInfo(font)
+
     names = [font_info.try_glyph_name(c) for c in chars]
-    spaces = [font_info.kern_table.get((a, b), 0) for a, b in it.pairwise(names)]
-    middle_chars = [font_info.get_char_bbox(c).width for c in chars[1:-1]]
-    return sum(spaces) + sum(middle_chars)
+    l_hmtx = font_info.hmtx[names[0] or "space"]
+    l_adv = l_hmtx[0] - l_hmtx[1]
+    r_adv = font_info.get_char_bbox(chars[-1]).x2
+    min_x, _, max_x, _ = font_info.get_text_bounds("".join(chars))
+    return max_x - min_x - l_adv - r_adv
 
 
 def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
@@ -155,3 +162,82 @@ def wrap_text(
     if isinstance(text, str):
         return _wrap_one_text(font, text=text, width=width)
     return [_wrap_one_text(font, x, width) for x in text]
+
+
+def _get_word_advances(font: FontArg, *words: PaddedText) -> Iterator[float]:
+    """Get the advance for each word."""
+    for left, right in it.pairwise(words):
+        space = _get_inner_text_advance(font, left.text[-1], " ", right.text[0])
+        yield left.width + space
+    yield words[-1].width
+
+
+def _get_line_cost(font: FontArg, width: float, *words: PaddedText) -> float:
+    """Get the cost of a line."""
+    if not words:
+        msg = "Cannot get the cost of an empty line."
+        raise ValueError(msg)
+    advances = list(_get_word_advances(font, *words))
+    total_cost = width - sum(advances)
+    if total_cost < 0:
+        return 0 if len(advances) == 1 else float("inf")
+    if len(advances) in (1, 2):
+        return pow(total_cost, 2)
+    return pow(total_cost / (len(advances) - 1), 2)
+
+
+class CandidateLineBreakIndices(NamedTuple):
+    """A candidate sequence of line-break indices.
+
+    :param path: the sequence of line-break indices, always starting with 0.
+    :param cost: the cost of the candidate.
+    """
+
+    path: tuple[int, ...] = (0,)
+    cost: float = 0
+
+
+def _construct_justification(
+    font: FontArg, words: list[PaddedText], width: float, path: tuple[int, ...]
+) -> list[list[PaddedText]]:
+    """Translate path words into a justification."""
+    result: list[list[PaddedText]] = []
+    for beg, end in it.pairwise(path):
+        line = words[beg:end]
+        advances = list(_get_word_advances(font, *line))
+        full_cost = 0 if end == len(words) else width - sum(advances)
+        spaces = len(advances) - 1
+        if spaces:
+            part_cost = full_cost / spaces
+            advances[:-1] = (x + part_cost for x in advances[:-1])
+            for i in range(1, len(advances)):
+                line[i].x += sum(advances[:i])
+        result.append(line)
+    return result
+
+
+def justify(font: FontArg, words: list[PaddedText], width: float) -> list[str]:
+    """Justify text."""
+    heads = [
+        CandidateLineBreakIndices((0,), 0),
+        *(
+            CandidateLineBreakIndices((0, x + 1), float("inf"))
+            for x in range(len(words))
+        ),
+    ]
+    for beg in range(len(words)):
+        for end in range(beg + 1, len(words) + 1):
+            cost = _get_line_cost(font, width, *words[beg:end])
+            if cost == float("inf"):
+                break
+            if end == len(words) - 1:
+                cost = 0
+            cost += heads[beg].cost
+            candidate = CandidateLineBreakIndices((*heads[beg].path, end), cost)
+            if candidate.cost < heads[end].cost:
+                heads[end] = candidate
+    plemss = _construct_justification(font, words, width, heads[-1].path)
+    plems = [new_padded_union(*x) for x in plemss]
+    _ = PaddedList(*plems).stack()
+    root = new_svg_root_around_bounds(*plems)
+    _ = write_svg("temp.svg", root)

@@ -12,6 +12,7 @@ dependencies = [
     "lxml>=6.0.2",
     "paragraphs>=1.0.1",
     "pillow>=11.3.0",
+    "pyphen>=0.17.2",
     "svg-path-data>=0.5.3",
     "types-lxml>=2025.8.25",
     "typing-extensions>=4.15.0",

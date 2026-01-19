@@ -345,7 +345,7 @@ class FTFontInfo:
         self._hhea_descent = getattr(hhea_table, "descent", None)
         self._hhea_lineGap = getattr(hhea_table, "lineGap", None)
 
-        self._hmtx = cast("dict[str, tuple[int, int]]", font.get("hmtx"))
+        self.hmtx = cast("dict[str, tuple[int, int]]", font.get("hmtx"))
         self._cmap = cast("dict[int, str]", font.getBestCmap())
         self._glyph_set = font.getGlyphSet()
 
@@ -556,7 +556,7 @@ class FTFontInfo:
 
         names = [self.get_glyph_name(c) for c in text]
         bounds = [self.get_char_bounds(c) for c in text]
-        total_advance = sum(self._hmtx[n][0] for n in names[:-1])
+        total_advance = sum(self.hmtx[n][0] for n in names[:-1])
         total_kern = sum(self.kern_table.get((x, y), 0) for x, y in it.pairwise(names))
         min_xs, min_ys, max_xs, max_ys = zip(*bounds, strict=True)
         min_x = min_xs[0]
@@ -580,7 +580,7 @@ class FTFontInfo:
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)
             yield self.get_char_svgd(c_this, char_dx)
-            char_dx += self._hmtx[this_name][0]
+            char_dx += self.hmtx[this_name][0]
             char_dx += self.kern_table.get((this_name, next_name), 0)
         yield self.get_char_svgd(text[-1], char_dx)
 
@@ -608,7 +608,7 @@ class FTFontInfo:
             next_name = self.get_glyph_name(c_next)
             svgd = self.get_char_svgd(c_this)
             svgds.append((svgd, dx))
-            dx += self._hmtx[this_name][0]
+            dx += self.hmtx[this_name][0]
             dx += self.kern_table.get((this_name, next_name), 0)
         svgd = self.get_char_svgd(text[-1])
         svgds.append((svgd, dx))
@@ -626,14 +626,14 @@ class FTFontInfo:
 
     def get_lsb(self, char: str) -> float:
         """Return the left side bearing of a character."""
-        _, lsb = self._hmtx[self.get_glyph_name(char)]
+        _, lsb = self.hmtx[self.get_glyph_name(char)]
         return lsb
 
     def get_rsb(self, char: str) -> float:
         """Return the right side bearing of a character."""
         glyph_name = self.get_glyph_name(char)
         glyph_width = self.get_char_bbox(char).width
-        advance, lsb = self._hmtx[glyph_name]
+        advance, lsb = self.hmtx[glyph_name]
         return advance - (lsb + glyph_width)
 
 
