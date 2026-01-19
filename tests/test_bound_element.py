@@ -91,7 +91,7 @@ class TestPaddedText:
         """Test the set_scale method."""
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
         blem.scale = (2, 2)
         assert blem.scale == (2.0, 2.0)
 
@@ -99,7 +99,7 @@ class TestPaddedText:
         """Test the transform method."""
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
         blem.transform(scale=5)
         assert blem.scale == (5.0, 5.0)
 
@@ -107,7 +107,7 @@ class TestPaddedText:
         """Test that vertical padding scales."""
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
 
         assert blem.tpad == 1.0
         assert blem.bpad == 3.0
@@ -121,7 +121,7 @@ class TestPaddedText:
         """Test that vertical padding scales non-uniformly."""
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
 
         assert blem.tpad == 1.0
         assert blem.bpad == 3.0
@@ -136,7 +136,7 @@ class TestPaddedText:
         """Test that horizontal padding does not scale."""
         elem = new_element("rect", width=100, height=100)
         bbox = BoundingBox(0, 0, 100, 100)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
 
         assert blem.tpad == 1.0
         assert blem.bpad == 3.0

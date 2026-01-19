@@ -44,7 +44,7 @@ class TestNewSvgRootAroundBounds:
     def test_padded_text(self):
         """Create svg root element from BoundElements."""
         bboxes = [BoundingBox(0, 0, 100, 100), BoundingBox(50, 50, 150, 150)]
-        args = bboxes[0], PaddedText(new_element("g"), bboxes[1], 1, 1, 1, 1)
+        args = bboxes[0], PaddedText(new_element("g"), bboxes[1], 1, 1, 1, 1, "")
         result = new_svg_root_around_bounds(*args)
         assert isinstance(result, EtreeElement)
         assert result.attrib["viewBox"] == "0 0 201 201"
@@ -74,6 +74,6 @@ class TestNewBoundUnion:
     def test_padded_text(self):
         """Create svg root element from BoundElements."""
         bboxes = [BoundingBox(0, 0, 100, 100), BoundingBox(50, 50, 150, 150)]
-        args = bboxes[0], PaddedText(new_element("g"), bboxes[1], 1, 1, 1, 1)
+        args = bboxes[0], PaddedText(new_element("g"), bboxes[1], 1, 1, 1, 1, "")
         result = new_bound_union(*args)
         assert isinstance(result, BoundElement)

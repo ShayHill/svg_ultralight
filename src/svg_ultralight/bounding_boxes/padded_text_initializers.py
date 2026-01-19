@@ -112,7 +112,8 @@ def pad_text_inkscape(
     rpad = -rmargin_bbox.x2
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
-    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad)
+    text_content = "".join(text_elem.itertext()) if text_elem.text is not None else ""
+    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad, text_content)
 
 
 def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
@@ -177,7 +178,7 @@ def pad_text(
     for t in [text] if isinstance(text, str) else text:
         ti = FTTextInfo(font, t)
         elem = ti.new_element(**attributes_)
-        plem = PaddedText(elem, ti.bbox, *ti.padding, metrics=copy.copy(metrics))
+        plem = PaddedText(elem, ti.bbox, *ti.padding, t, copy.copy(metrics))
         if font_size:
             plem.font_size = font_size
         plems.append(plem)

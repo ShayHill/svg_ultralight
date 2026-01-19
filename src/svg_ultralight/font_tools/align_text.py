@@ -33,45 +33,6 @@ if TYPE_CHECKING:
 FontArg: TypeAlias = str | os.PathLike[str] | FTFontInfo
 
 
-def _desanitize_svg_data_text(text: str) -> str:
-    """Desanitize a string from an SVG data-text attribute.
-
-    :param text: The input string to desanitize.
-    :return: The desanitized string with XML characters unescaped.
-    """
-    for char, escape_seq in DATA_TEXT_ESCAPE_CHARS.items():
-        text = text.replace(escape_seq, char)
-    return text
-
-
-def _iter_chars(tspan: PaddedText) -> Iterator[EtreeElement]:
-    """Iterate over the characters in a PaddedText element.
-
-    :param tspan: The PaddedText element to iterate over.
-    :return: An iterator over the characters in the PaddedText element.
-    """
-    for child in tspan.elem.iter():
-        if child.tag != "path":
-            continue
-        if not child.attrib.get("data-text"):
-            continue
-        yield child
-
-
-def _has_chars(tspan: PaddedText) -> bool:
-    """Check if a PaddedText element has characters.
-
-    :param tspan: The PaddedText element to check.
-    :return: True if the element has characters, False otherwise.
-    """
-    try:
-        _ = next(_iter_chars(tspan))
-    except StopIteration:
-        return False
-    else:
-        return True
-
-
 @functools.lru_cache
 def _get_inner_text_advance(font: FontArg, *chars: str) -> float:
     """Get the spacing b/t the first and last characters.
@@ -96,17 +57,6 @@ def _get_inner_text_advance(font: FontArg, *chars: str) -> float:
     return sum(spaces) + sum(middle_chars)
 
 
-def _get_space_between_two_text_spans(
-    font: FontArg, left: PaddedText, right: PaddedText
-) -> float:
-    """Get the spacing b/t last character of left and first character of right."""
-    l_joint = list(_iter_chars(left))[-1].attrib["data-text"]
-    l_joint = _desanitize_svg_data_text(l_joint)
-    r_joint = next(_iter_chars(right)).attrib["data-text"]
-    r_joint = _desanitize_svg_data_text(r_joint)
-    return _get_inner_text_advance(font, l_joint, r_joint)
-
-
 def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     """Arrange multiple PaddedText elements as if they were one long string.
 
@@ -119,9 +69,9 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     not handle scaled PaddedText instances. This is for joining tspans immediately
     after they are created and all using similar fonts.
     """
-    tspans_ = [x for x in tspans if _has_chars(x)]
+    tspans_ = [x for x in tspans if x.text]
     for left, right in it.pairwise(tspans_):
-        advance = _get_space_between_two_text_spans(font, left, right)
+        advance = _get_inner_text_advance(font, left.text[-1], right.text[0])
         if advance:
             advance *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + advance
@@ -138,10 +88,9 @@ def join_tspans(
     This is limited and will not handle arbitrary text elements (only `g` elements
     with a "data-text" attribute equal to the character(s) in the tspan).
     """
-    non_empty = list(filter(_has_chars, tspans))
+    non_empty = [x for x in tspans if x.text]
 
     if not non_empty:
-        # If all tspans are empty, return the first
         if tspans:
             return new_padded_union(*tspans[:1], **attributes)
         msg = "Cannot join empty tspans."

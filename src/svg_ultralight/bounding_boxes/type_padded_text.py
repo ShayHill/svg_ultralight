@@ -122,6 +122,7 @@ class PaddedText(BoundElement):
         rpad: float,
         bpad: float,
         lpad: float,
+        text: str,
         metrics: FontMetrics | None = None,
     ) -> None:
         """Initialize a PaddedText instance.
@@ -132,6 +133,7 @@ class PaddedText(BoundElement):
         :param rpad: Right padding.
         :param bpad: Bottom padding.
         :param lpad: Left padding.
+        :param text: The text string from which this instance was created.
         :param metrics: The font metrics for this line of text (inferred from a font):
         """
         self.elem = elem
@@ -140,6 +142,7 @@ class PaddedText(BoundElement):
         self._rpad = rpad
         self._bpad = bpad
         self._lpad = lpad
+        self._text = text
         self._metrics = metrics
 
     @property
@@ -524,6 +527,14 @@ class PaddedText(BoundElement):
         return self.height + self.line_gap
 
     @property
+    def text(self) -> str:
+        """The text string from which this PaddedText instance was created.
+
+        :return: The text string.
+        """
+        return self._text
+
+    @property
     def tpad(self) -> float:
         """The top padding of this line of text.
 
@@ -682,7 +693,7 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
         # fmt: off
         return PaddedText(
             new_element("g"), BoundingBox(0, 0, 0, 0),
-            0, 0, 0, 0, FontMetrics(0, 0, 0, 0, 0, 0),
+            0, 0, 0, 0, "", FontMetrics(0, 0, 0, 0, 0, 0),
         )
         # fmt: on
     bbox = BoundingBox.union(*(t.bbox for t in plems))
@@ -706,7 +717,10 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
         baseline - min_x_extent,
         min_line_gap,
     )
-    return PaddedText(etree.Element("g"), tbox, tpad, rpad, bpad, lpad, metrics)
+    combined_text = "".join(t.text for t in plems)
+    return PaddedText(
+        etree.Element("g"), tbox, tpad, rpad, bpad, lpad, combined_text, metrics
+    )
 
 
 def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:

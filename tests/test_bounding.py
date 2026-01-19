@@ -110,7 +110,7 @@ class TestPaddedText:
     def bound_element(self) -> PaddedText:
         elem = new_element("rect", x=0, y=0, width=100, height=200)
         bbox = BoundingBox(0, 0, 100, 200)
-        return PaddedText(elem, bbox, 1, 2, 3, 4)
+        return PaddedText(elem, bbox, 1, 2, 3, 4, "")
 
     def test_x(self, bound_element: PaddedText):
         assert bound_element.x == -4
@@ -195,7 +195,7 @@ class TestBoundCollection:
     def bound_collection(self) -> BoundCollection:
         elem = new_element("rect", x=0, y=0, width=100, height=200)
         bbox = BoundingBox(0, 0, 100, 200)
-        blem = PaddedText(elem, bbox, 1, 2, 3, 4)
+        blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
         return BoundCollection(blem, copy.deepcopy(elem))
 
     def test_blem_and_elem(self):
