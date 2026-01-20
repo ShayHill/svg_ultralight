@@ -146,7 +146,7 @@ class TestWrapText:
         text = ["Lorem ipsum dolor sit amet,", "consectetur adipiscing elit, sed"]
         expect = [
             ["Lorem ipsum", "dolor sit amet,"],
-            ["consectetur", "adipiscing", "elit, sed"],
+            ["consectetur", "adipiscing elit,", "sed"],
         ]
         result = wrap_text(font, text, width=15000)
         assert result == expect

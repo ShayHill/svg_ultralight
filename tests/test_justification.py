@@ -32,15 +32,15 @@ class TestJustification:
             ["the", "harbour", "from"],
             ["the", "shark", "factory;"],
             ["but", "today", "there"],
-            ["was", "only", "the"],
-            ["faint", "edge", "of", "the"],
-            ["odour,", "because", "the"],
-            ["wind", "had", "backed"],
-            ["into", "the", "north"],
-            ["and", "then", "dropped"],
-            ["off", "and", "it", "was"],
-            ["pleasant", "and", "sunny"],
-            ["on", "the", "Terrace."],
+            ["was", "only", "the", "faint"],
+            ["edge", "of", "the", "odour,"],
+            ["because", "the", "wind"],
+            ["had", "backed", "into"],
+            ["the", "north", "and", "then"],
+            ["dropped", "off", "and", "it"],
+            ["was", "pleasant", "and"],
+            ["sunny", "on", "the", "Ter-"],
+            ["race."],
         ]
         result = justify_text(FONT, PARAGRAPH, 5000, font_size=500)
         assert result == expect
@@ -55,10 +55,10 @@ class TestJustification:
             ["was", "only", "the", "faint", "edge"],
             ["of", "the", "odour,", "because"],
             ["the", "wind", "had", "backed"],
-            ["into", "the", "north", "and"],
-            ["then", "dropped", "off", "and"],
-            ["it", "was", "pleasant", "and"],
-            ["sunny", "on", "the", "Terrace."],
+            ["into", "the", "north", "and", "then"],
+            ["dropped", "off", "and", "it", "was"],
+            ["pleasant", "and", "sunny", "on"],
+            ["the", "Terrace."],
         ]
         result = justify_text(FONT, PARAGRAPH, 24000, hyp_pen=0.0)
         assert result == expect
@@ -70,13 +70,13 @@ class TestJustification:
             ["across", "the", "harbour"],
             ["from", "the", "shark", "factory;"],
             ["but", "today", "there", "was"],
-            ["only", "the", "faint", "edge"],
-            ["of", "the", "odour,", "because"],
-            ["the", "wind", "had", "backed"],
-            ["into", "the", "north", "and"],
-            ["then", "dropped", "off", "and"],
-            ["it", "was", "pleasant", "and"],
-            ["sunny", "on", "the", "Terrace."],
+            ["only", "the", "faint", "edge", "of"],
+            ["the", "odour,", "because", "the"],
+            ["wind", "had", "backed", "into"],
+            ["the", "north", "and", "then"],
+            ["dropped", "off", "and", "it", "was"],
+            ["pleasant", "and", "sunny", "on"],
+            ["the", "Terrace."],
         ]
         result = justify_text(FONT, PARAGRAPH, 24000, hyp_pen=1)
         assert result == expect
@@ -92,7 +92,7 @@ class TestJustification:
             ["odour,"], ["because"], ["the"], ["wind"], ["had"], ["backed"], ["into"],
             ["the"], ["north"], ["and"], ["then"], ["dropped"], ["off"], ["and"],
             ["it"], ["was"], ["pleasant"], ["and"], ["sun-"], ["ny"], ["on"], ["the"],
-            ["Ter-"], ["race."],
+            ["Terrace."],
         ]
         # fmt: on
         result = justify_text(FONT, PARAGRAPH, 5000, hyp_pen=0.1)

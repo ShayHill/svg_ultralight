@@ -274,7 +274,7 @@ def _find_best_line_breaks(
             cost = _get_line_cost(font, width, *words[beg:end], hyp_pen=hyp_pen)
             if cost == _INF:
                 break
-            if end == len(words) - 1:
+            if end == len(words):
                 cost = 0
             cost += heads[beg].cost
             candidate = _LineBreaks((*heads[beg].path, end), cost)
