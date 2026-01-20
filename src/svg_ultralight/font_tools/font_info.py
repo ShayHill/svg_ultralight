@@ -107,8 +107,9 @@ from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_fro
 from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.bounding_boxes.type_padded_text import FontMetrics, PaddedText
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors.new_element import new_element, new_sub_element
+from svg_ultralight.font_tools.font_metrics import FontMetrics
 from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:

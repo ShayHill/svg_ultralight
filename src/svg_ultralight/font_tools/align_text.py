@@ -23,7 +23,6 @@ from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
     new_padded_union,
 )
-from svg_ultralight.constructors import update_element
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
     FTTextInfo,
@@ -202,7 +201,6 @@ def _join_hyphenated_words(words: Sequence[PaddedText]) -> list[PaddedText]:
             words_.extend(group)
             continue
         group_ = tuple(group)
-        font = group_[0].font
         text = "".join(x.text for x in group_)
         if (
             key == last_key
@@ -210,8 +208,7 @@ def _join_hyphenated_words(words: Sequence[PaddedText]) -> list[PaddedText]:
             and words[-1].text[-1] != "-"
         ):
             text += "-"
-        words_.append(FTTextInfo(font, text).new_padded_text())
-        words_[-1].font_size = group_[0].font_size
+        words_.append(group_[0].with_text(text))
     return words_
 
 
@@ -372,20 +369,7 @@ def hyphenate(plem: PaddedText) -> list[PaddedText]:
     if len(split) == 1:
         return [plem]
 
-    # Get useful attributes from the original element.
-    # fmt: off
-    harmful_attrs = {
-        "id", "transform", "data-text", "d", "x", "y", "x1", "y1", "x2", "y2", "cx",
-        "cy", "r", "rx", "ry", "width", "height",
-    }
-    # fmt: on
-    attrs = {k: v for k, v in plem.elem.attrib.items() if k not in harmful_attrs}
-
-    new_plems = pad_text(plem.font, split)
-    attrs.update(new_plems[0].elem.attrib)
-    for new_plem in new_plems:
-        _ = update_element(new_plem.elem, **attrs)
-        new_plem.font_size = plem.font_size
+    new_plems = [plem.with_text(text) for text in split]
     tag = str(uuid.uuid4())
     for new_plem in new_plems[:-1]:
         new_plem.tag = tag

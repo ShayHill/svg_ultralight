@@ -22,11 +22,11 @@ from typing import overload
 from svg_ultralight.attrib_hints import ElemAttrib
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import (
-    FontMetrics,
     PaddedText,
     new_empty_padded_union,
     new_padded_union,
 )
+from svg_ultralight.font_tools.font_metrics import FontMetrics
 
 _Matrix = tuple[float, float, float, float, float, float]
 

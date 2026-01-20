@@ -39,7 +39,6 @@ PaddedText instances.
 
 from __future__ import annotations
 
-import dataclasses
 import math
 from contextlib import suppress
 from pathlib import Path
@@ -49,8 +48,9 @@ from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
-from svg_ultralight.constructors import new_element
+from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union
+from svg_ultralight.font_tools.font_metrics import FontMetrics
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
 if TYPE_CHECKING:
@@ -61,56 +61,6 @@ if TYPE_CHECKING:
     from svg_ultralight.attrib_hints import ElemAttrib
 
 _Matrix = tuple[float, float, float, float, float, float]
-
-
-@dataclasses.dataclass
-class FontMetrics:
-    """Font metrics."""
-
-    _font_size: float
-    _ascent: float
-    _descent: float
-    _cap_height: float
-    _x_height: float
-    _line_gap: float
-    _scalar: float = dataclasses.field(default=1.0, init=False)
-
-    def scale(self, scalar: float) -> None:
-        """Scale the font metrics by a scalar.
-
-        :param scalar: The scaling factor.
-        """
-        self._scalar *= scalar
-
-    @property
-    def font_size(self) -> float:
-        """The font size."""
-        return self._font_size * self._scalar
-
-    @property
-    def ascent(self) -> float:
-        """Return the ascent."""
-        return self._ascent * self._scalar
-
-    @property
-    def descent(self) -> float:
-        """Return the descent."""
-        return self._descent * self._scalar
-
-    @property
-    def cap_height(self) -> float:
-        """Return the cap height."""
-        return self._cap_height * self._scalar
-
-    @property
-    def x_height(self) -> float:
-        """Return the x height."""
-        return self._x_height * self._scalar
-
-    @property
-    def line_gap(self) -> float:
-        """Return the line gap."""
-        return self._line_gap * self._scalar
 
 
 class PaddedText(BoundElement):
@@ -699,6 +649,35 @@ class PaddedText(BoundElement):
         :effects: the text_element bounding box is scaled to height - tpad - bpad.
         """
         self.transform_preserve_sidebearings(scale=value / self.height)
+
+    def with_text(self, text: str) -> PaddedText:
+        """Create a copy of this PaddedText instance with different text content.
+
+        :param text: The new text content
+        :return: A new PaddedText instance with the specified text
+
+        Preserves attributes from the original element (excluding positioning and
+        size attributes), font size, and font path. The bounding box and padding
+        will be recalculated based on the new text content.
+        """
+        # Copy over fill, stroke, etc. ... hopefully without attributes that could alter
+        # the copy in unintuitive ways.
+        # fmt: off
+        harmful_attrs = {
+            "id", "transform", "data-text", "d", "x", "y", "x1", "y1", "x2", "y2",
+            "cx", "cy", "r", "rx", "ry", "width", "height",
+        }
+        # fmt: on
+        attrs = {k: v for k, v in self.elem.attrib.items() if k not in harmful_attrs}
+
+        from svg_ultralight.font_tools.font_info import FTTextInfo  # noqa: PLC0415
+
+        new_plem = FTTextInfo(self.font, text).new_padded_text()
+        attrs.update(new_plem.elem.attrib)
+        _ = update_element(new_plem.elem, **attrs)
+        new_plem.font_size = self.font_size
+
+        return new_plem
 
 
 def _get_majority_font(plems: tuple[PaddedText, ...]) -> Path | None:
