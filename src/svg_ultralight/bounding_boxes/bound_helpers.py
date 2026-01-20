@@ -18,6 +18,7 @@ import copy
 from typing import TYPE_CHECKING
 
 from lxml import etree
+from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
 from paragraphs import par
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -27,7 +28,6 @@ from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
-from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
 
 if TYPE_CHECKING:
     import os
@@ -216,9 +216,11 @@ def _remove_namespace_prefixes(root: EtreeElement) -> None:
                 elem.attrib[localname] = elem.attrib.pop(key)
 
 
-def _combine_use_and_def(use_elem: EtreeElement, def_elem: EtreeElement) -> EtreeElement:
+def _combine_use_and_def(
+    use_elem: EtreeElement, def_elem: EtreeElement
+) -> EtreeElement:
     """Combine a use element and a defd path element.
-    
+
     :param use: a use element that used a defd path element.
     :param defd_path: the defd path element
     :return: The combined element.
@@ -238,6 +240,8 @@ def _combine_use_and_def(use_elem: EtreeElement, def_elem: EtreeElement) -> Etre
     new_elem = new_element("g", **use_attrib)
     new_elem.append(update_element(def_elem, **def_attrib))
     return new_elem
+
+
 def _decopy_paths(root: EtreeElement) -> None:
     """Replace use elements with the elements they use."""
     hrefs: set[str] = set()

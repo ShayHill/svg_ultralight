@@ -18,11 +18,6 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text,
     pad_text_inkscape,
 )
-from svg_ultralight.font_tools.align_text import (
-    align_tspans,
-    join_tspans,
-    wrap_text,
-)
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
@@ -35,6 +30,11 @@ from svg_ultralight.constructors.new_element import (
     new_element_union,
     new_sub_element,
     update_element,
+)
+from svg_ultralight.font_tools.align_text import (
+    align_tspans,
+    join_tspans,
+    wrap_text,
 )
 from svg_ultralight.font_tools.font_info import FTFontInfo
 from svg_ultralight.inkscape import (

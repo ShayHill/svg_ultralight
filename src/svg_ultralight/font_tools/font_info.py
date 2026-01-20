@@ -305,6 +305,23 @@ class FTFontInfo:
         if hasattr(self, "path"):
             # Instance is already initialized, returned from cache by __new__
             return
+        # Initialize all attributes that will be set by _cache_font_data
+        self._units_per_em: int | None = None
+        self._kern_table: dict[tuple[str | None, str | None], int] = {}
+        self._os2_sTypoAscender: int | None = None
+        self._os2_sTypoDescender: int | None = None
+        self._os2_sTypoLineGap: int | None = None
+        self._os2_sCapHeight: int | None = None
+        self._os2_sxHeight: int | None = None
+        self._ySuperscriptXOffset: int | None = None
+        self._ySuperscriptYOffset: int | None = None
+        self._ySuperscriptYSize: int | None = None
+        self._hhea_ascent: int | None = None
+        self._hhea_descent: int | None = None
+        self._hhea_lineGap: int | None = None
+        self.hmtx: dict[str, tuple[int, int]] = {}
+        self._cmap: dict[int, str] = {}
+        self._glyph_set: Any = None
         self.path = Path(font).resolve()
         font_obj = TTFont(self.path)
         self._cache_font_data(font_obj)
@@ -495,7 +512,7 @@ class FTFontInfo:
         return glyph_name
 
     @functools.lru_cache
-    def get_char_svgd(self, char: str, dx: float = 0) -> str:
+    def get_char_svgd(self, char: str) -> str:
         """Return the svg path data for a glyph.
 
         :param char: The character to get the svg path data for.
@@ -505,14 +522,7 @@ class FTFontInfo:
         glyph_name = self.get_glyph_name(char)
         path_pen = PathPen(self._glyph_set)
         _ = self._glyph_set[glyph_name].draw(path_pen)
-        svgd = path_pen.svgd
-        if not dx or not svgd:
-            return format_svgd_shortest(svgd)
-        cpts = get_cpts_from_svgd(svgd)
-        for i, curve in enumerate(cpts):
-            cpts[i][:] = [(x + dx, y) for x, y in curve]
-        svgd = format_svgd_shortest(get_svgd_from_cpts(cpts))
-        return "M" + svgd[1:]
+        return format_svgd_shortest(path_pen.svgd)
 
     def get_char_bounds(self, char: str) -> tuple[int, int, int, int]:
         """Return the min and max x and y coordinates of a glyph.
@@ -571,46 +581,42 @@ class FTFontInfo:
         max_y = max(max_ys)
         return min_x, min_y, max_x, max_y
 
-    # TODO: remove dx paramater from get_text_svgd_by_char and get_text_svgds
-
-    def get_text_svgd_by_char(self, text: str, dx: float = 0) -> Iterator[str]:
+    def get_text_svgd_by_char(self, text: str) -> Iterator[str]:
         """Return an iterator of svg path data for each character in a string.
 
         :param text: The text to get the svg path data for.
-        :param dx: An optional x translation to apply to the entire text.
         :return: An iterator of svg path data for each character in the text.
         """
         if not text:
             return
-        char_dx = dx
+        char_dx = 0.0
         for c_this, c_next in it.pairwise(text):
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)
-            yield self.get_char_svgd(c_this, char_dx)
+            yield self.get_char_svgd(c_this)
             char_dx += self.hmtx[this_name][0]
             char_dx += self.kern_table.get((this_name, next_name), 0)
-        yield self.get_char_svgd(text[-1], char_dx)
+        yield self.get_char_svgd(text[-1])
 
     # TODO: remove get_text_svgd
-    def get_text_svgd(self, text: str, dx: float = 0) -> str:
+    def get_text_svgd(self, text: str) -> str:
         """Return the svg path data for a string.
 
         :param text: The text to get the svg path data for
-        :param dx: An optional x translation to apply to the entire text
         :return: The svg path data for the text
         """
-        return "".join(self.get_text_svgd_by_char(text, dx))
+        return "".join(self.get_text_svgd_by_char(text))
 
-    def get_text_svgds(self, text: str, dx: float = 0) -> list[tuple[str, float]]:
+    def get_text_svgds(self, text: str) -> list[tuple[str, float]]:
         """Return a list of svg path data for each character in a string.
 
         :param text: The text to get the svg path data for
-        :param dx: An optional x translation to apply to the entire text
         :return: A list of svg path data for each character in the text
         """
         if not text:
             return []
         svgds: list[tuple[str, float]] = []
+        dx = 0.0
         for c_this, c_next in it.pairwise(text):
             this_name = self.get_glyph_name(c_this)
             next_name = self.get_glyph_name(c_next)

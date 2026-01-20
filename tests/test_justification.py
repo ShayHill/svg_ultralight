@@ -11,7 +11,7 @@ from paragraphs import par
 from svg_ultralight.font_tools.align_text import hyphenate_text, justify_text
 
 PARAGRAPH = par(
-    """When the wind was in the east, a smell came across the harbour from the shark 
+    """When the wind was in the east, a smell came across the harbour from the shark
     factory; but today there was only the faint edge of the odour, because the wind had
     backed into the north and then dropped off and it was pleasant and sunny on the
     Terrace."""
