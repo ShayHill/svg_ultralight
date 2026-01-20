@@ -598,15 +598,6 @@ class FTFontInfo:
             char_dx += self.kern_table.get((this_name, next_name), 0)
         yield self.get_char_svgd(text[-1])
 
-    # TODO: remove get_text_svgd
-    def get_text_svgd(self, text: str) -> str:
-        """Return the svg path data for a string.
-
-        :param text: The text to get the svg path data for
-        :return: The svg path data for the text
-        """
-        return "".join(self.get_text_svgd_by_char(text))
-
     def get_text_svgds(self, text: str) -> list[tuple[str, float]]:
         """Return a list of svg path data for each character in a string.
 
