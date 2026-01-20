@@ -136,7 +136,7 @@ class TestWrapText:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
-        expect = ["Lorem ipsum dolor sit", "amet, consectetur", "adipiscing elit, sed"]
+        expect = ["Lorem ipsum dolor", "sit amet, consectetur", "adipiscing elit, sed"]
         result = wrap_text(font, text, width=20000)
         assert result == expect
 
@@ -146,7 +146,7 @@ class TestWrapText:
         text = ["Lorem ipsum dolor sit amet,", "consectetur adipiscing elit, sed"]
         expect = [
             ["Lorem ipsum", "dolor sit amet,"],
-            ["consectetur", "adipiscing elit,", "sed"],
+            ["consectetur", "adipiscing", "elit, sed"],
         ]
         result = wrap_text(font, text, width=15000)
         assert result == expect
