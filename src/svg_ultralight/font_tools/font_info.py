@@ -103,7 +103,7 @@ from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 from paragraphs import par
-from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_from_cpts
+from svg_path_data import format_svgd_shortest, get_cpts_from_svgd
 from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox

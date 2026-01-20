@@ -41,7 +41,6 @@ from __future__ import annotations
 
 import math
 from contextlib import suppress
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from lxml import etree
@@ -54,6 +53,8 @@ from svg_ultralight.font_tools.font_metrics import FontMetrics
 from svg_ultralight.transformations import new_transformation_matrix, transform_element
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
     )
@@ -88,7 +89,8 @@ class PaddedText(BoundElement):
         :param lpad: Left padding.
         :param text: The text string from which this instance was created.
         :param metrics: The font metrics for this line of text (inferred from a font):
-        :param font: Optional path to the font file from which this instance was created.
+        :param font: Optional path to the font file from which this instance was
+            created.
         """
         self.elem = elem
         self.unpadded_bbox = bbox

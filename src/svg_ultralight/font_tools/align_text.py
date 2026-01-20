@@ -21,9 +21,7 @@ from typing import TYPE_CHECKING, NamedTuple, TypeAlias, overload
 
 import pyphen
 
-from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_rect, pad_bbox
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
-from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
     new_padded_union,
@@ -31,8 +29,6 @@ from svg_ultralight.bounding_boxes.type_padded_text import (
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
 )
-from svg_ultralight.main import write_svg
-from svg_ultralight.root_elements import new_svg_root_around_bounds
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -195,8 +191,9 @@ def _get_word_advances(font: FontArg, *words: PaddedText) -> Iterator[float]:
     :return: iterator yielding the advance width for each word. The advance includes the
         word's width plus the spacing to the next word (if any)
     """
+    font_path = FTFontInfo(font).path
     for left, right in it.pairwise(words):
-        space = _get_inner_text_advance(font, left.text[-1], " ", right.text[0])
+        space = _get_inner_text_advance(font_path, left.text[-1], " ", right.text[0])
         yield left.bbox.width + space
     yield words[-1].bbox.width
 
@@ -349,8 +346,9 @@ def align_tspans(font: FontArg, *tspans: PaddedText) -> None:
     after they are created and all using similar fonts.
     """
     tspans_ = [x for x in tspans if x.text]
+    font_path = FTFontInfo(font).path
     for left, right in it.pairwise(tspans_):
-        advance = _get_inner_text_advance(font, left.text[-1], right.text[0])
+        advance = _get_inner_text_advance(font_path, left.text[-1], right.text[0])
         if advance:
             advance *= (left.scale[0] + right.scale[0]) / 2
         right.x = left.x2 + advance
@@ -480,12 +478,3 @@ def justify(
     """
     path = _find_best_line_breaks(font, words, width, hyp_pen)
     return _construct_hyphenated_text_lines(font, words, width, path, justify=True)
-    plems = [new_padded_union(*x) for x in plemss]
-    _ = PaddedList(*plems).stack()
-
-    rect = new_bbox_rect(pad_bbox(PaddedList(*plems).bbox, 300), fill="#ffffff")
-    root = new_svg_root_around_bounds(rect, *plems, pad_=300, print_width_=1080)
-
-    _ = write_svg("temp.svg", root)
-
-    return [plem.text for plem in plems]
