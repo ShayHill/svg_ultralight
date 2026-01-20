@@ -467,7 +467,7 @@ def justify(
     words: list[PaddedText],
     width: float,
     hyp_pen: float | None = None,
-) -> list[str]:
+) -> list[list[PaddedText]]:
     """Justify text and write to SVG file.
 
     :param font: the font used for measuring word advances
@@ -479,7 +479,7 @@ def justify(
         to "temp.svg" as a side effect
     """
     path = _find_best_line_breaks(font, words, width, hyp_pen)
-    plemss = _construct_hyphenated_text_lines(font, words, width, path, justify=True)
+    return _construct_hyphenated_text_lines(font, words, width, path, justify=True)
     plems = [new_padded_union(*x) for x in plemss]
     _ = PaddedList(*plems).stack()
 

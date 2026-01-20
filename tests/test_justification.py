@@ -4,13 +4,11 @@
 :created: 2026-01-19
 """
 
-# pyright: reportPrivateUsage=false
-
 from pathlib import Path
 
 from paragraphs import par
 
-from svg_ultralight.font_tools.align_text import hyphenate_text, justify, justify_text
+from svg_ultralight.font_tools.align_text import hyphenate_text, justify_text
 
 PARAGRAPH = par(
     """When the wind was in the east, a smell came across the harbour from the shark 
@@ -62,7 +60,7 @@ class TestJustification:
             ["it", "was", "pleasant", "and"],
             ["sunny", "on", "the", "Terrace."],
         ]
-        result = justify_text(FONT, PARAGRAPH, 24000, hyphenation_penalty=0.0)
+        result = justify_text(FONT, PARAGRAPH, 24000, hyp_pen=0.0)
         assert result == expect
 
     def test_high_penalty(self) -> None:
@@ -80,7 +78,7 @@ class TestJustification:
             ["it", "was", "pleasant", "and"],
             ["sunny", "on", "the", "Terrace."],
         ]
-        result = justify_text(FONT, PARAGRAPH, 24000, hyphenation_penalty=1)
+        result = justify_text(FONT, PARAGRAPH, 24000, hyp_pen=1)
         assert result == expect
 
     def test_justify_text_small_width(self) -> None:
@@ -97,5 +95,5 @@ class TestJustification:
             ["Ter-"], ["race."],
         ]
         # fmt: on
-        result = justify_text(FONT, PARAGRAPH, 5000, hyphenation_penalty=0.1)
+        result = justify_text(FONT, PARAGRAPH, 5000, hyp_pen=0.1)
         assert result == expect
