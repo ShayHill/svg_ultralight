@@ -61,11 +61,12 @@ docstring-code-line-length = 88
 select = ["ALL"]
 
 ignore = [
-    "PLR", # magic values
-    "COM", # trailing commas
-    "ANN", # forbid Any
-    "S",   # warnings about pickle, random, etc.
-    "N",   # names
+    "PLR",  # magic values
+    "COM",  # trailing commas
+    "ANN",  # forbid Any
+    "S",    # warnings about pickle, random, etc.
+    "N",    # names
+    "B019", # memory leak warning for lru_cache
 ]
 
 

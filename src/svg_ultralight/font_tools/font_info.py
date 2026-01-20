@@ -92,6 +92,7 @@ fontTools and this module.
 from __future__ import annotations
 
 import copy
+import functools
 import itertools as it
 import logging
 from contextlib import suppress
@@ -492,6 +493,7 @@ class FTFontInfo:
             raise ValueError(msg)
         return glyph_name
 
+    @functools.lru_cache
     def get_char_svgd(self, char: str, dx: float = 0) -> str:
         """Return the svg path data for a glyph.
 
@@ -568,6 +570,8 @@ class FTFontInfo:
         max_y = max(max_ys)
         return min_x, min_y, max_x, max_y
 
+    # TODO: remove dx paramater from get_text_svgd_by_char and get_text_svgds
+
     def get_text_svgd_by_char(self, text: str, dx: float = 0) -> Iterator[str]:
         """Return an iterator of svg path data for each character in a string.
 
@@ -586,6 +590,7 @@ class FTFontInfo:
             char_dx += self.kern_table.get((this_name, next_name), 0)
         yield self.get_char_svgd(text[-1], char_dx)
 
+    # TODO: remove get_text_svgd
     def get_text_svgd(self, text: str, dx: float = 0) -> str:
         """Return the svg path data for a string.
 
