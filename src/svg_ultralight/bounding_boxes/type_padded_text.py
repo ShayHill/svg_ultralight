@@ -41,6 +41,8 @@ from __future__ import annotations
 
 import dataclasses
 import math
+from contextlib import suppress
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from lxml import etree
@@ -124,6 +126,7 @@ class PaddedText(BoundElement):
         lpad: float,
         text: str,
         metrics: FontMetrics | None = None,
+        font: Path | None = None,
     ) -> None:
         """Initialize a PaddedText instance.
 
@@ -135,6 +138,7 @@ class PaddedText(BoundElement):
         :param lpad: Left padding.
         :param text: The text string from which this instance was created.
         :param metrics: The font metrics for this line of text (inferred from a font):
+        :param font: Optional path to the font file from which this instance was created.
         """
         self.elem = elem
         self.unpadded_bbox = bbox
@@ -144,6 +148,8 @@ class PaddedText(BoundElement):
         self._lpad = lpad
         self._text = text
         self._metrics = metrics
+        self._font = font
+        self.tag = ""
 
     @property
     def metrics(self) -> FontMetrics:
@@ -535,6 +541,18 @@ class PaddedText(BoundElement):
         return self._text
 
     @property
+    def font(self) -> Path:
+        """The path to the font file from which this instance was created.
+
+        :return: The path to the font file.
+        :raises AttributeError: If no font path was set when creating this instance.
+        """
+        if self._font is None:
+            msg = "No font path defined for this PaddedText."
+            raise AttributeError(msg)
+        return self._font
+
+    @property
     def tpad(self) -> float:
         """The top padding of this line of text.
 
@@ -683,6 +701,27 @@ class PaddedText(BoundElement):
         self.transform_preserve_sidebearings(scale=value / self.height)
 
 
+def _get_majority_font(plems: tuple[PaddedText, ...]) -> Path | None:
+    """Get the font attribute from members based on majority rule.
+
+    :param plems: The PaddedText instances to check.
+    :return: The font path if a majority exists, or the first tied value, or None.
+
+    Returns the font attribute if:
+    - A majority of members with font != None have the same font attribute
+    - If there is a tie for majority, use the first tied value that appears first
+    """
+    fonts_with_paths: list[Path] = []
+    for p in plems:
+        with suppress(AttributeError):
+            fonts_with_paths.append(p.font)
+
+    if not fonts_with_paths:
+        return None
+
+    return max(set(fonts_with_paths), key=fonts_with_paths.count)
+
+
 def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     """Use the new_padded_union mechanic to create an empty PaddedText instance.
 
@@ -693,7 +732,7 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
         # fmt: off
         return PaddedText(
             new_element("g"), BoundingBox(0, 0, 0, 0),
-            0, 0, 0, 0, "", FontMetrics(0, 0, 0, 0, 0, 0),
+            0, 0, 0, 0, "", FontMetrics(0, 0, 0, 0, 0, 0), None,
         )
         # fmt: on
     bbox = BoundingBox.union(*(t.bbox for t in plems))
@@ -718,8 +757,17 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
         min_line_gap,
     )
     combined_text = "".join(t.text for t in plems)
+    union_font = _get_majority_font(plems)
     return PaddedText(
-        etree.Element("g"), tbox, tpad, rpad, bpad, lpad, combined_text, metrics
+        etree.Element("g"),
+        tbox,
+        tpad,
+        rpad,
+        bpad,
+        lpad,
+        combined_text,
+        metrics,
+        union_font,
     )
 
 

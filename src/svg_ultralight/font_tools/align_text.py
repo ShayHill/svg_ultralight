@@ -6,11 +6,14 @@
 
 from __future__ import annotations
 
+import copy
+
+
 import dataclasses
 import functools
 import itertools as it
 import os
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, NamedTuple, TypeAlias, overload
 
 import pyphen
@@ -168,8 +171,32 @@ def _get_word_advances(font: FontArg, *words: PaddedText) -> Iterator[float]:
     """Get the advance for each word."""
     for left, right in it.pairwise(words):
         space = _get_inner_text_advance(font, left.text[-1], " ", right.text[0])
-        yield left.width + space
-    yield words[-1].width
+        yield left.bbox.width + space
+    yield words[-1].bbox.width
+
+
+def _hyphenated_word_group(word: PaddedText) -> str:
+    return word.tag.split(";")[0]
+
+
+def _join_hyphenated_words(
+    words: Sequence[PaddedText],
+) -> list[PaddedText | FTTextInfo]:
+    """Join hyphenated words into a single word."""
+    words_: list[PaddedText | FTTextInfo] = []
+    last_key = _hyphenated_word_group(words[-1])
+    grouped = it.groupby(words, _hyphenated_word_group)
+    for key, group in grouped:
+        if not key:
+            words_.extend(group)
+            continue
+        group_ = tuple(group)
+        font = group_[0].font
+        text = "".join(x.text for x in group_)
+        if key == last_key and not words[-1].tag.endswith("END"):
+            text += "-"
+        words_.append(FTTextInfo(font, text))
+    return words_
 
 
 def _get_line_cost(font: FontArg, width: float, *words: PaddedText) -> float:
@@ -177,11 +204,14 @@ def _get_line_cost(font: FontArg, width: float, *words: PaddedText) -> float:
     if not words:
         msg = "Cannot get the cost of an empty line."
         raise ValueError(msg)
-    advances = list(_get_word_advances(font, *words))
+    words_ = _join_hyphenated_words(words)
+    advances = list(_get_word_advances(font, *words_))
     total_cost = width - sum(advances)
     if total_cost < 0:
         return 0 if len(advances) == 1 else float("inf")
-    if len(advances) in (1, 2):
+    if len(advances) == 1:
+        return pow(total_cost * 2, 2)
+    if len(advances) == 2:
         return pow(total_cost, 2)
     return pow(total_cost / (len(advances) - 1), 2)
 
@@ -203,20 +233,23 @@ def _construct_justification(
     """Translate path words into a justification."""
     result: list[list[PaddedText]] = []
     for beg, end in it.pairwise(path):
-        line = words[beg:end]
-        advances = list(_get_word_advances(font, *line))
+        line = _join_hyphenated_words(words[beg:end])
+        plems = [x if isinstance(x, PaddedText) else x.new_padded_text() for x in line]
+        advances = list(_get_word_advances(font, *plems))
         full_cost = 0 if end == len(words) else width - sum(advances)
         spaces = len(advances) - 1
         if spaces:
             part_cost = full_cost / spaces
             advances[:-1] = (x + part_cost for x in advances[:-1])
             for i in range(1, len(advances)):
-                line[i].x += sum(advances[:i])
-        result.append(line)
+                plems[i].x += sum(advances[:i])
+        result.append(plems)
     return result
 
 
-def justify(font: FontArg, words: list[PaddedText], width: float) -> list[str]:
+def justify(
+    font: FontArg | Iterable[FontArg], words: list[PaddedText], width: float
+) -> list[str]:
     """Justify text."""
     heads = [
         CandidateLineBreakIndices((0,), 0),
@@ -241,3 +274,4 @@ def justify(font: FontArg, words: list[PaddedText], width: float) -> list[str]:
     _ = PaddedList(*plems).stack()
     root = new_svg_root_around_bounds(*plems)
     _ = write_svg("temp.svg", root)
+    return plems

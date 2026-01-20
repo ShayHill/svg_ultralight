@@ -91,6 +91,7 @@ fontTools and this module.
 
 from __future__ import annotations
 
+import copy
 import itertools as it
 import logging
 from contextlib import suppress
@@ -105,6 +106,7 @@ from svg_path_data import format_svgd_shortest, get_cpts_from_svgd, get_svgd_fro
 from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_padded_text import FontMetrics, PaddedText
 from svg_ultralight.constructors.new_element import new_element, new_sub_element
 from svg_ultralight.strings import svg_matrix
 
@@ -725,6 +727,30 @@ class FTTextInfo:
     def padding(self) -> tuple[float, float, float, float]:
         """Return the padding for the text as a tuple of (top, right, bottom, left)."""
         return self.tpad, self.rpad, self.bpad, self.lpad
+
+    def new_padded_text(self, **attributes: ElemAttrib) -> PaddedText:
+        """Create a new PaddedText instance from this FTTextInfo.
+
+        :param attributes: SVG attributes to apply to the text element
+        :return: A PaddedText instance
+        """
+        metrics = FontMetrics(
+            self.font.units_per_em,
+            self.font.ascent,
+            self.font.descent,
+            self.font.cap_height,
+            self.font.x_height,
+            self.font.line_gap,
+        )
+        elem = self.new_element(**attributes)
+        return PaddedText(
+            elem,
+            self.bbox,
+            *self.padding,
+            self.text,
+            copy.copy(metrics),
+            self.font.path,
+        )
 
 
 # ===================================================================================

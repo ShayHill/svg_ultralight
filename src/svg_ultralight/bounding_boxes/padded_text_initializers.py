@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import copy
 import os
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     ParamSpec,
@@ -30,10 +31,7 @@ from typing import (
     overload,
 )
 
-from svg_ultralight.bounding_boxes.type_padded_text import (
-    FontMetrics,
-    PaddedText,
-)
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import update_element
 from svg_ultralight.font_tools.font_info import (
     FTFontInfo,
@@ -113,7 +111,10 @@ def pad_text_inkscape(
     bpad = capline_bbox.y2 - bbox.y2
     lpad = bbox.x
     text_content = "".join(text_elem.itertext()) if text_elem.text is not None else ""
-    return PaddedText(text_elem, bbox, tpad, rpad, bpad, lpad, text_content)
+    font_path = Path(font).resolve() if font is not None else None
+    return PaddedText(
+        text_elem, bbox, tpad, rpad, bpad, lpad, text_content, None, font_path
+    )
 
 
 def _remove_svg_font_attributes(attributes: dict[str, ElemAttrib]) -> dict[str, str]:
@@ -165,20 +166,11 @@ def pad_text(
     """
     attributes_ = _remove_svg_font_attributes(attributes)
     font = FTFontInfo(font)
-    metrics = FontMetrics(
-        font.units_per_em,
-        font.ascent,
-        font.descent,
-        font.cap_height,
-        font.x_height,
-        font.line_gap,
-    )
 
     plems: list[PaddedText] = []
     for t in [text] if isinstance(text, str) else text:
         ti = FTTextInfo(font, t)
-        elem = ti.new_element(**attributes_)
-        plem = PaddedText(elem, ti.bbox, *ti.padding, t, copy.copy(metrics))
+        plem = ti.new_padded_text(**attributes_)
         if font_size:
             plem.font_size = font_size
         plems.append(plem)
