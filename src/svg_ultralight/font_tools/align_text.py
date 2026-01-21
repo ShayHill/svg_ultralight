@@ -481,3 +481,22 @@ def justify(
     """
     path = _find_best_line_breaks(font, words, width, hyp_pen)
     return _construct_hyphenated_text_lines(font, words, width, path, justify=True)
+
+
+def wrap(
+    font: FontArg,
+    words: list[PaddedText],
+    width: float,
+    hyp_pen: float | None = None,
+) -> list[list[PaddedText]]:
+    """Wrap text into lines without justification.
+
+    :param font: the font used for measuring word advances
+    :param words: padded words to wrap
+    :param width: the target line width
+    :param hyp_pen: optional penalty scalar for lines ending with a
+        hyphenated word. If None, no additional penalty is applied
+    :return: list of lists of PaddedText instances, one list per wrapped line
+    """
+    path = _find_best_line_breaks(font, words, width, hyp_pen)
+    return _construct_hyphenated_text_lines(font, words, width, path, justify=False)

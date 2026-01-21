@@ -38,6 +38,7 @@ from svg_ultralight.font_tools.align_text import (
     join_tspans,
     justify,
     justify_text,
+    wrap,
     wrap_text,
 )
 from svg_ultralight.font_tools.font_info import FTFontInfo
@@ -114,6 +115,7 @@ __all__ = [
     "parse_bound_element",
     "transform_element",
     "update_element",
+    "wrap",
     "wrap_text",
     "write_pdf",
     "write_pdf_from_svg",
