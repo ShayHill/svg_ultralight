@@ -33,7 +33,11 @@ from svg_ultralight.constructors.new_element import (
 )
 from svg_ultralight.font_tools.align_text import (
     align_tspans,
+    hyphenate,
+    hyphenate_text,
     join_tspans,
+    justify,
+    justify_text,
     wrap_text,
 )
 from svg_ultralight.font_tools.font_info import FTFontInfo
@@ -85,7 +89,11 @@ __all__ = [
     "get_bounding_box",
     "get_bounding_box_from_root",
     "get_bounding_boxes",
+    "hyphenate",
+    "hyphenate_text",
     "join_tspans",
+    "justify",
+    "justify_text",
     "mat_apply",
     "mat_dot",
     "mat_invert",
