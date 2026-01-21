@@ -194,6 +194,7 @@ def _get_word_advances(font: FontArg, *words: PaddedText) -> Iterator[float]:
     font_path = FTFontInfo(font).path
     for left, right in it.pairwise(words):
         space = _get_inner_text_advance(font_path, left.text[-1], " ", right.text[0])
+        space *= (left.scale[0] + right.scale[0]) / 2
         yield left.bbox.width + space
     yield words[-1].bbox.width
 
