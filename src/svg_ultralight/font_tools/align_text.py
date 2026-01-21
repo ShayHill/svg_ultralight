@@ -319,15 +319,15 @@ def _construct_hyphenated_text_lines(
     lines = list(_iter_joined_hyphenations(words, path))
     for line_idx, line in enumerate(lines):
         advances = list(_get_word_advances(font, *line))
-        if justify:
-            is_last_line = line_idx == len(lines) - 1
-            spaces = len(advances) - 1
-            if spaces:
+        spaces = len(advances) - 1
+        if spaces:
+            if justify:
+                is_last_line = line_idx == len(lines) - 1
                 if not is_last_line:
                     part_cost = (width - sum(advances)) / spaces
                     advances[:-1] = (x + part_cost for x in advances[:-1])
-                for j in range(1, len(advances)):
-                    line[j].x += sum(advances[:j])
+            for j in range(1, len(advances)):
+                line[j].x += sum(advances[:j])
     return lines
 
 
