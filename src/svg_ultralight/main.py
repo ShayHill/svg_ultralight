@@ -197,16 +197,42 @@ def write_svg(
     raise TypeError(msg)
 
 
-def _next_unique_id(d2id: dict[str, str], id_: str) -> str:
-    """Get the next unique ID for a given ID."""
-    seen = set(d2id.values())
-    if id_ != "path" and id_ not in seen:
-        return id_
-    for candidate in (f"{id_}_{i}" for i in range(1, 1000)):
-        if candidate not in seen:
-            return candidate
-    msg = f"No unique ID found for {id_}"
-    raise RuntimeError(msg)
+_ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _unique_id_generator(id_: str, seen: set[str]) -> Iterator[str]:
+    """Generate unique IDs for a given base ID.
+
+    :param id_: the base ID to generate unique variants for
+    :param seen: set of IDs that are already in use (updated as IDs are yielded)
+    :yield: unique ID candidates
+    """
+    if id_ not in seen:
+        seen.add(id_)
+        yield id_
+    for length in range(1, 5):
+        for suffix in _generate_alphanumeric(length):
+            candidate = f"{id_}_{suffix}"
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            yield candidate
+
+
+def _generate_alphanumeric(length: int) -> Iterator[str]:
+    """Generate alphanumeric strings of a given length.
+
+    :param length: the length of strings to generate
+    :param chars: the character set to use
+    :return: iterator of alphanumeric strings
+    """
+    if length == 1:
+        for char in _ALPHANUM:
+            yield char
+    else:
+        for prefix in _generate_alphanumeric(length - 1):
+            for char in _ALPHANUM:
+                yield prefix + char
 
 
 def _iter_paths(root: EtreeElement, exclude: EtreeElement) -> Iterator[EtreeElement]:
@@ -231,6 +257,8 @@ def _reuse_paths(root: EtreeElement) -> None:
     :param root: the root element of an svg
     """
     d2id: dict[str, str] = {}
+    base_id2ids: dict[str, Iterator[str]] = {}
+    seen = {"path"}
     try:
         defs = next(x for x in root if x.tag == "defs")
     except StopIteration:
@@ -243,8 +271,10 @@ def _reuse_paths(root: EtreeElement) -> None:
         if svgd in d2id:
             id_ = d2id[svgd]
         else:
-            id_ = path.attrib.get("data-text", "path")
-            id_ = _next_unique_id(d2id, id_)
+            base_id = path.attrib.get("data-text", "path")
+            if base_id not in base_id2ids:
+                base_id2ids[base_id] = _unique_id_generator(base_id, seen)
+            id_ = next(base_id2ids[base_id])
             d2id[svgd] = id_
         parent = path.getparent()
         if parent is None:
