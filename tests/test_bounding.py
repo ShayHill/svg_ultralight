@@ -18,7 +18,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     pad_bbox,
     parse_bound_element,
 )
-from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
+from svg_ultralight.bounding_boxes.type_bound_list import BoundList
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
@@ -190,13 +190,13 @@ class TestPaddedText:
         assert bound_element.tbox.y2 == elem_y2
 
 
-class TestBoundCollection:
+class TestBoundList:
     @pytest.fixture
-    def bound_collection(self) -> BoundCollection:
+    def bound_list(self) -> BoundList:
         elem = new_element("rect", x=0, y=0, width=100, height=200)
         bbox = BoundingBox(0, 0, 100, 200)
         blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
-        return BoundCollection(blem, copy.deepcopy(elem))
+        return BoundList(blem, copy.deepcopy(elem))
 
     def test_blem_and_elem(self):
         """Test that bound element and unbound element transforms are the same."""
@@ -204,11 +204,11 @@ class TestBoundCollection:
         bbox = BoundingBox(0, 0, 100, 200)
         blem = BoundElement(rect, bbox)
         elem = copy.deepcopy(rect)
-        bound_collection = BoundCollection(blem, elem)
-        bound_collection.x = -4
-        bound_collection.scale = (10.0, 10.0)
-        bound_collection.width = 60
-        bound_collection.cy = -40
+        bound_list = BoundList(blem, elem)
+        bound_list.x = -4
+        bound_list.scale = (10.0, 10.0)
+        bound_list.width = 60
+        bound_list.cy = -40
         blem_trans = blem.elem.attrib["transform"]
         elem_trans = elem.attrib["transform"]
         assert blem_trans == elem_trans

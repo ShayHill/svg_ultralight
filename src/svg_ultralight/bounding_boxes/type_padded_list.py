@@ -16,17 +16,21 @@ padded_list[::2].transform(dx=10)
 :created: 2025-11-17
 """
 
-import itertools as it
-from typing import overload
+from __future__ import annotations
 
-from svg_ultralight.attrib_hints import ElemAttrib
-from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+import itertools as it
+from typing import TYPE_CHECKING, overload
+
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
     new_empty_padded_union,
     new_padded_union,
 )
-from svg_ultralight.font_tools.font_metrics import FontMetrics
+
+if TYPE_CHECKING:
+    from svg_ultralight.attrib_hints import ElemAttrib
+    from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+    from svg_ultralight.font_tools.font_metrics import FontMetrics
 
 _Matrix = tuple[float, float, float, float, float, float]
 
@@ -40,12 +44,12 @@ class PaddedList(PaddedText):
         self.__mock_union: PaddedText | None = None
 
     @overload
-    def __getitem__(self, idx: slice) -> "PaddedList": ...
+    def __getitem__(self, idx: slice) -> PaddedList: ...
 
     @overload
     def __getitem__(self, idx: int) -> PaddedText: ...
 
-    def __getitem__(self, idx: slice | int) -> "PaddedList | PaddedText":
+    def __getitem__(self, idx: slice | int) -> PaddedList | PaddedText:
         """Get one or more padded text elements."""
         if isinstance(idx, int):
             return self.plems[idx]
@@ -82,7 +86,10 @@ class PaddedList(PaddedText):
 
     @bbox.setter
     def bbox(self, value: BoundingBox) -> None:
-        """Forbid setting the bbox directly."""
+        """Forbid setting the bbox directly.
+
+        Required because, per inheritance, bbox is a writeable attribute.
+        """
         del value
         msg = "Cannot set bbox."
         raise AttributeError(msg)

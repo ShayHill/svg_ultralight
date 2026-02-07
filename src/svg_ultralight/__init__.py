@@ -19,8 +19,8 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text_inkscape,
 )
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
-from svg_ultralight.bounding_boxes.type_bound_collection import BoundCollection
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.type_bound_list import BoundList
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
@@ -72,8 +72,8 @@ from svg_ultralight.transformations import (
 
 __all__ = [
     "NSMAP",
-    "BoundCollection",
     "BoundElement",
+    "BoundList",
     "BoundingBox",
     "FTFontInfo",
     "PaddedList",
