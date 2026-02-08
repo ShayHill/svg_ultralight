@@ -258,7 +258,7 @@ def _reuse_paths(root: EtreeElement) -> None:
     """
     d2id: dict[str, str] = {}
     base_id2ids: dict[str, Iterator[str]] = {}
-    seen = {"path"}
+    seen: set[str] = set()
     try:
         defs = next(x for x in root if x.tag == "defs")
     except StopIteration:
@@ -273,6 +273,8 @@ def _reuse_paths(root: EtreeElement) -> None:
         else:
             base_id = path.attrib.get("data-text", "path")
             if base_id not in base_id2ids:
+                if isinstance(path.tag, str) and path.tag.endswith(base_id):
+                    seen.add(base_id)
                 base_id2ids[base_id] = _unique_id_generator(base_id, seen)
             id_ = next(base_id2ids[base_id])
             d2id[svgd] = id_

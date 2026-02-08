@@ -18,15 +18,19 @@ import pytest
 from lxml import etree
 
 from svg_ultralight import NSMAP
+from svg_ultralight.constructors import new_element
 
-# noinspection PyProtectedMember
-from svg_ultralight.main import new_svg_root, write_svg
+from svg_ultralight.main import _reuse_paths, new_svg_root, write_svg
 from svg_ultralight.string_conversion import svg_tostring
 
 if TYPE_CHECKING:
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
+
+
+def _local_tag(elem: EtreeElement) -> str:
+    """Return the local part of the element tag (no namespace)."""
+    tag_str = str(elem.tag) if elem.tag else ""
+    return tag_str.split("}")[-1] if "}" in tag_str else tag_str
 
 
 @pytest.fixture
@@ -196,3 +200,59 @@ class TestTostringKwargs:
             b"<blank/>",
             b"",
         ]
+
+
+class TestReusePaths:
+    """Test _reuse_paths moves path definitions to defs and replaces with use."""
+
+    def test_creates_defs_and_replaces_paths_with_use(self) -> None:
+        """Paths are moved to defs and replaced by use elements."""
+        root = new_svg_root(0, 0, 100, 100)
+        g = new_element("g")
+        path_d = "M0 0 L10 10"
+        p1 = new_element("path", d=path_d)
+        p2 = new_element("path", d=path_d)
+        g.append(p1)
+        g.append(p2)
+        root.append(g)
+        _reuse_paths(root)
+        defs = next((c for c in root if _local_tag(c) == "defs"), None)
+        assert defs is not None
+        path_defs = [c for c in defs if _local_tag(c) == "path"]
+        assert len(path_defs) == 1
+        assert path_defs[0].attrib.get("d") == path_d
+        assert "id" in path_defs[0].attrib
+        ref_id = path_defs[0].attrib["id"]
+        use_elems = [c for c in g if _local_tag(c) == "use"]
+        assert len(use_elems) == 2
+        for use_elem in use_elems:
+            assert use_elem.attrib.get("href") == f"#{ref_id}"
+
+    def test_duplicate_path_reuses_same_id(self) -> None:
+        """Two paths with same d get one def and two use elements with same href."""
+        root = new_svg_root(0, 0, 100, 100)
+        g = new_element("g")
+        same_d = "M0 0 L5 5"
+        g.append(new_element("path", d=same_d))
+        g.append(new_element("path", d=same_d))
+        root.append(g)
+        _reuse_paths(root)
+        defs = next((c for c in root if _local_tag(c) == "defs"), None)
+        assert defs is not None
+        path_defs = [c for c in defs if _local_tag(c) == "path"]
+        assert len(path_defs) == 1
+        ref_id = path_defs[0].attrib["id"]
+        uses = [c for c in g if _local_tag(c) == "use"]
+        assert len(uses) == 2
+        assert all(u.attrib.get("href") == f"#{ref_id}" for u in uses)
+
+    def test_empty_path_skipped(self) -> None:
+        """Path with empty d is skipped and defs remains empty or removed."""
+        root = new_svg_root(0, 0, 100, 100)
+        g = new_element("g")
+        g.append(new_element("path", d=""))
+        root.append(g)
+        _reuse_paths(root)
+        defs_list = [c for c in root if _local_tag(c) == "defs"]
+        if defs_list:
+            assert len(list(defs_list[0])) == 0

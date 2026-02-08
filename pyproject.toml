@@ -71,13 +71,17 @@ ignore = [
 
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "tests"]
 exclude = ["**/__pycache__.py"]
 
 pythonVersion = "3.10"
 pythonPlatform = "All"
 
 typeCheckingMode = "strict"
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+reportPrivateUsage = false
 # reportShadowedImports = true
 reportCallInDefaultInitializer = true
 reportImplicitStringConcatenation = true

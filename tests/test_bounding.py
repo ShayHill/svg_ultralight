@@ -18,8 +18,8 @@ from svg_ultralight.bounding_boxes.bound_helpers import (
     pad_bbox,
     parse_bound_element,
 )
-from svg_ultralight.bounding_boxes.type_bound_list import BoundList
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
+from svg_ultralight.bounding_boxes.type_bound_list import BoundList
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
