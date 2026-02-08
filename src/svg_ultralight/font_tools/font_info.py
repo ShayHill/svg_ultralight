@@ -524,6 +524,7 @@ class FTFontInfo:
         _ = self._glyph_set[glyph_name].draw(path_pen)
         return format_svgd_shortest(path_pen.svgd)
 
+    @functools.lru_cache
     def get_char_bounds(self, char: str) -> tuple[int, int, int, int]:
         """Return the min and max x and y coordinates of a glyph.
 

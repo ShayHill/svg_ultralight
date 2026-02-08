@@ -19,7 +19,6 @@ from lxml import etree
 
 from svg_ultralight import NSMAP
 from svg_ultralight.constructors import new_element
-
 from svg_ultralight.main import _reuse_paths, new_svg_root, write_svg
 from svg_ultralight.string_conversion import svg_tostring
 
