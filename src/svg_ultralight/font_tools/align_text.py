@@ -303,7 +303,7 @@ def _iter_joined_hyphenations(
 def _construct_hyphenated_text_lines(
     font: FontArg,
     words: list[PaddedText],
-    width: float,
+    width: float | Iterable[float],
     path: tuple[int, ...],
     *,
     justify: bool,
@@ -318,15 +318,17 @@ def _construct_hyphenated_text_lines(
         line is not justified
     :return: list of lists of PaddedText instances, one list per line
     """
+    width = [width] if isinstance(width, (int, float)) else list(width)
     lines = list(_iter_joined_hyphenations(words, path))
     for line_idx, line in enumerate(lines):
+        width_ = width[min(line_idx, len(width) - 1)]
         advances = list(_get_word_advances(font, *line))
         spaces = len(advances) - 1
         if spaces:
             if justify:
                 is_last_line = line_idx == len(lines) - 1
                 if not is_last_line:
-                    part_cost = (width - sum(advances)) / spaces
+                    part_cost = (width_ - sum(advances)) / spaces
                     advances[:-1] = (x + part_cost for x in advances[:-1])
             for j in range(1, len(advances)):
                 line[j].x += sum(advances[:j])
@@ -469,7 +471,7 @@ def wrap_text(
 def justify(
     font: FontArg,
     words: list[PaddedText],
-    width: float,
+    width: float | Iterable[float],
     hyp_pen: float | None = None,
 ) -> list[list[PaddedText]]:
     """Justify text and write to SVG file.

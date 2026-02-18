@@ -8,7 +8,8 @@ from pathlib import Path
 
 from paragraphs import par
 
-from svg_ultralight.font_tools.align_text import hyphenate_text, justify_text
+from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
+from svg_ultralight.font_tools.align_text import hyphenate_text, justify, justify_text
 
 PARAGRAPH = par(
     """When the wind was in the east, a smell came across the harbour from the shark
@@ -121,3 +122,8 @@ class TestJustification:
         ]
         result = justify_text(FONT, PARAGRAPH, [12000, 24000] * 50, hyp_pen=0.1)
         assert result == expect
+
+    def test_justify(self) -> None:
+        """Test justify function."""
+        words = [pad_text(FONT, word) for word in PARAGRAPH.split()]
+        result = justify(FONT, words, [12000, 24000] * 50, hyp_pen=0.1)

@@ -9,7 +9,7 @@ fields.
 
 import warnings
 
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.constructors.new_element import new_element, new_sub_element
 from svg_ultralight.nsmap import new_qname

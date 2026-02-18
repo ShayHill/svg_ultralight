@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_union, new_bound_union
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox

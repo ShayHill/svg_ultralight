@@ -16,7 +16,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.string_conversion import set_attributes
 
