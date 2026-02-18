@@ -97,3 +97,27 @@ class TestJustification:
         # fmt: on
         result = justify_text(FONT, PARAGRAPH, 5000, hyp_pen=0.1)
         assert result == expect
+
+    def test_justify_multiple_widths(self) -> None:
+        """Test justify_text with multiple widths."""
+        expect = [
+            ["When", "the"],
+            ["wind", "was", "in", "the", "east,", "a"],
+            ["smell", "came"],
+            ["across", "the", "harbour"],
+            ["from", "the"],
+            ["shark", "factory;", "but"],
+            ["today", "there"],
+            ["was", "only", "the", "faint"],
+            ["edge", "of", "the"],
+            ["odour,", "because", "the"],
+            ["wind", "had"],
+            ["backed", "into", "the", "north"],
+            ["and", "then"],
+            ["dropped", "off", "and", "it"],
+            ["was", "pleas-"],
+            ["ant", "and", "sunny", "on", "the"],
+            ["Terrace."],
+        ]
+        result = justify_text(FONT, PARAGRAPH, [12000, 24000] * 50, hyp_pen=0.1)
+        assert result == expect

@@ -79,13 +79,9 @@ pythonPlatform = "All"
 
 typeCheckingMode = "strict"
 
-[[tool.pyright.executionEnvironments]]
-root = "tests"
 reportPrivateUsage = false
-# reportShadowedImports = true
 reportCallInDefaultInitializer = true
 reportImplicitStringConcatenation = true
-# reportMissingSuperCall = true
 reportPropertyTypeMismatch = true
 reportUninitializedInstanceVariable = true
 reportUnnecessaryTypeIgnoreComment = true
@@ -93,3 +89,6 @@ reportUnusedCallResult = true
 
 venvPath = "."
 venv = "./.venv"
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"

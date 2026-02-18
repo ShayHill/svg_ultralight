@@ -30,9 +30,7 @@ from lxml import etree
 from svg_ultralight import main
 
 if TYPE_CHECKING:
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
 
 
 def write_png_from_svg(

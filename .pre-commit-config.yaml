@@ -64,7 +64,7 @@ repos:
     id: pyupgrade
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+  rev: v1.5.6
   hooks:
   - id: remove-tabs
 
@@ -126,7 +126,7 @@ repos:
   # SLF001 Private member accessed
   # B019 Memory leak warning for lru_cache
 
-  rev: 'v0.14.10'
+  rev: 'v0.15.1'
   hooks:
     - id: ruff
       exclude: "tests"
@@ -143,6 +143,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.407
+  rev: v1.1.408
   hooks:
     - id: pyright

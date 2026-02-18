@@ -39,9 +39,7 @@ from svg_ultralight.constructors import new_element
 if TYPE_CHECKING:
     import os
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore [reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
 
 
 def _symmetric_crop(

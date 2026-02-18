@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Literal
 from warnings import warn
 
 from lxml import etree
-from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Comment as EtreeComment
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.main import new_svg_root, write_svg
@@ -33,9 +33,7 @@ from svg_ultralight.main import new_svg_root, write_svg
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
 
 
 with TemporaryFile() as f:

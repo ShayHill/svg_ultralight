@@ -18,7 +18,7 @@ import copy
 from typing import TYPE_CHECKING
 
 from lxml import etree
-from lxml.etree import _Comment as EtreeComment  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Comment as EtreeComment
 from paragraphs import par
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
@@ -32,9 +32,7 @@ from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 if TYPE_CHECKING:
     import os
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
 
     from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds

@@ -23,9 +23,7 @@ from svg_ultralight.nsmap import NSMAP
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement
 
     from svg_ultralight.attrib_hints import ElemAttrib
 

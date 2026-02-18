@@ -31,7 +31,7 @@ from svg_ultralight.font_tools.font_info import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Iterable, Iterator, Sequence
 
     from svg_ultralight.attrib_hints import ElemAttrib
 
@@ -251,7 +251,7 @@ class _LineBreaks(NamedTuple):
 def _find_best_line_breaks(
     font: FontArg,
     words: list[PaddedText],
-    width: float,
+    width: float | Iterable[float],
     hyp_pen: float | None = None,
 ) -> tuple[int, ...]:
     """Find the optimal line-break path for a sequence of words.
@@ -266,13 +266,15 @@ def _find_best_line_breaks(
     :return: tuple of indices describing optimal line breaks. Each index indicates where
         a new line should start
     """
+    width = [width] if isinstance(width, (int, float)) else list(width)
     heads = [
         _LineBreaks((0,), 0),
         *(_LineBreaks((0, x + 1), _INF) for x in range(len(words))),
     ]
     for beg in range(len(words)):
         for end in range(beg + 1, len(words) + 1):
-            cost = _get_line_cost(font, width, *words[beg:end], hyp_pen=hyp_pen)
+            width_ = width[min(len(heads[beg].path) - 1, len(width) - 1)]
+            cost = _get_line_cost(font, width_, *words[beg:end], hyp_pen=hyp_pen)
             if cost == _INF:
                 break
             if end == len(words):
@@ -383,7 +385,7 @@ def join_tspans(
 def justify_text(
     font: FontArg,
     text: str,
-    width: float,
+    width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
 ) -> list[list[str]]:
@@ -401,7 +403,8 @@ def justify_text(
         with words as separate strings
     """
     scale = font_size / FTFontInfo(font).units_per_em if font_size else 1.0
-    width /= scale
+    width = [width] if isinstance(width, (int, float)) else list(width)
+    width = [x / scale for x in width]
     words = hyphenate_text(font, text)
     path = _find_best_line_breaks(font, words, width, hyp_pen)
     plemss = _iter_joined_hyphenations(words, path)
@@ -412,7 +415,7 @@ def justify_text(
 def wrap_text(
     font: FontArg,
     text: str,
-    width: float,
+    width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
 ) -> list[str]: ...
@@ -422,7 +425,7 @@ def wrap_text(
 def wrap_text(
     font: FontArg,
     text: list[str],
-    width: float,
+    width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
 ) -> list[list[str]]: ...
@@ -431,7 +434,7 @@ def wrap_text(
 def wrap_text(
     font: FontArg,
     text: str | list[str],
-    width: float,
+    width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = _INF,
 ) -> list[str] | list[list[str]]:
