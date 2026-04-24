@@ -19,7 +19,8 @@ from lxml import etree
 
 from svg_ultralight import NSMAP
 from svg_ultralight.constructors import new_element
-from svg_ultralight.main import _reuse_paths, new_svg_root, write_svg
+from svg_ultralight.main import new_svg_root, write_svg
+from svg_ultralight.reuse_paths import reuse_paths
 from svg_ultralight.string_conversion import svg_tostring
 
 if TYPE_CHECKING:
@@ -202,7 +203,7 @@ class TestTostringKwargs:
 
 
 class TestReusePaths:
-    """Test _reuse_paths moves path definitions to defs and replaces with use."""
+    """Test reuse_paths moves path definitions to defs and replaces with use."""
 
     def test_creates_defs_and_replaces_paths_with_use(self) -> None:
         """Paths are moved to defs and replaced by use elements."""
@@ -214,7 +215,7 @@ class TestReusePaths:
         g.append(p1)
         g.append(p2)
         root.append(g)
-        _reuse_paths(root)
+        reuse_paths(root)
         defs = next((c for c in root if _local_tag(c) == "defs"), None)
         assert defs is not None
         path_defs = [c for c in defs if _local_tag(c) == "path"]
@@ -235,7 +236,7 @@ class TestReusePaths:
         g.append(new_element("path", d=same_d))
         g.append(new_element("path", d=same_d))
         root.append(g)
-        _reuse_paths(root)
+        reuse_paths(root)
         defs = next((c for c in root if _local_tag(c) == "defs"), None)
         assert defs is not None
         path_defs = [c for c in defs if _local_tag(c) == "path"]
@@ -251,7 +252,29 @@ class TestReusePaths:
         g = new_element("g")
         g.append(new_element("path", d=""))
         root.append(g)
-        _reuse_paths(root)
+        reuse_paths(root)
         defs_list = [c for c in root if _local_tag(c) == "defs"]
         if defs_list:
             assert len(list(defs_list[0])) == 0
+
+    def test_paths_within_defs_not_stripped(self) -> None:
+        """Do not strip paths in the top level of defs."""
+        root = new_svg_root(0, 0, 100, 100)
+        defs = new_element("defs")
+        root.append(defs)
+        p = new_element("path", d="M0 0 L10 10")
+        defs.append(p)
+        reuse_paths(root)
+        assert len(defs) == 1
+
+    def test_paths_buried_in_defs_stripped(self) -> None:
+        """Strip paths withing a g element within defs."""
+        root = new_svg_root(0, 0, 100, 100)
+        defs = new_element("defs")
+        root.append(defs)
+        g = new_element("g")
+        p = new_element("path", d="M0 0 L10 10")
+        g.append(p)
+        defs.append(g)
+        reuse_paths(root)
+        assert len(defs) == 2
