@@ -41,7 +41,7 @@ repos:
         # files: .pre-commit-config.yaml
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.19.1
+  rev: v1.20.2
   hooks:
   - id: mypy
     name: mypy
@@ -126,7 +126,7 @@ repos:
   # SLF001 Private member accessed
   # B019 Memory leak warning for lru_cache
 
-  rev: 'v0.15.1'
+  rev: 'v0.15.11'
   hooks:
     - id: ruff
       exclude: "tests"
@@ -143,6 +143,6 @@ repos:
 
 # reads pyproject.toml for additional config
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.408
+  rev: v1.1.409
   hooks:
     - id: pyright
