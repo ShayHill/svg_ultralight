@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 from svg_ultralight.constructors import new_element
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from lxml.etree import _Element as EtreeElement
 
 _ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
