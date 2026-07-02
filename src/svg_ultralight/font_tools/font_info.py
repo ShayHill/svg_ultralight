@@ -253,7 +253,8 @@ class PathPen(BasePen):
     @property
     def cpts(self) -> list[list[tuple[float, float]]]:
         """Return as a list of lists of Bezier control points."""
-        return get_cpts_from_svgd(" ".join(self._cmds))
+        curves = get_cpts_from_svgd(" ".join(self._cmds))
+        return [[(x, y) for x, y in curve] for curve in curves]
 
     def moveTo(self, pt: tuple[float, float]) -> None:
         """Move the current point to a new location."""
@@ -646,11 +647,7 @@ class FTFontInfo:
 class FTTextInfo:
     """Scale the fontTools font information for a specific text and font size."""
 
-    def __init__(
-        self,
-        font: str | os.PathLike[str] | FTFontInfo,
-        text: str,
-    ) -> None:
+    def __init__(self, font: str | os.PathLike[str] | FTFontInfo, text: str) -> None:
         """Initialize the FTTextInfo with text and an FTFontInfo instance."""
         self._font = FTFontInfo(font)
         self._text = text
@@ -804,10 +801,7 @@ def _get_font_names(
     return family, style
 
 
-_FONT_STYLE_TERMS = [
-    "italic",
-    "oblique",
-]
+_FONT_STYLE_TERMS = ["italic", "oblique"]
 _FONT_WEIGHT_MAP = {
     "ultralight": "100",
     "demibold": "600",

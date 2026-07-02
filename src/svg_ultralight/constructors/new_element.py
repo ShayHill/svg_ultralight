@@ -21,9 +21,7 @@ from lxml.etree import _Element as EtreeElement
 from svg_ultralight.string_conversion import set_attributes
 
 if TYPE_CHECKING:
-    from lxml.etree import (
-        QName,
-    )
+    from lxml.etree import QName
 
     from svg_ultralight.attrib_hints import ElemAttrib
 

@@ -23,13 +23,7 @@ from __future__ import annotations
 import copy
 import os
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    ParamSpec,
-    TypeAlias,
-    TypeVar,
-    overload,
-)
+from typing import TYPE_CHECKING, ParamSpec, TypeAlias, TypeVar, overload
 
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import update_element

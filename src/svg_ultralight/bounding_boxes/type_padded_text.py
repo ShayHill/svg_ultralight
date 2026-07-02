@@ -595,10 +595,7 @@ class PaddedText(BoundElement):
         `scale = 2` -> ignore whatever scale was previously defined and set scale to 2
         `scale *= 2` -> make it twice as big as it was.
         """
-        new_scale = (
-            value[0] / self.tbox.scale[0],
-            value[1] / self.tbox.scale[1],
-        )
+        new_scale = (value[0] / self.tbox.scale[0], value[1] / self.tbox.scale[1])
         self.transform(scale=new_scale)
 
     def transform_preserve_sidebearings(

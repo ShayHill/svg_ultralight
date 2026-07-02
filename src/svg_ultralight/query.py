@@ -193,7 +193,7 @@ def _try_bbox_cache(elem_hash: str) -> BoundingBox | None:
     except (EOFError, pickle.UnpicklingError) as e:
         msg = f"Error loading cache file {cache_path}: {e}"
         warn(msg, stacklevel=2)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         msg = f"Unexpected error loading cache file {cache_path}: {e}"
         warn(msg, stacklevel=2)
     return None

@@ -47,12 +47,7 @@ class HasBoundingBox(SupportsBounds):
 
         :return: x, y, width, height of the bounding box
         """
-        return (
-            self.bbox.x,
-            self.bbox.y,
-            self.bbox.width,
-            self.bbox.height,
-        )
+        return (self.bbox.x, self.bbox.y, self.bbox.width, self.bbox.height)
 
     def _get_transformed_corners(
         self,

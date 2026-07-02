@@ -4,8 +4,22 @@ version = "0.99.0"
 description = "a sensible way to create svg files with Python"
 readme = "README.md"
 license = "MIT"
-authors = [{ name = "Shay Hill", email = "shay_public@hotmail.com" }]
+authors = [
+    { name = "ShayHill", email = "shay_public@hotmail.com" }
+]
 requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
+]
 dependencies = [
     "cssutils>=2.11.1",
     "fonttools>=4.60.1",
@@ -19,7 +33,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.8.22,<0.9.0"]
+requires = ["uv_build>=0.11.25,<0.12.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -34,15 +48,19 @@ major-version-zero = true
 version_files = ["pyproject.toml:^version"]
 
 
-[tool.isort]
-profile = "black"
+# [tool.isort]
+# profile = "black"
+
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
 pythonpath = "tests"
+testpaths = ["tests"]
 log_cli = true
 
 
+[tool.ruff]
+exclude = ["typings", ".venv"]
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
 
@@ -55,11 +73,10 @@ convention = "pep257"
 
 [tool.ruff.format]
 docstring-code-line-length = 88
+skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-
 select = ["ALL"]
-
 ignore = [
     "PLR",  # magic values
     "COM",  # trailing commas
@@ -67,12 +84,14 @@ ignore = [
     "S",    # warnings about pickle, random, etc.
     "N",    # names
     "B019", # memory leak warning for lru_cache
+    "PTH108", # insist on Path.unlink()
 ]
 
 
 [tool.pyright]
 include = ["src", "tests"]
 exclude = ["**/__pycache__.py"]
+ignore = ["typings", ".venv"]
 
 pythonVersion = "3.10"
 pythonPlatform = "All"

@@ -22,13 +22,8 @@ from typing import TYPE_CHECKING, NamedTuple, TypeAlias, overload
 import pyphen
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
-from svg_ultralight.bounding_boxes.type_padded_text import (
-    PaddedText,
-    new_padded_union,
-)
-from svg_ultralight.font_tools.font_info import (
-    FTFontInfo,
-)
+from svg_ultralight.bounding_boxes.type_padded_text import PaddedText, new_padded_union
+from svg_ultralight.font_tools.font_info import FTFontInfo
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
@@ -200,10 +195,7 @@ def _get_word_advances(font: FontArg, *words: PaddedText) -> Iterator[float]:
 
 
 def _get_line_cost(
-    font: FontArg,
-    width: float,
-    *words: PaddedText,
-    hyp_pen: float | None = None,
+    font: FontArg, width: float, *words: PaddedText, hyp_pen: float | None = None
 ) -> float:
     """Get the cost of a line.
 
@@ -489,10 +481,7 @@ def justify(
 
 
 def wrap(
-    font: FontArg,
-    words: list[PaddedText],
-    width: float,
-    hyp_pen: float | None = None,
+    font: FontArg, words: list[PaddedText], width: float, hyp_pen: float | None = None
 ) -> list[list[PaddedText]]:
     """Wrap text into lines without justification.
 
