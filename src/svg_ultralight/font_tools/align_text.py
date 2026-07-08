@@ -252,7 +252,8 @@ def _find_best_line_breaks(
 
     :param font: the font used for measuring word advances
     :param words: the words to break into lines
-    :param width: the target line width
+    :param width: the target line width. If passed an iterable (e.g., [0, 1, 2]) will
+        use 0, 1, 2, 2, 2, ... for the widths of each line.
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word
     :return: tuple of indices describing optimal line breaks. Each index indicates where
@@ -304,7 +305,8 @@ def _construct_hyphenated_text_lines(
 
     :param font: the font used for measuring word advances
     :param words: the words to justify
-    :param width: the target line width
+    :param width: the target line width. If passed an iterable (e.g., [0, 1, 2]) will
+        use 0, 1, 2, 2, 2, ... for the widths of each line.
     :param path: the path describing line breaks
     :param justify: if True, distribute space between words to justify lines. The last
         line is not justified
@@ -470,7 +472,8 @@ def justify(
 
     :param font: the font used for measuring word advances
     :param words: padded words to justify
-    :param width: the target line width
+    :param width: the target line width. If passed an iterable (e.g., [0, 1, 2]) will
+        use 0, 1, 2, 2, 2, ... for the widths of each line.
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word. If None, no additional penalty is applied
     :return: list of strings, one per justified line. Also writes the justified text
@@ -481,7 +484,10 @@ def justify(
 
 
 def wrap(
-    font: FontArg, words: list[PaddedText], width: float, hyp_pen: float | None = None
+    font: FontArg,
+    words: list[PaddedText],
+    width: float | Iterable[float],
+    hyp_pen: float | None = None,
 ) -> list[list[PaddedText]]:
     """Wrap text into lines without justification.
 
