@@ -60,6 +60,7 @@ log_cli = true
 
 
 [tool.ruff]
+target-version = "py310"
 exclude = ["typings", ".venv"]
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
@@ -75,16 +76,32 @@ convention = "pep257"
 docstring-code-line-length = 88
 skip-magic-trailing-comma = true
 
+[tool.ruff.lint.isort]
+# keep isort consistent with format.skip-magic-trailing-comma
+split-on-trailing-comma = false
+
 [tool.ruff.lint]
 select = ["ALL"]
+# only auto-fix __all__ sorting (RUF022) and import sorting (I)
+fixable = ["RUF022", "I"]
 ignore = [
-    "PLR",  # magic values
-    "COM",  # trailing commas
-    "ANN",  # forbid Any
-    "S",    # warnings about pickle, random, etc.
-    "N",    # names
-    "B019", # memory leak warning for lru_cache
-    "PTH108", # insist on Path.unlink()
+    "COM812",  # trailing comma missing (does not agree with Black)
+    "D203",    # 1 blank line before class docstring (incompatible with D211)
+    "D213",    # multi-line summary second line (incompatible with D212)
+    "ISC003",  # explicitly concatenated string should be implicit
+    "ANN401",  # Any type disallowed (need Any for fonttools)
+    "S301",    # don't use pickle
+    "PLR2004", # magic value used in comparison
+    "S603",    # subprocess call: untrusted input
+    "SIM108",  # insists on ternary operator
+    "PTH108",  # os.unlink should be replaced by .unlink()
+    "PLR0913", # too many arguments to function call
+    "PGH003",  # use specific rule codes when ignoring type issues
+    "FLY",     # consider f-string
+    "N802",    # function name should be lowercase (font_info magic)
+    "PLR0911", # too many return statements (MeasurementArgs)
+    "SLF001",  # private member accessed
+    "B019",    # memory leak warning for lru_cache
 ]
 
 
