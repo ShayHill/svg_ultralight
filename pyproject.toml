@@ -43,7 +43,7 @@ dev = ["commitizen", "pre-commit", "pytest"]
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.99.0"
-tag_format = "$version"
+tag_format = "version"
 major-version-zero = true
 version_files = ["pyproject.toml:^version"]
 
