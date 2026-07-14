@@ -13,7 +13,7 @@ import binascii
 import itertools as it
 import re
 from enum import Enum
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal
 
 import svg_path_data
 from lxml import etree
@@ -30,6 +30,17 @@ if TYPE_CHECKING:
 
 # match a hex color string with 8 digits: #RRGGBBAA
 _HEX_COLOR_8DIGIT = re.compile(r"^#([0-9a-fA-F]{8})$")
+
+
+class Sentinal:
+    """A sentinal object to indicate a default value.
+
+    Exists to maintain fidelity with the lxml.etree.tostring function arguments while
+    allowing another layer of default arguments underneath it.
+    """
+
+
+SENTINAL = Sentinal()
 
 
 def format_number(num: float | str, resolution: int | None = 6) -> str:
@@ -160,7 +171,28 @@ class _TostringDefaults(Enum):
     ENCODING = "UTF-8"
 
 
-def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> bytes:
+def _clean_whitespace(elem: EtreeElement) -> None:
+    """Remove "blank text" so pretty_print will work."""
+    # Recursively remove blank text nodes
+    if elem.text and not elem.text.strip():
+        elem.text = None
+    for child in elem:
+        _clean_whitespace(child)
+    if elem.tail and not elem.tail.strip():
+        elem.tail = None
+
+
+def svg_tostring(
+    xml: EtreeElement,
+    *,
+    encoding: str | None | Sentinal = SENTINAL,
+    method: Literal["html", "text", "xml"] = "xml",
+    xml_declaration: bool | None = None,
+    pretty_print: bool = True,
+    with_tail: bool = True,
+    standalone: bool | None = None,
+    doctype: str | None | Sentinal = SENTINAL,
+) -> bytes:
     """Contents of svg file with optional xml declaration.
 
     :param xml: root node of your svg geometry
@@ -169,14 +201,21 @@ def svg_tostring(xml: EtreeElement, **tostring_kwargs: str | bool | None) -> byt
         header in write_svg docstring.
     :return: bytestring of svg file contents
     """
-    tostring_kwargs["pretty_print"] = tostring_kwargs.get("pretty_print", True)
-    if tostring_kwargs.get("xml_declaration"):
-        for default in _TostringDefaults:
-            arg_name = default.name.lower()
-            value = tostring_kwargs.get(arg_name, default.value)
-            tostring_kwargs[arg_name] = value
-    as_bytes = etree.tostring(etree.ElementTree(xml), **tostring_kwargs)  # type: ignore
-    return cast("bytes", as_bytes)
+    _clean_whitespace(xml)
+    if isinstance(encoding, Sentinal):
+        encoding = _TostringDefaults.ENCODING.value if xml_declaration else None
+    if isinstance(doctype, Sentinal):
+        doctype = _TostringDefaults.DOCTYPE.value if xml_declaration else None
+    return etree.tostring(
+        etree.ElementTree(xml),
+        encoding=encoding,
+        method=method,
+        xml_declaration=xml_declaration,
+        pretty_print=pretty_print,
+        with_tail=with_tail,
+        standalone=standalone,
+        doctype=doctype,
+    )
 
 
 def get_view_box_str(

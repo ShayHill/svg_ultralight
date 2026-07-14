@@ -14,7 +14,7 @@ should work with all Inkscape versions. Please report any issues.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, TypeGuard
+from typing import IO, TYPE_CHECKING, Literal, TypeGuard
 
 from lxml import etree
 
@@ -22,7 +22,12 @@ from svg_ultralight.constructors import update_element
 from svg_ultralight.layout import PadArg, pad_and_scale
 from svg_ultralight.nsmap import NSMAP
 from svg_ultralight.reuse_paths import reuse_paths
-from svg_ultralight.string_conversion import get_view_box_str, svg_tostring
+from svg_ultralight.string_conversion import (
+    SENTINAL,
+    Sentinal,
+    get_view_box_str,
+    svg_tostring,
+)
 from svg_ultralight.unit_conversion import MeasurementArg, to_svg_str, to_user_units
 
 if TYPE_CHECKING:
@@ -124,7 +129,14 @@ def write_svg(
     stylesheet: str | os.PathLike[str] | None = None,
     *,
     do_link_css: bool = False,
-    **tostring_kwargs: str | bool,
+    # lxml.etree.tostring kwargs
+    encoding: str | None | Sentinal = SENTINAL,
+    method: Literal["html", "text", "xml"] = "xml",
+    xml_declaration: bool | None = None,
+    pretty_print: bool = True,
+    with_tail: bool = True,
+    standalone: bool | None = None,
+    doctype: str | None | Sentinal = SENTINAL,
 ) -> Path:
     r"""Write an xml element as an svg file.
 
@@ -156,7 +168,7 @@ def write_svg(
 
     Always, this function will default to ``pretty_print=True``
 
-    These can be overridden by tostring_kwargs.
+    These can be overridden by tostring kwargs.
 
     e.g., ``write_svg(..., xml_declaration=True, doctype=None``)
     e.g., ``write_svg(..., xml_declaration=True, encoding='ascii')``
@@ -182,7 +194,16 @@ def write_svg(
     etree.cleanup_namespaces(root)
     reuse_paths(root)
 
-    svg_contents = svg_tostring(root, **tostring_kwargs)
+    svg_contents = svg_tostring(
+        root,
+        encoding=encoding,
+        method=method,
+        xml_declaration=xml_declaration,
+        pretty_print=pretty_print,
+        with_tail=with_tail,
+        standalone=standalone,
+        doctype=doctype,
+    )
 
     if _is_io_bytes(svg):
         _ = svg.write(svg_contents)
