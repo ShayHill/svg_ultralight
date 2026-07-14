@@ -95,14 +95,14 @@ class TestTransformToMatrix:
         assert transform_to_matrix("matrix(1, 2, 3, 4, 5, 6)") == (1, 2, 3, 4, 5, 6)
 
     def test_extra_spaces(self) -> None:
-        expect = (8, 16, 24, 32, 40, 48)
+        expect = (8, 16, 24, 32, 5, 6)
         result = transform_to_matrix("  matrix( 1 , 2 , 3 , 4 , 5 , 6 ) scale  (8) ")
         assert result == expect
 
     def test_multiple_transforms(self) -> None:
-        single = "rotate(130, 10, 30)"
+        single = "rotate(90, 10, 30)"
         multi = " ".join(
-            ["translate(-10, -30)", "rotate(150)", "rotate(-20)", "translate(10, 30)"]
+            ["translate(10, 30)", "rotate(90)", "translate(-10, -30)"]
         )
         expect = svg_matrix(transform_to_matrix(single))
         result = svg_matrix(transform_to_matrix(multi))
@@ -110,3 +110,4 @@ class TestTransformToMatrix:
 
     def test_empty(self) -> None:
         assert transform_to_matrix("") == (1, 0, 0, 1, 0, 0)
+

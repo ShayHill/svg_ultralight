@@ -268,5 +268,5 @@ def transform_to_matrix(transform: str) -> _Matrix:
         return (1, 0, 0, 1, 0, 0)
     at_mat = mats[0]
     for mat in mats[1:]:
-        at_mat = mat_dot(mat, at_mat)
+        at_mat = mat_dot(at_mat, mat)  # svg applies transformations in reverse order
     return at_mat
