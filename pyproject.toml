@@ -102,6 +102,7 @@ ignore = [
     "PLR0911", # too many return statements (MeasurementArgs)
     "SLF001",  # private member accessed
     "B019",    # memory leak warning for lru_cache
+    "S311",    # pseudo-random generators should not be used for security purposes
 ]
 
 
