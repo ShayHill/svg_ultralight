@@ -201,6 +201,8 @@ def shortest_transform_string(transform: str | _Matrix) -> str:
     native: str | None = None
     if isinstance(transform, str):
         native = svg_transforms(*_split_commands(transform))
+        if not native:
+            return ""
         matrix = svg_matrix(transform_to_matrix(transform))
     else:
         matrix = svg_matrix(transform)
