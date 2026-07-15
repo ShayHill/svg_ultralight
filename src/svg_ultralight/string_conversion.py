@@ -182,7 +182,7 @@ def set_attributes(elem: EtreeElement, **attributes: ElemAttrib) -> None:
     for dot in dots & set(attr_dict):
         setattr(elem, dot, attr_dict.pop(dot))
 
-    for key, val in attr_dict.items():
+    for key, val in tuple(attr_dict.items()):
         if not val and key in attr_dict:
             del attr_dict[key]
         else:
