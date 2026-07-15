@@ -59,11 +59,11 @@ def random_numbers() -> Iterator[float]:
 class TestFormatNuber:
     """Test format_number function."""
 
-    def test_negative_zero(self):
+    def test_negative_zero(self) -> None:
         """Remove "-" from "-0"."""
         assert mod.format_number(-0.0000000001) == "0"
 
-    def test_round_to_int(self):
+    def test_round_to_int(self) -> None:
         """Round to int if no decimal values !- 0."""
         assert mod.format_number(1.0000000001) == "1"
 
@@ -71,11 +71,11 @@ class TestFormatNuber:
 class TestFormatNumbers:
     """Test format_numbers function."""
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         """Return empty list."""
         assert mod.format_numbers([]) == []
 
-    def test_explicit(self):
+    def test_explicit(self) -> None:
         """Return list of formatted strings."""
         assert mod.format_numbers([1, 2, 3]) == ["1", "2", "3"]
 
@@ -83,24 +83,24 @@ class TestFormatNumbers:
 class TestFormatAttrDict:
     """Test format_attr_dict function."""
 
-    def test_float(self):
+    def test_float(self) -> None:
         """Return string of float."""
         assert mod.format_attr_dict(x=1.0) == {"x": "1"}
 
-    def test_exponential_float(self):
+    def test_exponential_float(self) -> None:
         """Return string of float."""
         assert mod.format_attr_dict(x=1.0e-10) == {"x": "0"}
 
-    def test_trailing_underscore(self):
+    def test_trailing_underscore(self) -> None:
         """Remove trailing underscore from key."""
         assert mod.format_attr_dict(x_=1) == {"x": "1"}
 
-    def test_replace_underscore(self):
+    def test_replace_underscore(self) -> None:
         """Replace underscore with hyphen."""
         assert mod.format_attr_dict(x_y=1) == {"x-y": "1"}
 
 
-def _generate_random_utf8_string():
+def _generate_random_utf8_string() -> str:
     length = random.randint(11, 99)
     additional_chars = "éçüäößñáàâêëíìîïóòôõúùûñãõåøæœçÿžčšćđž"
     characters = (
@@ -123,7 +123,7 @@ def random_utf8_string(request: pytest.FixtureRequest) -> str:
 class TestEncodeCssClassName:
     """Test encode_to_css_class_name and decode_from_css_class_name functions."""
 
-    def test_encode_decode(self, random_utf8_string: str):
+    def test_encode_decode(self, random_utf8_string: str) -> None:
         """Encode - decode will return the original string."""
         encoded = mod.encode_to_css_class_name(random_utf8_string)
         decoded = mod.decode_from_css_class_name(encoded)
@@ -131,7 +131,7 @@ class TestEncodeCssClassName:
             f"Decoded string '{decoded}' does not match original '{random_utf8_string}'"
         )
 
-    def test_encode_valid(self, random_utf8_string: str):
+    def test_encode_valid(self, random_utf8_string: str) -> None:
         """All encoded strings will be ascii, _, and -."""
         encoded = mod.encode_to_css_class_name(random_utf8_string)
         assert all(c.isascii() or c in {"_", "-"} for c in encoded)
