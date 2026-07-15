@@ -12,7 +12,7 @@ from svg_ultralight.metadata import new_metadata
 _inkscape_output = """
 <metadata id="metadata1">
     <rdf:RDF>
-        <cc:Work rdf:about="">
+        <cc:Work>
         <dc:title>TITLE</dc:title>
         <dc:date>DATE</dc:date>
         <dc:creator>

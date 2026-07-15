@@ -111,6 +111,40 @@ class TestFormatAttrDict:
         with pytest.raises(TypeError):
             _ = mod.format_attr_dict(x=(2, 0, 0, 2, 0, 0))
 
+    def test_8channel_hex_clear_fill(self) -> None:
+        """Format 8-channel hex color with clear fill."""
+        assert mod.format_attr_dict(fill="#00000000") == {"fill": "none"}
+
+    def test_8channel_hex_clear_stroke(self) -> None:
+        """Format 8-channel hex color with clear fill."""
+        assert mod.format_attr_dict(stroke="#00000000") == {"stroke": "none"}
+
+    def test_8channel_trans_fill(self) -> None:
+        """Format 8-channel hex color with transparent fill."""
+        assert mod.format_attr_dict(fill="#000000aa") == {
+            "fill": "#000000",
+            "opacity": ".666667",
+        }
+
+    def test_8channel_trans_stroke(self) -> None:
+        assert mod.format_attr_dict(stroke="#000000aa") == {
+            "stroke": "#000000",
+            "opacity": ".666667",
+        }
+
+    def test_8channel_opaque_fill(self) -> None:
+        """Format 8-channel hex color with opaque fill."""
+        assert mod.format_attr_dict(fill="#000000ff") == {
+            "fill": "#000000",
+            "fill-opacity": "1",
+        }
+
+    def test_8channel_opaque_stroke(self) -> None:
+        """Format 8-channel hex color with opaque stroke."""
+        assert mod.format_attr_dict(stroke="#000000ff") == {
+            "stroke": "#000000",
+            "stroke-opacity": "1",
+        }
 
 
 def _generate_random_utf8_string() -> str:
@@ -192,4 +226,3 @@ class TestSvgTransform:
     def test_matrix(self) -> None:
         """If matrix, return matrix string."""
         assert svg_transform("matrix", [1, 2, 3, 4, 5, 6]) == "matrix(1 2 3 4 5 6)"
-

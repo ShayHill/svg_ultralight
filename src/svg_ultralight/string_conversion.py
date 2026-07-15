@@ -76,13 +76,42 @@ def _split_opacity(
     :param prefix: either "fill" or "stroke"
     :param color: an 8-digit hex color with leading # ("#RRGGBBAA")
     :yield: tuples of (attribute name, attribute value)
+
+    There is a nasty artifact with fill-opacity and stroke-opacity in svg: In a
+    group, standard opacity is applied to the entire group, so overlapping items do
+    not double shade. This is not true of fill-opacity or stroke-opacity. These shade
+    path-by-path, even when the attribute is applied to a group, so text and other
+    groups that overlap will have double-shaded areas.
+
+    I have decided to hadle that this way:
+
+    You can pass full opacity ("ff") to anything, and fill-opacity or stroke-opacity
+    will be set. There is no alpha, so the double shading bug won't occur. If you set
+    any other alpha, standard opacity will be set. This rules out having one
+    partially-transparent opacity for fill and another for stroke, but that will be a
+    rare occurrence anyway and can still be accomplished with two overlapping groups
+    (one with a stroke, one with a fill).
+
+    As it stands, there are only three possibilities for fill and stroke opacity when
+    passing an 8-digit hex color:
+
+    - same opacity for stroke and fill
+    - translucent fill, opaque stroke (pass fill FIRST)
+    - translucent stroke, opaque fill (pass stroke FIRST)
+
+    You can pass colors with separate [fill|stroke] and [fill|stroke]-opacity values
+    and do whatever you like. This only relates to automatic actions when passing an
+    8-digit hex color to fill or stroke.
     """
     rgb, opacity = hex_color[:7], hex_color[7:]
     if opacity == "00":
         yield (prefix, "none")
-    else:
-        yield (prefix, rgb)
-        yield f"{prefix}-opacity", format_number(int(opacity, 16) / 255)
+        return
+    yield (prefix, rgb)
+    if opacity == "ff":
+        yield (f"{prefix}-opacity", "1")
+        return
+    yield ("opacity", format_number(int(opacity, 16) / 255))
 
 
 def _IsStrOrMatrix(
