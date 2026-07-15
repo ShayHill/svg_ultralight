@@ -13,6 +13,7 @@ from collections.abc import Iterator
 import pytest
 
 import svg_ultralight.string_conversion as mod
+from svg_ultralight.strings.svg_strings import svg_transform
 
 _FLOAT_ITERATIONS = 100
 
@@ -135,3 +136,48 @@ class TestEncodeCssClassName:
         """All encoded strings will be ascii, _, and -."""
         encoded = mod.encode_to_css_class_name(random_utf8_string)
         assert all(c.isascii() or c in {"_", "-"} for c in encoded)
+
+
+class TestSvgTransform:
+    def test_no_transform(self) -> None:
+        """If no transform, return empty string."""
+        assert svg_transform("translate", [0, 0]) == ""
+
+    def test_x_transform(self) -> None:
+        """If x transform, return only x value."""
+        assert svg_transform("translate", [10, 0]) == "translate(10)"
+
+    def test_no_scale(self) -> None:
+        """If no scale, return empty string."""
+        assert svg_transform("scale", [1, 1]) == ""
+
+    def test_x_scale(self) -> None:
+        """If x scale, return only x value."""
+        assert svg_transform("scale", [10, 1]) == "scale(10)"
+
+    def test_emtpy_rotate(self) -> None:
+        """If no rotate, return empty string."""
+        assert svg_transform("rotate", [0, 5, 5]) == ""
+        assert svg_transform("rotate", [0, 0, 0]) == ""
+
+    def test_rotate(self) -> None:
+        """If rotate, return rotate string."""
+        assert svg_transform("rotate", [90, 5, 5]) == "rotate(90 5 5)"
+
+    def test_rotate_x(self) -> None:
+        """If rotate, return rotate string."""
+        assert svg_transform("rotate", [90, 5, 0]) == "rotate(90 5)"
+
+    def test_rotate_origin(self) -> None:
+        """If rotate, return rotate string."""
+        assert svg_transform("rotate", [90, 0, 0]) == "rotate(90)"
+
+    def test_empty_skew(self) -> None:
+        """If no skew, return empty string."""
+        assert svg_transform("skewX", [0]) == ""
+        assert svg_transform("skewY", [0]) == ""
+
+    def test_matrix(self) -> None:
+        """If matrix, return matrix string."""
+        assert svg_transform("matrix", [1, 2, 3, 4, 5, 6]) == "matrix(1 2 3 4 5 6)"
+

@@ -19,11 +19,15 @@ from lxml import etree
 from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.string_conversion import set_attributes
+from svg_ultralight.strings.svg_strings import shortest_transform_string
+from svg_ultralight.transformations import get_transform_matrix, mat_dot
 
 if TYPE_CHECKING:
     from lxml.etree import QName
 
     from svg_ultralight.attrib_hints import ElemAttrib
+
+_Matrix = tuple[float, float, float, float, float, float]
 
 
 def new_element(tag: str | QName, **attributes: ElemAttrib) -> EtreeElement:
@@ -78,6 +82,33 @@ def new_sub_element(
     """
     elem = etree.SubElement(parent, tag)
     set_attributes(elem, **attributes)
+    return elem
+
+
+def transform_element(
+    elem: EtreeElement, matrix: _Matrix, *, reverse: bool = False
+) -> EtreeElement:
+    """Apply a transformation matrix to an svg element.
+
+    :param elem: svg element
+    :par m matrix: transformation matrix
+
+    :param reverse: If you have a transformation matrix, A, and wish to apply an
+        additional transform, B, the result is B @ A. This is how an element can be
+        cumulatively transformed in svg.
+
+    If the element is transformed by A and is a part of a GROUP transformed by B,
+    then the result is the reverse: A @ B.
+    """
+    current = get_transform_matrix(elem)
+    if current == (1, 0, 0, 1, 0, 0):
+        mat = matrix
+    elif reverse:
+        mat = mat_dot(current, matrix)
+    else:
+        mat = mat_dot(matrix, current)
+    mat_str = shortest_transform_string(mat)
+    _ = update_element(elem, transform=mat_str)
     return elem
 
 

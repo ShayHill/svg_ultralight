@@ -29,6 +29,7 @@ from svg_ultralight.constructors.new_element import (
     new_element,
     new_element_union,
     new_sub_element,
+    transform_element,
     update_element,
 )
 from svg_ultralight.font_tools.align_text import (
@@ -63,12 +64,7 @@ from svg_ultralight.string_conversion import (
     format_number,
     format_numbers,
 )
-from svg_ultralight.transformations import (
-    mat_apply,
-    mat_dot,
-    mat_invert,
-    transform_element,
-)
+from svg_ultralight.transformations import mat_apply, mat_dot, mat_invert
 
 __all__ = [
     "NSMAP",

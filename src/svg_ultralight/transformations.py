@@ -12,16 +12,12 @@ import re
 from contextlib import suppress
 from typing import TYPE_CHECKING, TypeAlias
 
-from paragraphs import par
-
-from svg_ultralight.strings import svg_matrix
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterator
 
     from lxml.etree import _Element as EtreeElement
 
-RE_MATRIX = re.compile(r"matrix\(([^)]+)\)")
 
 _Matrix: TypeAlias = tuple[float, float, float, float, float, float]
 
@@ -123,44 +119,11 @@ def new_transformation_matrix(
     return mat_dot((float(scale_x), 0, 0, float(scale_y), dx, dy), transformation)
 
 
-def transform_element(
-    elem: EtreeElement, matrix: _Matrix, *, reverse: bool = False
-) -> EtreeElement:
-    """Apply a transformation matrix to an svg element.
-
-    :param elem: svg element
-    :par m matrix: transformation matrix
-
-    :param reverse: If you have a transformation matrix, A, and wish to apply an
-        additional transform, B, the result is B @ A. This is how an element can be
-        cumulatively transformed in svg.
-
-    If the element is transformed by A and is a part of a GROUP transformed by B,
-    then the result is the reverse: A @ B.
-    """
-    current = get_transform_matrix(elem)
-    if reverse:
-        elem.attrib["transform"] = svg_matrix(mat_dot(current, matrix))
-    else:
-        elem.attrib["transform"] = svg_matrix(mat_dot(matrix, current))
-    return elem
 
 
 # ===================================================================================
 #   Create a matrix from any svg transform string.
 # ===================================================================================
-
-
-# Check that each command has the correct number of parameters (as I understand the
-# svg spec). The values are sets of valid parameter counts for each command.
-_REQUIRED_PARAMS = {
-    "translate": {1, 2},
-    "scale": {1, 2},
-    "rotate": {1, 2, 3},
-    "skewX": {1},
-    "skewY": {1},
-    "matrix": {6},
-}
 
 
 def _get_nos(transform: str) -> list[float]:
@@ -173,35 +136,18 @@ def _get_nos(transform: str) -> list[float]:
     return nos
 
 
-def _get_nos_error_string(nos: Iterable[float]) -> str:
-    """Return a string representation of a list of numbers."""
-    nos_ = sorted(map(str, nos))
-    if len(nos_) == 1:
-        params = "parameter" if nos_[0] == "1" else "parameters"
-        return f"exactly {nos_[0]} {params}"
-    return f"{', '.join(nos_[:-1])}, or {nos_[-1]} parameters"
-
-
 def _split_commands(transform: str) -> Iterator[tuple[str, list[float]]]:
     """Parse a transform string into commands and their associated numbers."""
     commands = (x + ")" for x in re.split(r"\s*\)", transform) if x.strip())
     for command in commands:
         name = command.split("(", 1)[0].strip()
         nos = _get_nos(command)
-        if name not in _REQUIRED_PARAMS:
-            msg = f"Unknown transform command: {name}. In {transform}."
-            raise ValueError(msg)
-        reqd = _REQUIRED_PARAMS[name]
-        if len(nos) not in reqd:
-            msg = par(
-                f"""{name} requires {_get_nos_error_string}, got {len(nos)} in
-                {transform}."""
-            )
-            raise ValueError(msg)
         yield name, nos
 
 
-def transform_to_matrix(transform: str) -> _Matrix:
+
+
+def transform_to_matrix(transform: str) -> _Matrix:  # noqa: C901
     """Convert any svg transform string to a 6-value matrix.
 
     1. **Translate**: Moves the element a specified distance along the X and Y axes.
@@ -233,18 +179,21 @@ def transform_to_matrix(transform: str) -> _Matrix:
     6. **Matrix**: Defines a transformation in terms of a 2D matrix.
        - Pattern: `matrix(a, b, c, d, e, f)`
        - Example: `matrix(1, 0, 0, 1, 30, 50)`
+
+    Rolls through invalid input (unknown commands, too many or too few arguments)
+    just like svg does.
     """
     mats: list[_Matrix] = []
     for name, nos in _split_commands(transform):
+        if not nos:
+            continue
         if name == "translate":
             tx, ty, *_ = *nos, 0
             mats.append((1, 0, 0, 1, tx, ty))
-            continue
-        if name == "scale":
+        elif name == "scale":
             sx, sy, *_ = *nos, nos[0]
             mats.append((sx, 0, 0, sy, 0, 0))
-            continue
-        if name == "rotate":
+        elif name == "rotate":
             degs, cx, cy, *_ = *nos, 0, 0
             angle = math.radians(degs)
             cos_a = math.cos(angle)
@@ -252,18 +201,15 @@ def transform_to_matrix(transform: str) -> _Matrix:
             dx = cx - cx * cos_a + cy * sin_a
             dy = cy - cx * sin_a - cy * cos_a
             mats.append((cos_a, sin_a, -sin_a, cos_a, dx, dy))
-            continue
-        if name == "skewX":
+        elif name == "skewX":
             angle = math.radians(nos[0])
             mats.append((1, 0, math.tan(angle), 1, 0, 0))
-            continue
-        if name == "skewY":
+        elif name == "skewY":
             angle = math.radians(nos[0])
             mats.append((1, math.tan(angle), 0, 1, 0, 0))
-            continue
-        if name == "matrix":
-            mats.append((nos[0], nos[1], nos[2], nos[3], nos[4], nos[5]))
-            continue
+        elif name == "matrix":
+            a, b, c, d, e, f = (*nos, *[1, 0, 0, 1, 0, 0][len(nos) :])
+            mats.append((a, b, c, d, e, f))
     if not mats:
         return (1, 0, 0, 1, 0, 0)
     at_mat = mats[0]

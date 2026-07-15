@@ -10,6 +10,8 @@ from svg_ultralight.strings.svg_strings import (
     svg_floats,
     svg_ints,
     svg_matrix,
+    svg_transform,
+    svg_transforms,
 )
 
 __all__ = [
@@ -18,4 +20,6 @@ __all__ = [
     "svg_floats",
     "svg_ints",
     "svg_matrix",
+    "svg_transform",
+    "svg_transforms",
 ]

@@ -16,6 +16,8 @@ from svg_ultralight.transformations import (
     transform_to_matrix,
 )
 
+from svg_ultralight.strings.svg_strings import shortest_transform_string
+
 
 class TestMat:
     def test_explicit(self) -> None:
@@ -110,4 +112,32 @@ class TestTransformToMatrix:
 
     def test_empty(self) -> None:
         assert transform_to_matrix("") == (1, 0, 0, 1, 0, 0)
+
+class TestShortestTransformString:
+    def test_identity(self) -> None:
+        expect = ""
+        result = shortest_transform_string((1, 0, 0, 1, 0, 0))
+        assert result == expect
+
+    def test_scale_only(self) -> None:
+        expect = "scale(2 4)"
+        result = shortest_transform_string((2, 0, 0, 4, 0, 0))
+        assert result == expect
+
+    def test_uniform_scale(self) -> None:
+        expect = "scale(2)"
+        result = shortest_transform_string((2, 0, 0, 2, 0, 0))
+        assert result == expect
+
+    def test_xy_translate(self) -> None:
+        expect = "translate(10 20)"
+        result = shortest_transform_string((1, 0, 0, 1, 10, 20))
+        assert result == expect
+
+    def test_x_translate(self) -> None:
+        expect = "translate(10)"
+        result = shortest_transform_string((1, 0, 0, 1, 10, 0))
+        assert result == expect
+
+
 

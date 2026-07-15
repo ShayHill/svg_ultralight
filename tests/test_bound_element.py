@@ -12,11 +12,8 @@ from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
 from svg_ultralight.constructors import new_element
-from svg_ultralight.transformations import (
-    get_transform_matrix,
-    mat_dot,
-    transform_element,
-)
+from svg_ultralight.constructors.new_element import transform_element
+from svg_ultralight.transformations import get_transform_matrix, mat_dot
 
 
 class TestTransforms:

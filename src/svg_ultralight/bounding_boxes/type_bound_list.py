@@ -12,7 +12,8 @@ from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_union, new_bound_union
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
-from svg_ultralight.transformations import new_transformation_matrix, transform_element
+from svg_ultralight.constructors.new_element import transform_element
+from svg_ultralight.transformations import new_transformation_matrix
 
 if TYPE_CHECKING:
     from svg_ultralight.attrib_hints import ElemAttrib

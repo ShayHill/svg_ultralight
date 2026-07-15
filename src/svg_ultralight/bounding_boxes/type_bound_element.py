@@ -16,7 +16,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
-from svg_ultralight.transformations import new_transformation_matrix, transform_element
+from svg_ultralight.constructors.new_element import transform_element
+from svg_ultralight.transformations import new_transformation_matrix
 
 if TYPE_CHECKING:
     from lxml.etree import _Element as EtreeElement
