@@ -13,12 +13,14 @@ import binascii
 import itertools as it
 import re
 from enum import Enum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeGuard
 
 import svg_path_data
 from lxml import etree
+from paragraphs import par
 
 from svg_ultralight.nsmap import NSMAP
+from svg_ultralight.strings import svg_strings
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -83,6 +85,19 @@ def _split_opacity(
         yield f"{prefix}-opacity", format_number(int(opacity, 16) / 255)
 
 
+def _IsStrOrMatrix(
+    val: object,
+) -> TypeGuard[str | tuple[float, float, float, float, float, float]]:
+    """Check that a values is a string or a 6-tuple of floats."""
+    if isinstance(val, str):
+        return True
+    return (
+        isinstance(val, tuple)
+        and len(val) == 6  # pyright: ignore[reportUnknownArgumentType]
+        and all(isinstance(x, (float, int)) for x in val)  # pyright: ignore[reportUnknownVariableType]
+    )
+
+
 def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, str]]:
     """Format one key, value pair for an svg element.
 
@@ -120,7 +135,7 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, st
         val_ = "none"
     elif isinstance(val, (int, float)):
         val_ = format_number(val)
-    elif _HEX_COLOR_8DIGIT.match(val):
+    elif isinstance(val, str) and _HEX_COLOR_8DIGIT.match(val):
         if key_ == "fill":
             yield from _split_opacity("fill", val)
             return
@@ -130,6 +145,16 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, st
         val_ = val
     else:
         val_ = val
+
+    if key_ == "transform" and _IsStrOrMatrix(val_):
+        val_ = svg_strings.shortest_transform_string(val_)
+
+    if not isinstance(val_, str):
+        msg = par(
+            f"""Failed to recognize and convert element attribute value to a string.
+            No provision for key '{key_}' with value '{val_}'."""
+        )
+        raise TypeError(msg)
 
     yield key_, val_
 
@@ -149,7 +174,7 @@ def set_attributes(elem: EtreeElement, **attributes: ElemAttrib) -> None:
 
     :param elem: element to receive element.set(keyword, str(value)) calls
     :param attributes: element attribute names and values. Knows what to do with 'text'
-        keyword.V :effects: updates ``elem``
+        keyword, which is a rare 'dot' attribute: `elem.text`.
     """
     attr_dict = format_attr_dict(**attributes)
 
@@ -158,7 +183,10 @@ def set_attributes(elem: EtreeElement, **attributes: ElemAttrib) -> None:
         setattr(elem, dot, attr_dict.pop(dot))
 
     for key, val in attr_dict.items():
-        elem.set(key, val)
+        if not val and key in attr_dict:
+            del attr_dict[key]
+        else:
+            elem.set(key, val)
 
 
 class _TostringDefaults(Enum):

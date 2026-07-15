@@ -8,7 +8,9 @@ from collections.abc import Mapping
 from typing import TypeAlias
 
 # Types svg_ultralight can format to pass through to lxml constructors.
-ElemAttrib: TypeAlias = str | float | None
+ElemAttrib: TypeAlias = (
+    str | float | None | tuple[float, float, float, float, float, float]
+)
 
 # Type for an optional dictionary of element attributes.
 OptionalElemAttribMapping: TypeAlias = Mapping[str, ElemAttrib] | None

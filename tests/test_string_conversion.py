@@ -100,6 +100,18 @@ class TestFormatAttrDict:
         """Replace underscore with hyphen."""
         assert mod.format_attr_dict(x_y=1) == {"x-y": "1"}
 
+    def test_matrix(self) -> None:
+        """Format matrix attribute."""
+        assert mod.format_attr_dict(transform=(2, 0, 0, 2, 0, 0)) == {
+            "transform": "scale(2)"
+        }
+
+    def test_type_error(self) -> None:
+        """Raise TypeError if value was not converted to a string."""
+        with pytest.raises(TypeError):
+            _ = mod.format_attr_dict(x=(2, 0, 0, 2, 0, 0))
+
+
 
 def _generate_random_utf8_string() -> str:
     length = random.randint(11, 99)
