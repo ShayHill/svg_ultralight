@@ -113,7 +113,7 @@ def _get_svg_embedded_image_str(image: ImageType) -> str:
 
 
 def new_image_blem(
-    filename: str | os.PathLike[str],
+    filename: str | os.PathLike[str] | ImageType,
     bbox: BoundingBox | None = None,
     center: tuple[float, float] | None = None,
 ) -> BoundElement:
@@ -126,10 +126,10 @@ def new_image_blem(
         (0.4, 0.5) would crop 20% off the right side of the image.
     :return: a BoundElement element with the cropped image embedded
     """
-    image = Image.open(filename)
+    image = filename if isinstance(filename, ImageType) else Image.open(filename)
     if bbox is None:
         bbox = BoundingBox(0, 0, image.width, image.height)
-    image = _crop_image_to_bbox_ratio(Image.open(filename), bbox, center)
+    image = _crop_image_to_bbox_ratio(image, bbox, center)
     svg_image = new_element("image", **bbox_dict(bbox))
     svg_image.set(
         etree.QName(NSMAP["xlink"], "href"), _get_svg_embedded_image_str(image)
@@ -138,7 +138,7 @@ def new_image_blem(
 
 
 def new_image_elem_in_bbox(
-    filename: str | os.PathLike[str],
+    filename: str | os.PathLike[str] | ImageType,
     bbox: BoundingBox | None = None,
     center: tuple[float, float] | None = None,
 ) -> EtreeElement:
