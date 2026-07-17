@@ -68,7 +68,7 @@ def format_numbers(
     return [format_number(num) for num in nums]
 
 
-def _split_opacity(
+def split_opacity(
         prefix: Literal["fill", "stroke"], hex_color: str, *, do_prefix: bool = True
 ) -> Iterator[tuple[str, str]]:
     """Get a fill and fill-opacity or stroke and stroke-opacity for an svg element.
@@ -149,10 +149,10 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, st
         val_ = format_number(val)
     elif isinstance(val, str) and _HEX_COLOR_8DIGIT.match(val):
         if key_ == "fill":
-            yield from _split_opacity("fill", val)
+            yield from split_opacity("fill", val)
             return
         if key_ == "stroke":
-            yield from _split_opacity("stroke", val)
+            yield from split_opacity("stroke", val)
             return
         val_ = val
     else:
