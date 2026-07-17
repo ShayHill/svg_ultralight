@@ -15,9 +15,7 @@ from paragraphs import par
 
 try:
     from PIL import Image
-
-    if TYPE_CHECKING:
-        from PIL.Image import Image as ImageType
+    from PIL.Image import Image as ImageType
 except ImportError as err:
     msg = par(
         """PIL is not installed. Install it using 'pip install Pillow' to use
