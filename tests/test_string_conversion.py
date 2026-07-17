@@ -123,27 +123,25 @@ class TestFormatAttrDict:
         """Format 8-channel hex color with transparent fill."""
         assert mod.format_attr_dict(fill="#000000aa") == {
             "fill": "#000000",
-            "opacity": ".666667",
+            "fill-opacity": ".666667",
         }
 
     def test_8channel_trans_stroke(self) -> None:
         assert mod.format_attr_dict(stroke="#000000aa") == {
             "stroke": "#000000",
-            "opacity": ".666667",
+            "stroke-opacity": ".666667",
         }
 
     def test_8channel_opaque_fill(self) -> None:
         """Format 8-channel hex color with opaque fill."""
         assert mod.format_attr_dict(fill="#000000ff") == {
-            "fill": "#000000",
-            "fill-opacity": "1",
+            "fill": "#000000"
         }
 
     def test_8channel_opaque_stroke(self) -> None:
         """Format 8-channel hex color with opaque stroke."""
         assert mod.format_attr_dict(stroke="#000000ff") == {
             "stroke": "#000000",
-            "stroke-opacity": "1",
         }
 
 

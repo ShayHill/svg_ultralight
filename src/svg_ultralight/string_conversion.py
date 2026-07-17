@@ -68,13 +68,29 @@ def format_numbers(
     return [format_number(num) for num in nums]
 
 
+def split_hex(hex_color: str) -> tuple[str, str]:
+    """Split a hex color into rgb and opacity.
+
+    :param hex_color: a 6-digit or 8-digit hex color ("#RRGGBBAA")
+    :return: tuple of (rgb, opacity) where rgb is "#RRGGBB" and opacity is a float
+        between 0.0 and 1.0
+    """
+    hex_color = hex_color.lstrip("#")
+    rgb, opacity = hex_color[:6], hex_color[6:]
+    if opacity == "00":
+        return "none", format_number(0)
+    if opacity == "":
+        return f"#{rgb}", format_number(1)
+    return f"#{rgb}", format_number(int(opacity, 16) / 255)
+
+
 def split_opacity(
-        prefix: Literal["fill", "stroke"], hex_color: str, *, do_prefix: bool = True
+    prefix: Literal["fill", "stroke"], hex_color: str
 ) -> Iterator[tuple[str, str]]:
     """Get a fill and fill-opacity or stroke and stroke-opacity for an svg element.
 
     :param prefix: either "fill" or "stroke"
-    :param color: an 8-digit hex color with leading # ("#RRGGBBAA")
+    :param color: a 6-digit or 8-digit hex color ("#RRGGBBAA")
     :yield: tuples of (attribute name, attribute value)
 
     There is a nasty artifact with fill-opacity and stroke-opacity in svg: In a
@@ -86,15 +102,10 @@ def split_opacity(
     To accomplish different opacities for fill and stroke, it is best to use multiple
     elements.
     """
-    rgb, opacity = hex_color[:7], hex_color[7:]
-    if opacity == "00":
-        yield (prefix, "none")
-        return
-    yield (prefix, rgb)
-    if do_prefix:
-        yield f"{prefix}-opacity", format_number(int(opacity, 16) / 255)
-    else:
-        yield "opacity", format_number(int(opacity, 16) / 255)
+    rgb, opacity = split_hex(hex_color)
+    yield prefix, rgb
+    if opacity not in {"0", "1"}:
+        yield f"{prefix}-opacity", format_number(opacity)
 
 
 def _IsStrOrMatrix(
