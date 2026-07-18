@@ -138,16 +138,13 @@ DATA_TEXT_ESCAPE_CHARS = {
 }
 
 
-def _sanitize_svg_data_text(text: str) -> str:
+def _sanitize_svg_data_text(text: str) -> list[str]:
     """Sanitize a string for use in an SVG data-text attribute.
 
     :param text: The input string to sanitize.
     :return: The sanitized string with XML characters escaped.
     """
-    for char, escape_seq in DATA_TEXT_ESCAPE_CHARS.items():
-        text = text.replace(char, escape_seq)
-    return text
-
+    return [DATA_TEXT_ESCAPE_CHARS.get(char, char) for char in text]
 
 def _get_gpos_kerning(font: TTFont) -> dict[tuple[str | None, str | None], int]:
     """Extract kerning pairs from the GPOS table of a font.

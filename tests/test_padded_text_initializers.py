@@ -17,10 +17,7 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
     pad_text_inkscape,
 )
 from svg_ultralight.constructors import new_element
-from svg_ultralight.font_tools.align_text import (
-    join_tspans,
-    wrap_text,
-)
+from svg_ultralight.font_tools.align_text import join_tspans, wrap_text
 
 
 class TestPadTextInkscape:
@@ -45,6 +42,26 @@ def _random_string(length: int) -> str:
 
 
 class TestPadText:
+    def test_text_with_quotes(self) -> None:
+        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
+        blem = pad_text(font, "a 'quoted' word")
+        expect = [
+            "a",
+            "&apos;",
+            "q",
+            "u",
+            "o",
+            "t",
+            "e",
+            "d",
+            "&apos;",
+            "w",
+            "o",
+            "r",
+            "d",
+        ]
+        assert [e.attrib["data-text"] for e in blem.elem] == expect
+
     def test_bad_font_path(self) -> None:
         """Do not attempt to close an FTFontInfo instance that was never opened."""
         with pytest.raises(FileNotFoundError, match=r"exist.ttf'"):
@@ -54,7 +71,7 @@ class TestPadText:
         """Test pad_text with a font file."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         if not font.exists():
-            # msg = "Test font file does not exist on system."
+            msg = "Test font file does not exist on system."
             pytest.skip(msg)
         padded = pad_text(font, " ")
         assert len(padded.elem) == 1
