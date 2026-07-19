@@ -33,7 +33,9 @@ from svg_ultralight.unit_conversion import MeasurementArg, to_svg_str, to_user_u
 if TYPE_CHECKING:
     import os
 
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
 

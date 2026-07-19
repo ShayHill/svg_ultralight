@@ -15,7 +15,9 @@ from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.main import new_svg_root
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.attrib_hints import ElemAttrib, OptionalElemAttribMapping
     from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds

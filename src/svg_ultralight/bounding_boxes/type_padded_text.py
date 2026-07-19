@@ -55,7 +55,9 @@ from svg_ultralight.transformations import new_transformation_matrix
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.attrib_hints import ElemAttrib
 

@@ -36,7 +36,9 @@ from svg_ultralight.query import get_bounding_boxes
 from svg_ultralight.string_conversion import format_attr_dict, format_number
 
 if TYPE_CHECKING:
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.attrib_hints import ElemAttrib
 

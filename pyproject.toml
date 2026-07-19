@@ -116,7 +116,7 @@ pythonPlatform = "All"
 
 typeCheckingMode = "strict"
 
-reportPrivateUsage = false
+# reportPrivateUsage = false
 reportCallInDefaultInitializer = true
 reportImplicitStringConcatenation = true
 reportPropertyTypeMismatch = true

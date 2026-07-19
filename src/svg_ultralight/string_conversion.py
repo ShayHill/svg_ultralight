@@ -25,7 +25,9 @@ from svg_ultralight.strings import svg_strings
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
     from svg_ultralight.attrib_hints import ElemAttrib
 

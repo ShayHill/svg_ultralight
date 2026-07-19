@@ -26,7 +26,9 @@ from svg_ultralight.string_conversion import svg_tostring
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 
 def _local_tag(elem: EtreeElement) -> str:

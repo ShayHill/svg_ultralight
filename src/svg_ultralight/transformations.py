@@ -15,7 +15,9 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from lxml.etree import _Element as EtreeElement
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
 
 
 _Matrix: TypeAlias = tuple[float, float, float, float, float, float]

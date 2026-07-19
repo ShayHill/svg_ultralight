@@ -5,7 +5,7 @@
 """
 
 import pytest
-from lxml.etree import _Element as EtreeElement
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.bound_helpers import new_bound_union
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
