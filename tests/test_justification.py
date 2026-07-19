@@ -124,6 +124,7 @@ class TestJustification:
         assert result == expect
 
     def test_justify(self) -> None:
-        """Test justify function."""
+        """Smoke test justify function."""
         words = [pad_text(FONT, word) for word in PARAGRAPH.split()]
         result = justify(FONT, words, [12000, 24000] * 50, hyp_pen=0.1)
+        assert len(result) == 17

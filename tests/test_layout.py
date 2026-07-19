@@ -49,61 +49,61 @@ def unit_pair(request: pytest.FixtureRequest) -> Iterator[Unit]:
 
 
 class TestParseUnit:
-    def test_float(self):
+    def test_float(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit(1.0) == (1, Unit.USER)
 
-    def test_float_str(self):
+    def test_float_str(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit("1.0") == (1, Unit.USER)
 
-    def test_float_str_tuple(self):
+    def test_float_str_tuple(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit((1.0, "")) == (1, Unit.USER)
 
-    def test_str_str_tuple(self):
+    def test_str_str_tuple(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit(("1.0", "")) == (1, Unit.USER)
 
-    def test_float_unit_tuple(self):
+    def test_float_unit_tuple(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit((1.0, Unit.PX)) == (1, Unit.PX)
 
-    def test_str_unit_tuple(self):
+    def test_str_unit_tuple(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit(("1.0", Unit.PX)) == (1, Unit.PX)
 
-    def test_str_with_unit(self):
+    def test_str_with_unit(self) -> None:
         """Test that a float is returned."""
         assert _parse_unit("1.0px") == (1, Unit.PX)
 
 
 class TestMeasurement:
-    def test_add_float(self):
+    def test_add_float(self) -> None:
         """Test that adding a float increases value."""
         m = Measurement("1in")
         m2 = m + 1.0
         assert math.isclose(m2.value, m.value + 1.0)
 
-    def test_radd_float(self):
+    def test_radd_float(self) -> None:
         """Test that adding a float increases value."""
         m = Measurement("1in")
         m2 = 1.0 + m
         assert math.isclose(m2.value, m.value + 1.0)
 
-    def test_subtract_float(self):
+    def test_subtract_float(self) -> None:
         """Test that subtracting a float decreases value."""
         m = Measurement("1in")
         m2 = m - 1.0
         assert math.isclose(m2.value, m.value - 1.0)
 
-    def test_rsubtract_float(self):
+    def test_rsubtract_float(self) -> None:
         """Test that subtracting a float decreases value."""
         m = Measurement("1in")
         m2 = 1.0 - m
         assert math.isclose(m2.value, 1.0 - m.value)
 
-    def test_mistyped_string(self):
+    def test_mistyped_string(self) -> None:
         """Test that mistyped string raises ValueError.
 
         This is to catch a bug found in another project.
@@ -111,23 +111,23 @@ class TestMeasurement:
         with pytest.raises(ValueError, match="Cannot parse"):
             _ = Measurement("O.25in")  # Capital O instead of zero
 
-    def test_unit_identified(self, unit: Unit):
+    def test_unit_identified(self, unit: Unit) -> None:
         """Test that unit is identified correctly."""
         assert Measurement(f"1{unit.value[0]}").native_unit == unit
 
-    def test_measurement_instance_as_measurement_arg(self, unit: Unit):
+    def test_measurement_instance_as_measurement_arg(self, unit: Unit) -> None:
         """Test that Measurement instance can be passed as argument."""
         m = Measurement(f"1{unit.value[0]}")
         m2 = Measurement(m)
         assert m2.get_tuple() == m.get_tuple()
 
-    def test_value_scaled(self, unit: Unit):
+    def test_value_scaled(self, unit: Unit) -> None:
         """Value is scaled per Inkscape conversion values."""
         assert math.isclose(
             Measurement(f"1{unit.value[0]}").value, INKSCAPE_SCALARS[unit.value[0]]
         )
 
-    def test_conversion(self, unit_pair: tuple[Unit, Unit]):
+    def test_conversion(self, unit_pair: tuple[Unit, Unit]) -> None:
         """Test that value is converted to other units."""
         unit_a, unit_b = unit_pair
         a_unit = Measurement(f"1{unit_a.value[0]}")
@@ -135,55 +135,55 @@ class TestMeasurement:
         b_unit = Measurement(f"{a_as_b}{unit_b.value[0]}")
         assert math.isclose(b_unit.value, a_unit.value)
 
-    def test_add(self, unit: Unit):
+    def test_add(self, unit: Unit) -> None:
         """Test that values are added."""
         a_unit = Measurement(f"1{unit.value[0]}")
         b_unit = Measurement(f"2{unit.value[0]}")
         assert (a_unit + b_unit).value == Measurement(f"3{unit.value[0]}").value
 
-    def test_subtract(self, unit: Unit):
+    def test_subtract(self, unit: Unit) -> None:
         """Test that values are subtracted."""
         a_unit = Measurement(f"1{unit.value[0]}")
         b_unit = Measurement(f"2{unit.value[0]}")
         assert (a_unit - b_unit).value == Measurement(f"-1{unit.value[0]}").value
 
-    def test_multiply(self, unit: Unit):
+    def test_multiply(self, unit: Unit) -> None:
         """Test that values are multiplied."""
         assert (Measurement((1, unit)) * 4).value == Measurement((4, unit)).value
 
-    def test_rmultiply(self, unit: Unit):
+    def test_rmultiply(self, unit: Unit) -> None:
         """Test that values are multiplied."""
         assert (4 * Measurement((1, unit))).value == Measurement((4, unit)).value
 
-    def test_divide(self, unit: Unit):
+    def test_divide(self, unit: Unit) -> None:
         """Test that values are multiplied."""
         assert (Measurement((1, unit)) / 4).value == Measurement((1 / 4, unit)).value
 
 
 class TestExpandPadArg:
-    def test_expand_val(self):
+    def test_expand_val(self) -> None:
         """Test that a single value is expanded to a 4-tuple."""
         assert layout.expand_pad_arg(1) == (1, 1, 1, 1)
 
-    def test_expand_1tuple(self):
+    def test_expand_1tuple(self) -> None:
         """Test that a single value is expanded to a 4-tuple."""
         assert layout.expand_pad_arg(1) == (1, 1, 1, 1)
 
-    def test_expand_2tuple(self):
+    def test_expand_2tuple(self) -> None:
         """Test that a single value is expanded to a 4-tuple."""
         assert layout.expand_pad_arg((1, 2)) == (1, 2, 1, 2)
 
-    def test_expand_3tuple(self):
+    def test_expand_3tuple(self) -> None:
         """Test that a single value is expanded to a 4-tuple per css rules."""
         assert layout.expand_pad_arg((1, 2, 3)) == (1, 2, 3, 2)
 
-    def test_expand_4tuple(self):
+    def test_expand_4tuple(self) -> None:
         """Test that a single value is expanded to a 4-tuple per css rules."""
         assert layout.expand_pad_arg((1, 2, 3, 4)) == (1, 2, 3, 4)
 
 
 class TestLayout:
-    def test_standard(self):
+    def test_standard(self) -> None:
         """No print dimensions give expanded pad argument
         and no width args"""
         viewbox = (1, 2, 3, 4)
@@ -191,7 +191,7 @@ class TestLayout:
         assert padded == (-4, -3, 13, 14)
         assert width_attribs == {}
 
-    def test_from_svg_drawings(self):
+    def test_from_svg_drawings(self) -> None:
         """This one doesn't look right in the project.
 
         Run here to see if there is a bug.
@@ -202,40 +202,40 @@ class TestLayout:
         assert padded == (-72.0, -72.0, 244.0, 194.0)
         assert width_attribs == {"width": "244pt", "height": "194pt"}
 
-    def test_0_area(self):
+    def test_0_area(self) -> None:
         """Zero area viewbox is padded"""
         viewbox = (0, 0, 0, 0)
-        padded, width_attribs = layout.pad_and_scale(viewbox, 1)
+        padded, _ = layout.pad_and_scale(viewbox, 1)
         assert padded == (-1, -1, 2, 2)
 
-    def test_0_width(self):
+    def test_0_width(self) -> None:
         """Test that print width is used to calculate pad"""
         viewbox = (0, 0, 96, 0)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", "2in")
         assert padded == (-12, -12, 120, 24)
         assert width_attribs == {"width": "2.5in", "height": ".5in"}
 
-    def test_0_height(self):
+    def test_0_height(self) -> None:
         """Test that print width is used to calculate pad"""
         viewbox = (0, 0, 0, 96)
         padded, width_attribs = layout.pad_and_scale(viewbox, "0.25in", None, "2in")
         assert padded == (-12, -12, 24, 120)
         assert width_attribs == {"width": ".5in", "height": "2.5in"}
 
-    def test_string_padding(self):
+    def test_string_padding(self) -> None:
         """Test that string padding is converted to float"""
         viewbox = (0, 0, 1, 1)
         padded, width_attribs = layout.pad_and_scale(viewbox, "1in")
         assert padded == (-96, -96, 193, 193)
         assert width_attribs == {}
 
-    def test_infinite_width(self):
+    def test_infinite_width(self) -> None:
         """Raise ValueError if no non-infinite scale can be inferred."""
         viewbox = (0, 0, 0, 0)
         with pytest.raises(ValueError, match="infinite"):
             _ = layout.pad_and_scale(viewbox, "0.25in", "2in")
 
-    def test_pad_print_at_input_scale(self):
+    def test_pad_print_at_input_scale(self) -> None:
         """Test that padding is applied at the input scale.
 
         Padding get small as scale of user units increases."""
@@ -244,21 +244,21 @@ class TestLayout:
         assert padded == (-0.25, -0.25, 1.5, 1.5)
         assert width_attribs == {"width": "6in", "height": "6in"}
 
-    def test_width_wins(self):
+    def test_width_wins(self) -> None:
         """The tighter fit (width or height) should be used"""
         viewbox = (1, 2, 3, 6)
         padded, width_attribs = layout.pad_and_scale(viewbox, 0, 2, 200)
         assert padded == (1, 2, 3, 6)
         assert width_attribs == {"width": "2", "height": "4"}
 
-    def test_height_wins(self):
+    def test_height_wins(self) -> None:
         """The tighter fit (width or height) should be used"""
         viewbox = (1, 2, 3, 6)
         padded, width_attribs = layout.pad_and_scale(viewbox, 0, 200, 2)
         assert padded == (1, 2, 3, 6)
         assert width_attribs == {"width": "1", "height": "2"}
 
-    def test_pad_is_constant(self):
+    def test_pad_is_constant(self) -> None:
         """Pad does not change with scale."""
         viewbox = (0, 0, 10, 20)
         padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "10in")
@@ -269,7 +269,7 @@ class TestLayout:
         assert [format_number(x) for x in padded] == ["-.1", "-.1", "10.2", "20.2"]
         assert width_attribs == {"width": "102in", "height": "202in"}
 
-    def test_dpu_(self):
+    def test_dpu_(self) -> None:
         """dpu_ scales the padded output."""
         viewbox = (0, 0, 10, 20)
         padded, width_attribs = layout.pad_and_scale(viewbox, "1in", "10in")
@@ -280,7 +280,7 @@ class TestLayout:
         assert padded == (-1.0, -1.0, 12.0, 22.0)
         assert width_attribs == {"width": "24in", "height": "44in"}
 
-    def test_dpu_scales_without_print_args(self):
+    def test_dpu_scales_without_print_args(self) -> None:
         """dpu_ scales output even when no print_width_ or print_height_ are given."""
         viewbox = (0, 0, 1, 1)
         padded, width_attribs = layout.pad_and_scale(viewbox, 1, dpu=2)

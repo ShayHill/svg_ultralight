@@ -9,6 +9,7 @@ import random
 from contextlib import suppress
 
 from svg_ultralight.strings import svg_matrix
+from svg_ultralight.strings.svg_strings import shortest_transform_string
 from svg_ultralight.transformations import (
     mat_apply,
     mat_dot,
@@ -16,7 +17,7 @@ from svg_ultralight.transformations import (
     transform_to_matrix,
 )
 
-from svg_ultralight.strings.svg_strings import shortest_transform_string
+_Matrix = tuple[float, float, float, float, float, float]
 
 
 class TestMat:
@@ -66,7 +67,7 @@ class TestTransformToMatrix:
     def test_rotate_x_0(self) -> None:
         por_x = 10
         por_y = 0
-        expect = (1, 0, 0, 1, 0, 0)
+        expect: _Matrix = (1, 0, 0, 1, 0, 0)
         expect = mat_dot((1, 0, 0, 1, -por_x, -por_y), expect)
         expect = mat_dot((0, 1, -1, 0, 0, 0), expect)
         expect = mat_dot((1, 0, 0, 1, por_x, por_y), expect)
@@ -76,7 +77,7 @@ class TestTransformToMatrix:
     def test_rotate_x_y(self) -> None:
         por_x = 10
         por_y = 30
-        expect = (1, 0, 0, 1, 0, 0)
+        expect: _Matrix = (1, 0, 0, 1, 0, 0)
         expect = mat_dot((1, 0, 0, 1, -por_x, -por_y), expect)
         expect = mat_dot((0, 1, -1, 0, 0, 0), expect)
         expect = mat_dot((1, 0, 0, 1, por_x, por_y), expect)
@@ -97,21 +98,20 @@ class TestTransformToMatrix:
         assert transform_to_matrix("matrix(1, 2, 3, 4, 5, 6)") == (1, 2, 3, 4, 5, 6)
 
     def test_extra_spaces(self) -> None:
-        expect = (8, 16, 24, 32, 5, 6)
+        expect: _Matrix = (8, 16, 24, 32, 5, 6)
         result = transform_to_matrix("  matrix( 1 , 2 , 3 , 4 , 5 , 6 ) scale  (8) ")
         assert result == expect
 
     def test_multiple_transforms(self) -> None:
         single = "rotate(90, 10, 30)"
-        multi = " ".join(
-            ["translate(10, 30)", "rotate(90)", "translate(-10, -30)"]
-        )
+        multi = " ".join(["translate(10, 30)", "rotate(90)", "translate(-10, -30)"])
         expect = svg_matrix(transform_to_matrix(single))
         result = svg_matrix(transform_to_matrix(multi))
         assert result == expect
 
     def test_empty(self) -> None:
         assert transform_to_matrix("") == (1, 0, 0, 1, 0, 0)
+
 
 class TestShortestTransformString:
     def test_identity(self) -> None:
@@ -138,6 +138,3 @@ class TestShortestTransformString:
         expect = "translate(10)"
         result = shortest_transform_string((1, 0, 0, 1, 10, 0))
         assert result == expect
-
-
-

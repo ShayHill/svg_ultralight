@@ -22,7 +22,7 @@ from svg_ultralight.query import (
 
 
 class TestMergeBoundingBoxes:
-    def test_new_merged_bbox(self):
+    def test_new_merged_bbox(self) -> None:
         bbox_a = BoundingBox(-2, -4, 10, 20)
         bbox_b = BoundingBox(0, 0, 10, 10)
         merged = BoundingBox.union(bbox_a, bbox_b)
@@ -40,20 +40,20 @@ class MockSupportsBounds:
     height: float
 
     @property
-    def x2(self):
+    def x2(self) -> float:
         return self.x + self.width
 
     @property
-    def y2(self):
+    def y2(self) -> float:
         return self.y + self.height
 
 
 class TestBoundingBox:
     @pytest.fixture
-    def bounding_box(self):
+    def bounding_box(self) -> BoundingBox:
         return BoundingBox(0, 0, 100, 200)
 
-    def test_scale(self):
+    def test_scale(self) -> None:
         bbox = BoundingBox(100, 200, 300, 400)
         assert bbox.scale == (1.0, 1.0)
         bbox.scale = (3.0, 3.0)
@@ -65,7 +65,7 @@ class TestBoundingBox:
         assert bbox.width == 600.0
         assert bbox.height == 800.0
 
-    def test_alter_scale(self):
+    def test_alter_scale(self) -> None:
         bbox = BoundingBox(100, 200, 300, 400)
         assert bbox.scale == (1.0, 1.0)
         bbox.scale = (3.0, 3.0)
@@ -76,47 +76,47 @@ class TestBoundingBox:
         assert bbox.width == 9000.0
         assert bbox.height == 12000.0
 
-    def test_x(self, bounding_box: BoundingBox):
+    def test_x(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.x == 0.0
         bounding_box.x = 50.0
         assert bounding_box.x == 50.0
         assert bounding_box.cx == 100.0
 
-    def test_x2(self, bounding_box: BoundingBox):
+    def test_x2(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.x2 == 100.0
         bounding_box.x2 = 150.0
         assert bounding_box.x2 == 150.0
         assert bounding_box.cx == 100.0
 
-    def test_y(self, bounding_box: BoundingBox):
+    def test_y(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.y == 0.0
         bounding_box.y = 50.0
         assert bounding_box.y == 50.0
         assert bounding_box.cy == 150.0
 
-    def test_y2(self, bounding_box: BoundingBox):
+    def test_y2(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.y2 == 200.0
         bounding_box.y2 = 250.0
         assert bounding_box.y2 == 250.0
         assert bounding_box.cy == 150.0
 
-    def test_width(self, bounding_box: BoundingBox):
+    def test_width(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.width == 100.0
         bounding_box.width = 150.0
         assert bounding_box.width == 150.0
         assert bounding_box.x2 == 150.0
 
-    def test_height(self, bounding_box: BoundingBox):
+    def test_height(self, bounding_box: BoundingBox) -> None:
         assert bounding_box.height == 200.0
         bounding_box.height = 250.0
         assert bounding_box.height == 250.0
         assert bounding_box.y2 == 250.0
 
-    def test_transform_string(self, bounding_box: BoundingBox):
+    def test_transform_string(self, bounding_box: BoundingBox) -> None:
         transform_string = bounding_box.transform_string
         assert transform_string == "matrix(1 0 0 1 0 0)"
 
-    def test_union(self):
+    def test_union(self) -> None:
         bbox1 = BoundingBox(0, 0, 100, 200)
         bbox2 = BoundingBox(50, 50, 150, 250)
         merged_bbox = BoundingBox.union(bbox1, bbox2)
@@ -125,7 +125,7 @@ class TestBoundingBox:
         assert merged_bbox.width == 200.0
         assert merged_bbox.height == 300.0
 
-    def test_intersect(self):
+    def test_intersect(self) -> None:
         bbox1 = BoundingBox(0, 0, 100, 200)
         bbox2 = BoundingBox(50, 50, 150, 250)
         intersect_bbox = BoundingBox.intersect(bbox1, bbox2)
@@ -135,7 +135,7 @@ class TestBoundingBox:
         assert intersect_bbox.width == 50.0
         assert intersect_bbox.height == 150.0
 
-    def test_intersect_is_none(self):
+    def test_intersect_is_none(self) -> None:
         bbox1 = BoundingBox(210, 0, 100, 200)
         bbox2 = BoundingBox(50, 50, 150, 250)
         intersect_bbox = BoundingBox.intersect(bbox1, bbox2)
@@ -143,7 +143,7 @@ class TestBoundingBox:
 
 
 class TestTransformBoundingBoxes:
-    def test_transforms_commutative(self):
+    def test_transforms_commutative(self) -> None:
         """Scale then transform = transform then scale."""
         bbox_a = BoundingBox(-20000, -4, 10, 30)
         bbox_b = BoundingBox(-20000, -4, 10, 30)
@@ -156,14 +156,14 @@ class TestTransformBoundingBoxes:
 
         assert bbox_a.transform_string == bbox_b.transform_string
 
-    def test_width_does_not_alter_x(self):
+    def test_width_does_not_alter_x(self) -> None:
         """Setting width does not change x."""
         bbox = BoundingBox(-20000, -4, 10, 30)
         bbox_x = bbox.x
         bbox.width = 100
         assert bbox.x == bbox_x
 
-    def test_width_does_not_alter_y(self):
+    def test_width_does_not_alter_y(self) -> None:
         """Setting width does not change x."""
         bbox = BoundingBox(-20000, -4, 10, 30)
         bbox_x = bbox.x
@@ -206,11 +206,7 @@ class TestMapElemsToBoundingBoxes:
         rect4 = new_sub_element(xml, "rect", x=0, y=0, width=12, height=18)
         result = get_bounding_boxes(INKSCAPE, xml, rect1, rect2, rect3, rect4)
         assert result[0] == BoundingBox(
-            x=0.0,
-            y=0.0,
-            width=16.0,
-            height=32.0,
-            transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0, y=0.0, width=16.0, height=32.0, transformation=(1, 0, 0, 1, 0, 0)
         )
         assert result[1] == BoundingBox(
             x=0.0, y=0.0, width=16.0, height=9.0, transformation=(1, 0, 0, 1, 0, 0)
@@ -219,18 +215,10 @@ class TestMapElemsToBoundingBoxes:
             x=0.0, y=0.0, width=8.0, height=32.0, transformation=(1, 0, 0, 1, 0, 0)
         )
         assert result[3] == BoundingBox(
-            x=0.0,
-            y=0.0,
-            width=12.0,
-            height=18.0,
-            transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0, y=0.0, width=12.0, height=18.0, transformation=(1, 0, 0, 1, 0, 0)
         )
         assert result[4] == BoundingBox(
-            x=0.0,
-            y=0.0,
-            width=12.0,
-            height=18.0,
-            transformation=(1, 0, 0, 1, 0, 0),
+            x=0.0, y=0.0, width=12.0, height=18.0, transformation=(1, 0, 0, 1, 0, 0)
         )
 
     @pytest.mark.skipif(not has_inkscape(INKSCAPE), reason="Inkscape not found")

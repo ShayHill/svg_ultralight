@@ -98,7 +98,7 @@ def _rstrip_list(vals: list[_T], strip_val: _T) -> None:
         _ = vals.pop()
 
 
-def svg_transform(command: str, floats: Iterable[float] | Iterable[str]) -> str:
+def svg_transform(command: str, floats: Iterable[float] | Iterable[str]) -> str:  # noqa: C901
     """Format one svg transform command, removing meaningless arguments."""
     nos = [format_number(x) for x in floats]
     if command == "rotate" and nos and nos[0] == "0":

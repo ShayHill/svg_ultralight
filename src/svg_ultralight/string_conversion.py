@@ -154,6 +154,7 @@ def _fix_key_and_format_val(key: str, val: ElemAttrib) -> Iterator[tuple[str, st
     else:
         key_ = key.rstrip("_").replace("_", "-")
 
+    val_: str | tuple[float, float, float, float, float, float]
     if val is None:
         val_ = "none"
     elif isinstance(val, (int, float)):

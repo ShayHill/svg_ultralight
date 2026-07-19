@@ -56,7 +56,7 @@ _inkscape_output = "".join([x.strip() for x in _inkscape_output.splitlines()])
 
 
 class TestMetedata:
-    def test_inkscape_explicit(self):
+    def test_inkscape_explicit(self) -> None:
         """Output matches Inkscape output.
 
         Wrap this is a root element or lxml will add namespace info to the metadata
@@ -81,7 +81,7 @@ class TestMetedata:
         root.append(metadata)
         assert _inkscape_output in etree.tostring(root).decode()
 
-    def test_blank_title(self):
+    def test_blank_title(self) -> None:
         """Title defaults to empty string."""
         root = new_svg_root()
         metadata = new_metadata()

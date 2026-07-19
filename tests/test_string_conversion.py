@@ -134,15 +134,11 @@ class TestFormatAttrDict:
 
     def test_8channel_opaque_fill(self) -> None:
         """Format 8-channel hex color with opaque fill."""
-        assert mod.format_attr_dict(fill="#000000ff") == {
-            "fill": "#000000"
-        }
+        assert mod.format_attr_dict(fill="#000000ff") == {"fill": "#000000"}
 
     def test_8channel_opaque_stroke(self) -> None:
         """Format 8-channel hex color with opaque stroke."""
-        assert mod.format_attr_dict(stroke="#000000ff") == {
-            "stroke": "#000000",
-        }
+        assert mod.format_attr_dict(stroke="#000000ff") == {"stroke": "#000000"}
 
 
 def _generate_random_utf8_string() -> str:

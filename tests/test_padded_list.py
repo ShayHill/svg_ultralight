@@ -20,47 +20,47 @@ test_instance = PaddedList(
 
 
 class TestPaddedList:
-    def test_init(self):
+    def test_init(self) -> None:
         assert len(test_instance.plems) == 3
 
-    def test_getitem_int(self):
+    def test_getitem_int(self) -> None:
         plem = test_instance[1]
         assert plem.elem[0].attrib["data-text"] == "b"
 
-    def test_getitem_slice(self):
+    def test_getitem_slice(self) -> None:
         sublist = test_instance[0::2]
         assert isinstance(sublist, PaddedList)
         assert len(sublist.plems) == 2
         assert sublist.plems[0].elem[0].attrib["data-text"] == "a"
         assert sublist.plems[1].elem[0].attrib["data-text"] == "c"
 
-    def test_transform(self):
+    def test_transform(self) -> None:
         plist = copy.deepcopy(test_instance)
         old_bbox = plist.bbox
         plist.transform(dx=10)
         new_bbox = plist.bbox
         assert new_bbox.x == old_bbox.x + 10
 
-    def test_union(self):
+    def test_union(self) -> None:
         union = test_instance.union(fill="red")
         assert union.bbox.values() == test_instance.bbox.values()
         assert union.elem.attrib["fill"] == "red"
 
-    def test_align(self):
+    def test_align(self) -> None:
         for dim in ("x", "cx", "x2", "y", "cy", "y2", "width", "height"):
             plist = copy.deepcopy(test_instance)
             plist.align(dim, 100)
             for p in plist.plems:
                 assert math.isclose(getattr(p, dim), 100)
 
-    def test_stack_defaults(self):
+    def test_stack_defaults(self) -> None:
         plist = copy.deepcopy(test_instance)
         plist.stack()
         for above, below in it.pairwise(plist.plems):
             offset = below.leading
             assert below.baseline == above.baseline + offset
 
-    def test_stack_gap(self):
+    def test_stack_gap(self) -> None:
         plist = copy.deepcopy(test_instance)
         gap = 5
         plist.stack(gap, "capline")

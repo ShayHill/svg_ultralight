@@ -10,7 +10,7 @@ import uuid
 import pytest
 from conftest import INKSCAPE, has_inkscape
 from lxml import etree
-from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import _Element as EtreeElement
 
 from svg_ultralight.constructors import new_sub_element
 from svg_ultralight.inkscape import convert_text_to_path
@@ -20,7 +20,7 @@ from svg_ultralight.nsmap import NSMAP
 PATH_TAG = str(etree.QName(NSMAP["svg"], "path"))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def text_conversion() -> tuple[EtreeElement, EtreeElement]:
     """Return a root without text."""
     has_text = new_svg_root(0, 0, 1, 1)
@@ -28,9 +28,6 @@ def text_conversion() -> tuple[EtreeElement, EtreeElement]:
         random_string = str(uuid.uuid4())
         _ = new_sub_element(has_text, "text", text=random_string)
     no_text = convert_text_to_path(INKSCAPE, has_text)
-    return has_text, no_text
-
-    has_text = new_svg_root(0, 0, 1, 1)
     return has_text, no_text
 
 

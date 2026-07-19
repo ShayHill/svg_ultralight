@@ -26,7 +26,7 @@ from svg_ultralight.constructors import new_element
 
 
 class TestBoundingBox:
-    def test_measurement_args(self):
+    def test_measurement_args(self) -> None:
         bbox = BoundingBox("-2in", "0", "1in", "3pt")
         assert bbox.x == -192
         assert bbox.y == 0
@@ -41,7 +41,7 @@ class TestBoundElement:
         bbox = BoundingBox(0, 0, 100, 200)
         return BoundElement(elem, bbox)
 
-    def test_scale(self):
+    def test_scale(self) -> None:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
@@ -55,7 +55,7 @@ class TestBoundElement:
         assert blem.width == 600.0
         assert blem.height == 800.0
 
-    def test_alter_scale(self):
+    def test_alter_scale(self) -> None:
         elem = new_element("rect", x=100, y=200, width=300, height=400)
         bbox = BoundingBox(100, 200, 300, 400)
         blem = BoundElement(elem, bbox)
@@ -68,37 +68,37 @@ class TestBoundElement:
         assert blem.width == 9000.0
         assert blem.height == 12000.0
 
-    def test_x(self, bound_element: BoundElement):
+    def test_x(self, bound_element: BoundElement) -> None:
         assert bound_element.x == 0.0
         bound_element.x = 50.0
         assert bound_element.x == 50.0
         assert bound_element.cx == 100.0
 
-    def test_x2(self, bound_element: BoundElement):
+    def test_x2(self, bound_element: BoundElement) -> None:
         assert bound_element.x2 == 100.0
         bound_element.x2 = 150.0
         assert bound_element.x2 == 150.0
         assert bound_element.cx == 100.0
 
-    def test_y(self, bound_element: BoundElement):
+    def test_y(self, bound_element: BoundElement) -> None:
         assert bound_element.y == 0.0
         bound_element.y = 50.0
         assert bound_element.y == 50.0
         assert bound_element.cy == 150.0
 
-    def test_y2(self, bound_element: BoundElement):
+    def test_y2(self, bound_element: BoundElement) -> None:
         assert bound_element.y2 == 200.0
         bound_element.y2 = 250.0
         assert bound_element.y2 == 250.0
         assert bound_element.cy == 150.0
 
-    def test_width(self, bound_element: BoundElement):
+    def test_width(self, bound_element: BoundElement) -> None:
         assert bound_element.width == 100.0
         bound_element.width = 150.0
         assert bound_element.width == 150.0
         assert bound_element.x2 == 150.0
 
-    def test_height(self, bound_element: BoundElement):
+    def test_height(self, bound_element: BoundElement) -> None:
         assert bound_element.height == 200.0
         bound_element.height = 250.0
         assert bound_element.height == 250.0
@@ -112,31 +112,31 @@ class TestPaddedText:
         bbox = BoundingBox(0, 0, 100, 200)
         return PaddedText(elem, bbox, 1, 2, 3, 4, "")
 
-    def test_x(self, bound_element: PaddedText):
+    def test_x(self, bound_element: PaddedText) -> None:
         assert bound_element.x == -4
         bound_element.x = 50.0
         assert bound_element.x == 50.0
         assert bound_element.cx == 103.0
 
-    def test_x2(self, bound_element: PaddedText):
+    def test_x2(self, bound_element: PaddedText) -> None:
         assert bound_element.x2 == 102
         bound_element.x2 = 150.0
         assert bound_element.x2 == 150.0
         assert bound_element.cx == 97.0
 
-    def test_y(self, bound_element: PaddedText):
+    def test_y(self, bound_element: PaddedText) -> None:
         assert bound_element.y == -1
         bound_element.y = 50.0
         assert bound_element.y == 50.0
         assert bound_element.cy == 152.0
 
-    def test_y2(self, bound_element: PaddedText):
+    def test_y2(self, bound_element: PaddedText) -> None:
         assert bound_element.y2 == 203.0
         bound_element.y2 = 250.0
         assert bound_element.y2 == 250.0
         assert bound_element.cy == 148.0
 
-    def test_cx(self, bound_element: PaddedText):
+    def test_cx(self, bound_element: PaddedText) -> None:
         bbox_x = bound_element.x
         bbox_x2 = bound_element.x2
         bbox_cx = bound_element.cx
@@ -145,7 +145,7 @@ class TestPaddedText:
         assert bound_element.x2 == bbox_x2 + 100.0
         assert bound_element.cx == bbox_cx + 100.0
 
-    def test_cy(self, bound_element: PaddedText):
+    def test_cy(self, bound_element: PaddedText) -> None:
         bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
         bbox_cy = bound_element.cy
@@ -154,18 +154,18 @@ class TestPaddedText:
         assert bound_element.y2 == bbox_y2 + 100.0
         assert bound_element.cy == bbox_cy + 100.0
 
-    def test_width(self, bound_element: PaddedText):
+    def test_width(self, bound_element: PaddedText) -> None:
         assert bound_element.width == 106.0
         bound_element.set_width_preserve_sidebearings(150.0)
         assert bound_element.width == 150.0
         assert bound_element.x == -5.76
 
-    def test_height(self, bound_element: PaddedText):
+    def test_height(self, bound_element: PaddedText) -> None:
         assert bound_element.height == 204
         bound_element.set_height_preserve_sidebearings(250)
         assert math.isclose(bound_element.height, 250)
 
-    def test_tpad_preserves_elem_moves_y(self, bound_element: PaddedText):
+    def test_tpad_preserves_elem_moves_y(self, bound_element: PaddedText) -> None:
         """Alter bbox margins, but do no move text when setting tpad."""
         bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
@@ -177,7 +177,7 @@ class TestPaddedText:
         assert bound_element.tbox.x == elem_y
         assert bound_element.tbox.y2 == elem_y2
 
-    def test_bpad_preserves_elem_moves_y2(self, bound_element: PaddedText):
+    def test_bpad_preserves_elem_moves_y2(self, bound_element: PaddedText) -> None:
         """Alter bbox margins, but do no move text when setting bpad."""
         bbox_y = bound_element.y
         bbox_y2 = bound_element.y2
@@ -198,7 +198,7 @@ class TestBoundList:
         blem = PaddedText(elem, bbox, 1, 2, 3, 4, "")
         return BoundList(blem, copy.deepcopy(elem))
 
-    def test_blem_and_elem(self):
+    def test_blem_and_elem(self) -> None:
         """Test that bound element and unbound element transforms are the same."""
         rect = new_element("rect", x=0, y=0, width=100, height=200)
         bbox = BoundingBox(0, 0, 100, 200)
@@ -215,7 +215,7 @@ class TestBoundList:
 
 
 class TestBoundHelpers:
-    def test_pad_bbox(self):
+    def test_pad_bbox(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         padded = pad_bbox(bbox, 1)
         assert padded.x == -1
@@ -223,7 +223,7 @@ class TestBoundHelpers:
         assert padded.width == 6
         assert padded.height == 6
 
-    def test_pad_bbox_t1(self):
+    def test_pad_bbox_t1(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         padded = pad_bbox(bbox, (1,))
         assert padded.x == -1
@@ -231,7 +231,7 @@ class TestBoundHelpers:
         assert padded.width == 6
         assert padded.height == 6
 
-    def test_pad_bbox_t2(self):
+    def test_pad_bbox_t2(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         padded = pad_bbox(bbox, (1, 2))
         assert padded.x == -2
@@ -239,7 +239,7 @@ class TestBoundHelpers:
         assert padded.width == 8
         assert padded.height == 6
 
-    def test_pad_bbox_t3(self):
+    def test_pad_bbox_t3(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         padded = pad_bbox(bbox, (1, 2, 3))
         assert padded.x == -2
@@ -247,7 +247,7 @@ class TestBoundHelpers:
         assert padded.width == 8
         assert padded.height == 8
 
-    def test_pad_bbox_t4(self):
+    def test_pad_bbox_t4(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         padded = pad_bbox(bbox, (1, 2, 3, 4))
         assert padded.x == -4
@@ -255,7 +255,7 @@ class TestBoundHelpers:
         assert padded.width == 10
         assert padded.height == 8
 
-    def test_cut_bbox(self):
+    def test_cut_bbox(self) -> None:
         bbox = BoundingBox(0, 0, 4, 4)
         cut = cut_bbox(bbox, x=1)
         assert cut.x == 1
@@ -263,17 +263,17 @@ class TestBoundHelpers:
         assert cut.width == 3
         assert cut.height == 4
 
-    def test_bbox_dict(self):
+    def test_bbox_dict(self) -> None:
         bbox = BoundingBox(0, 1, 2, 3)
         assert bbox_dict(bbox) == {"x": 0, "y": 1, "width": 2, "height": 3}
 
-    def test_new_bbox_rect(self):
+    def test_new_bbox_rect(self) -> None:
         bbox = BoundingBox(0, 1, 2, 3)
         elem = new_bbox_rect(bbox)
         assert elem.attrib == {"x": "0", "y": "1", "width": "2", "height": "3"}
 
 
-def test_import_bound_element():
+def test_import_bound_element() -> None:
     blem = parse_bound_element(TEST_RESOURCES / "arrow.svg")
     assert blem.bbox == BoundingBox(
         x=0, y=0, width=10, height=10, transformation=(1, 0, 0, 1, 0, 0)

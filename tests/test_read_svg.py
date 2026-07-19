@@ -14,7 +14,7 @@ test_svg = TEST_RESOURCES / "arrow.svg"
 class TestReadSVG:
     """Test the read_svg module."""
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """Test get_bounding_box_from_root function."""
         blem = parse_bound_element(test_svg)
         assert blem.bbox.x == 0.0

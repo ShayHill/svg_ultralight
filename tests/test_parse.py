@@ -11,7 +11,7 @@ from svg_ultralight.bounding_boxes.bound_helpers import parse_bound_element
 input_svg = TEST_RESOURCES / "fs_logo.svg"
 
 
-def test_decopy_paths():
+def test_decopy_paths() -> None:
     """Replace any use elements with the elements they use."""
     blem = parse_bound_element(input_svg)
     assert len(blem.elem) == 7

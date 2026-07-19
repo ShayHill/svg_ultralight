@@ -146,6 +146,7 @@ def _sanitize_svg_data_text(text: str) -> list[str]:
     """
     return [DATA_TEXT_ESCAPE_CHARS.get(char, char) for char in text]
 
+
 def _get_gpos_kerning(font: TTFont) -> dict[tuple[str | None, str | None], int]:
     """Extract kerning pairs from the GPOS table of a font.
 

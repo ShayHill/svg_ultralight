@@ -24,6 +24,8 @@ from svg_ultralight.reuse_paths import reuse_paths
 from svg_ultralight.string_conversion import svg_tostring
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from lxml.etree import _Element as EtreeElement
 
 
@@ -34,7 +36,7 @@ def _local_tag(elem: EtreeElement) -> str:
 
 
 @pytest.fixture
-def css_source():
+def css_source() -> Iterator[str]:
     """Temporary css file object with meaningless contents."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as css_source:
         _ = css_source.write("/** css for my project **/")
@@ -43,7 +45,7 @@ def css_source():
 
 
 @pytest.fixture
-def temp_filename(mode: str = "w"):
+def temp_filename(mode: str = "w") -> Iterator[str]:
     """Temporary file object to capture test output."""
     with tempfile.NamedTemporaryFile(mode=mode, delete=False) as svg_output:
         yield svg_output.name

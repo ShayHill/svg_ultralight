@@ -12,7 +12,6 @@ import re
 from contextlib import suppress
 from typing import TYPE_CHECKING, TypeAlias
 
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -119,8 +118,6 @@ def new_transformation_matrix(
     return mat_dot((float(scale_x), 0, 0, float(scale_y), dx, dy), transformation)
 
 
-
-
 # ===================================================================================
 #   Create a matrix from any svg transform string.
 # ===================================================================================
@@ -143,8 +140,6 @@ def _split_commands(transform: str) -> Iterator[tuple[str, list[float]]]:
         name = command.split("(", 1)[0].strip()
         nos = _get_nos(command)
         yield name, nos
-
-
 
 
 def transform_to_matrix(transform: str) -> _Matrix:  # noqa: C901
@@ -208,7 +203,8 @@ def transform_to_matrix(transform: str) -> _Matrix:  # noqa: C901
             angle = math.radians(nos[0])
             mats.append((1, math.tan(angle), 0, 1, 0, 0))
         elif name == "matrix":
-            a, b, c, d, e, f = (*nos, *[1, 0, 0, 1, 0, 0][len(nos) :])
+            identity: _Matrix = (1, 0, 0, 1, 0, 0)
+            a, b, c, d, e, f = (*nos, *identity[len(nos) :])
             mats.append((a, b, c, d, e, f))
     if not mats:
         return (1, 0, 0, 1, 0, 0)
