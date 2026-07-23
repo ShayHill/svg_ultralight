@@ -18,7 +18,6 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
 )
 from svg_ultralight.constructors import new_element
 from svg_ultralight.font_tools.align_text import join_tspans, wrap_text
-from svg_ultralight.font_tools.font_info import DATA_TEXT_ESCAPE_CHARS
 
 
 class TestPadTextInkscape:
@@ -43,31 +42,10 @@ def _random_string(length: int) -> str:
 
 
 class TestPadText:
-    def test_escaped_symbols(self) -> None:
-        symbols = list(DATA_TEXT_ESCAPE_CHARS.keys())
-        expect = list(DATA_TEXT_ESCAPE_CHARS.values())
-        font = Path("C:/Windows/Fonts/bahnschrift.ttf")
-        blem = pad_text(font, "".join(symbols))
-        assert [e.attrib["data-text"] for e in blem.elem] == expect
-
     def test_text_with_quotes(self) -> None:
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")
         blem = pad_text(font, "a 'quoted' word")
-        expect = [
-            "a",
-            "&apos;",
-            "q",
-            "u",
-            "o",
-            "t",
-            "e",
-            "d",
-            "&apos;",
-            "w",
-            "o",
-            "r",
-            "d",
-        ]
+        expect = ["a", "u27", "q", "u", "o", "t", "e", "d", "u27", "w", "o", "r", "d"]
         assert [e.attrib["data-text"] for e in blem.elem] == expect
 
     def test_bad_font_path(self) -> None:

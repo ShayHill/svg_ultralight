@@ -97,6 +97,7 @@ import itertools as it
 import logging
 from contextlib import suppress
 from pathlib import Path
+from string import ascii_letters, digits
 from typing import TYPE_CHECKING, Any, cast
 
 from fontTools.pens.basePen import BasePen
@@ -126,17 +127,9 @@ logging.getLogger("fontTools").setLevel(logging.ERROR)
 # Cache for FTFontInfo instances keyed by font path
 _FONT_INFO_CACHE: dict[Path, FTFontInfo] = {}
 
-
-DATA_TEXT_ESCAPE_CHARS = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&apos;",
-    "{": "&#123",  # valid, but stops MS File Explorer from thumbnailing an svg
-    "}": "&#125",  # valid, but stops MS File Explorer from thumbnailing an svg
-    "%": "&#37",  # Inkscape gives Malformed URI warning
-}
+# This isn't all of ascii, just the characters that are 100% not going to cause a
+# problem in an svg data-text attribute.
+_ASCII_LETTERS_AND_NUMBERS = set(ascii_letters + digits)
 
 
 def _sanitize_svg_data_text(text: str) -> list[str]:
@@ -145,7 +138,7 @@ def _sanitize_svg_data_text(text: str) -> list[str]:
     :param text: The input string to sanitize.
     :return: The sanitized string with XML characters escaped.
     """
-    return [DATA_TEXT_ESCAPE_CHARS.get(char, char) for char in text]
+    return [x if x in _ASCII_LETTERS_AND_NUMBERS else f"u{ord(x):x}" for x in text]
 
 
 def _get_gpos_kerning(font: TTFont) -> dict[tuple[str | None, str | None], int]:
