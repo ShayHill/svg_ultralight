@@ -135,6 +135,7 @@ DATA_TEXT_ESCAPE_CHARS = {
     "'": "&apos;",
     "{": "&#123",  # valid, but stops MS File Explorer from thumbnailing an svg
     "}": "&#125",  # valid, but stops MS File Explorer from thumbnailing an svg
+    "%": "&#37",  # Inkscape gives Malformed URI warning
 }
 
 
