@@ -58,3 +58,9 @@ class TestUpdateElement:
         elem = constructors.new_element("line", x=10, y1=80)
         _ = constructors.update_element(elem, stroke_width=2)
         assert etree.tostring(elem) == b'<line x="10" y1="80" stroke-width="2"/>'
+
+    def test_remove_empty_params(self) -> None:
+        """Params with empty values are removed."""
+        elem = constructors.new_element("line", x=10, y1=80, stroke_width=2)
+        _ = constructors.update_element(elem, stroke_width="")
+        assert etree.tostring(elem) == b'<line x="10" y1="80"/>'
