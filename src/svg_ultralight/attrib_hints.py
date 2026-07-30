@@ -9,7 +9,7 @@ from typing import TypeAlias
 
 # Types svg_ultralight can format to pass through to lxml constructors.
 ElemAttrib: TypeAlias = (
-    str | float | None | tuple[float, float, float, float, float, float]
+    str | float | tuple[float, float, float, float, float, float] | None
 )
 
 # Type for an optional dictionary of element attributes.

@@ -239,13 +239,13 @@ def _clean_whitespace(elem: EtreeElement) -> None:
 def svg_tostring(
     xml: EtreeElement,
     *,
-    encoding: str | None | Sentinal = SENTINAL,
+    encoding: str | Sentinal | None = SENTINAL,
     method: Literal["html", "text", "xml"] = "xml",
     xml_declaration: bool | None = None,
     pretty_print: bool = True,
     with_tail: bool = True,
     standalone: bool | None = None,
-    doctype: str | None | Sentinal = SENTINAL,
+    doctype: str | Sentinal | None = SENTINAL,
 ) -> bytes:
     """Contents of svg file with optional xml declaration.
 

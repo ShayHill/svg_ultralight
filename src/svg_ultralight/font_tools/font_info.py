@@ -529,7 +529,7 @@ class FTFontInfo:
         glyph_name = self.get_glyph_name(char)
         bounds_pen = BoundsPen(self._glyph_set)
         _ = self._glyph_set[glyph_name].draw(bounds_pen)
-        pen_bounds = cast("None | tuple[int, int, int, int]", bounds_pen.bounds)
+        pen_bounds = cast("tuple[int, int, int, int] | None", bounds_pen.bounds)
         if pen_bounds is None:
             return 0, 0, 0, 0
         x_min, y_min, x_max, y_max = pen_bounds

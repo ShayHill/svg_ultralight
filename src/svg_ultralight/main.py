@@ -132,13 +132,13 @@ def write_svg(
     *,
     do_link_css: bool = False,
     # lxml.etree.tostring kwargs
-    encoding: str | None | Sentinal = SENTINAL,
+    encoding: str | Sentinal | None = SENTINAL,
     method: Literal["html", "text", "xml"] = "xml",
     xml_declaration: bool | None = None,
     pretty_print: bool = True,
     with_tail: bool = True,
     standalone: bool | None = None,
-    doctype: str | None | Sentinal = SENTINAL,
+    doctype: str | Sentinal | None = SENTINAL,
 ) -> Path:
     r"""Write an xml element as an svg file.
 

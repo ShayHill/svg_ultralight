@@ -89,6 +89,7 @@ ignore = [
     "D203",    # 1 blank line before class docstring (incompatible with D211)
     "D213",    # multi-line summary second line (incompatible with D212)
     "ISC003",  # explicitly concatenated string should be implicit
+    "CPY001",  # copyrite notice should be present in each file
     "ANN401",  # Any type disallowed (need Any for fonttools)
     "S301",    # don't use pickle
     "PLR2004", # magic value used in comparison
@@ -103,6 +104,7 @@ ignore = [
     "SLF001",  # private member accessed
     "B019",    # memory leak warning for lru_cache
     "S311",    # pseudo-random generators should not be used for security purposes
+    "PLR0917", # too many positional arguments
 ]
 
 
