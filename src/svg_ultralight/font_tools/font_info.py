@@ -109,7 +109,11 @@ from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.constructors.new_element import new_element, new_sub_element
+from svg_ultralight.constructors.new_element import (
+    new_element,
+    new_sub_element,
+    transform_element,
+)
 from svg_ultralight.font_tools.font_metrics import FontMetrics
 from svg_ultralight.strings import svg_matrix
 
@@ -663,12 +667,13 @@ class FTTextInfo:
         """
         data_text = _sanitize_svg_data_text(self.text)
         group = new_element("g", **attributes)
+        _ = transform_element(group, (1, 0, 0, -1, 0, 0))
 
         def add_char(svgd: str, data_text: str, dx: float) -> None:
             """Add a character path to the group."""
             path = new_sub_element(group, "path", data_text=data_text, d=svgd)
-            if svgd:
-                path.set("transform", svg_matrix((1, 0, 0, -1, dx, 0)))
+            if svgd and dx:
+                path.set("transform", svg_matrix((1, 0, 0, 1, dx, 0)))
 
         for i, (svgd, dx) in enumerate(self.font.get_text_svgds(self.text)):
             if not svgd:
