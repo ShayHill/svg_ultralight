@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
 from svg_ultralight.constructors import new_element
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -53,7 +54,9 @@ def _generate_alphanumeric(length: int) -> Iterator[str]:
                 yield prefix + char
 
 
-def _iter_paths(root: EtreeElement, defs: EtreeElement) -> Iterator[EtreeElement]:
+def _iter_paths(
+    root: EtreeElement, defs: EtreeElement | None
+) -> Iterator[EtreeElement]:
     """Iterate over the path elements that are not the top defs section.
 
     :param root: the root element of an svg
@@ -85,40 +88,70 @@ def _find_or_create_defs(root: EtreeElement) -> EtreeElement:
         return defs
 
 
+def _new_id_getter(seen: set[str] | None = None) -> Callable[[str], str]:
+    """Return a function that takes a base_id and returns a unique ID.
+
+    :param seen: set of IDs that are already in use (updated as IDs are yielded).
+        This is optional, for if you'd prefer some unique id sequences start with
+        "{base_id}_0" instead of "{base_id}".
+    """
+    seen = seen or set()
+    base_id2id_gen: dict[str, Iterator[str]] = {}
+
+    def get_next_unique_id(base_id: str) -> str:
+        """Select a generator for the base_id and return the next unique ID."""
+        gen = base_id2id_gen.setdefault(base_id, _unique_id_generator(base_id, seen))
+        return next(gen)
+
+    return get_next_unique_id
+
+
+# A placeholder value to indicate that a value has only been seen once. For
+# _map_paths_to_ids, where IDs are only generated for values that have been seen at
+# least twice.
+_SEEN_ONCE = str(uuid.uuid4())
+
+def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
+    """Map any data strings used multiple times to unique IDs."""
+    defs = next((x for x in root if x.tag == "defs"), None)
+    svgd2id: dict[str, str] = {}
+    get_next_unique_id = _new_id_getter()
+    for path in _iter_paths(root, defs):
+        svgd = path.attrib.get("d")
+        if svgd is None or not svgd:
+            continue
+        current_id = svgd2id.get(svgd)
+        if current_id is None:
+            svgd2id[svgd] = _SEEN_ONCE
+        elif current_id == _SEEN_ONCE:
+            svgd2id[svgd] = get_next_unique_id(path.attrib.get("data-text", "path"))
+    return {k: v for k, v in svgd2id.items() if v != _SEEN_ONCE}
+
+
 def reuse_paths(root: EtreeElement) -> None:
     """Define paths in the defs section of the SVG.
 
     :param root: the root element of an svg
     """
-    d2id: dict[str, str] = {}
-    base_id2ids: dict[str, Iterator[str]] = {}
-    seen: set[str] = set()
+    svgd2id = _map_paths_to_ids(root)
+    if not svgd2id:
+        return
     defs = _find_or_create_defs(root)
+    for svgd, id_ in reversed(svgd2id.items()):
+        path = new_element("path", id_=id_, d=svgd)
+        defs.insert(0, path)
     for path in _iter_paths(root, defs):
-        svgd = path.attrib["d"]
-        if svgd == "":
+        svgd = path.attrib.get("d", "")
+        id_ = svgd2id.get(svgd)
+        if id_ is None:
             continue
-        if svgd in d2id:
-            id_ = d2id[svgd]
-        else:
-            base_id = path.attrib.get("data-text", "path")
-            if base_id not in base_id2ids:
-                if isinstance(path.tag, str) and path.tag.endswith(base_id):
-                    seen.add(base_id)
-                base_id2ids[base_id] = _unique_id_generator(base_id, seen)
-            id_ = next(base_id2ids[base_id])
-            d2id[svgd] = id_
         parent = path.getparent()
         if parent is None:
             msg = "Path element has no parent, cannot replace."
             raise RuntimeError(msg)
         pass_attrib = {k: v for k, v in path.attrib.items() if k != "d"}
-        replacement = new_element("use", href=f"#{d2id[svgd]}", **pass_attrib)
+        replacement = new_element("use", href=f"#{id_}", **pass_attrib)
         ix = parent.index(path)
         parent.insert(ix, replacement)
         parent.remove(path)
-    for svgd, id_ in reversed(d2id.items()):
-        path = new_element("path", id_=id_, d=svgd)
-        defs.insert(0, path)
-    if len(defs) == 0:
-        root.remove(defs)
+

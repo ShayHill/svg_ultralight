@@ -277,8 +277,10 @@ class TestReusePaths:
         defs = new_element("defs")
         root.append(defs)
         g = new_element("g")
-        p = new_element("path", d="M0 0 L10 10")
-        g.append(p)
+        p_a = new_element("path", d="M0 0 L10 10")
+        p_b = new_element("path", d="M0 0 L10 10")
+        g.append(p_a)
+        g.append(p_b)
         defs.append(g)
         reuse_paths(root)
         assert len(defs) == 2
