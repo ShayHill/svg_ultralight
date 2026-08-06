@@ -133,6 +133,7 @@ class TestPadText:
         padded = pad_text(font, ["Lorem", "ipsum", "dolor"])
         assert len(padded) == 3
 
+
 class TestGroup:
     def test_group_flipped(self) -> None:
         """The group, rather than the glyphs themselves, are y-flipped."""
@@ -140,7 +141,7 @@ class TestGroup:
         text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed"
         padded = pad_text(font, text)
         assert padded.elem.attrib["transform"] == "scale(1 -1)"
-        assert padded.elem[0].attrib.get('transform') is None
+        assert padded.elem[0].attrib.get("transform") is None
 
 
 class TestWrapText:

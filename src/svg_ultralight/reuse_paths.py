@@ -69,7 +69,7 @@ def _iter_paths(
         return
     # if within defs, don't strip data strings from path elements, but do descend into
     # `g` elements which may contain paths.
-    children = [x for x in root if x.tag != "path"] if root is defs else root
+    children = [x for x in root if x.tag != "path"] if defs and root is defs else root
     for child in children:
         yield from _iter_paths(child, defs)
 
@@ -111,6 +111,7 @@ def _new_id_getter(seen: set[str] | None = None) -> Callable[[str], str]:
 # least twice.
 _SEEN_ONCE = str(uuid.uuid4())
 
+
 def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
     """Map any data strings used multiple times to unique IDs."""
     defs = next((x for x in root if x.tag == "defs"), None)
@@ -142,8 +143,8 @@ def reuse_paths(root: EtreeElement) -> None:
         defs.insert(0, path)
     for path in _iter_paths(root, defs):
         svgd = path.attrib.get("d", "")
-        id_ = svgd2id.get(svgd)
-        if id_ is None:
+        id_ = svgd2id.get(svgd, "")
+        if not id_:
             continue
         parent = path.getparent()
         if parent is None:
@@ -154,4 +155,3 @@ def reuse_paths(root: EtreeElement) -> None:
         ix = parent.index(path)
         parent.insert(ix, replacement)
         parent.remove(path)
-

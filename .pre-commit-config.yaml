@@ -106,7 +106,7 @@ repos:
 
 # ruff config (select/ignore/fixable/target-version) lives in pyproject.toml
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.16.0'
+  rev: 'v0.16.1'
   hooks:
     - id: ruff
       args: ["--fix"]
