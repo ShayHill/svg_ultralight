@@ -19,9 +19,9 @@ from typing import IO, TYPE_CHECKING, Literal, TypeGuard
 from lxml import etree
 
 from svg_ultralight.constructors import update_element
+from svg_ultralight.font_tools.sanitize_text import sanitize_text
 from svg_ultralight.layout import PadArg, pad_and_scale
 from svg_ultralight.nsmap import NSMAP
-from svg_ultralight.reuse_paths import reuse_paths
 from svg_ultralight.string_conversion import (
     SENTINAL,
     Sentinal,
@@ -194,7 +194,7 @@ def write_svg(
             root.insert(0, style)
 
     etree.cleanup_namespaces(root)
-    reuse_paths(root)
+    sanitize_text(root)
 
     svg_contents = svg_tostring(
         root,

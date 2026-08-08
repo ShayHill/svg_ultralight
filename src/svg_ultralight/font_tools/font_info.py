@@ -97,7 +97,6 @@ import itertools as it
 import logging
 from contextlib import suppress
 from pathlib import Path
-from string import ascii_letters, digits
 from typing import TYPE_CHECKING, Any, cast
 
 from fontTools.pens.basePen import BasePen
@@ -130,19 +129,6 @@ logging.getLogger("fontTools").setLevel(logging.ERROR)
 
 # Cache for FTFontInfo instances keyed by font path
 _FONT_INFO_CACHE: dict[Path, FTFontInfo] = {}
-
-# This isn't all of ascii, just the characters that are 100% not going to cause a
-# problem in an svg data-text attribute.
-_ASCII_LETTERS_AND_NUMBERS = set(ascii_letters + digits)
-
-
-def _sanitize_svg_data_text(text: str) -> list[str]:
-    """Sanitize a string for use in an SVG data-text attribute.
-
-    :param text: The input string to sanitize.
-    :return: The sanitized string with XML characters escaped.
-    """
-    return [x if x in _ASCII_LETTERS_AND_NUMBERS else f"u{ord(x):x}" for x in text]
 
 
 def _get_gpos_kerning(font: TTFont) -> dict[tuple[str | None, str | None], int]:
@@ -665,7 +651,7 @@ class FTTextInfo:
         occurs at the beginning or end of the text. This is for kerning reference later
         if the elements are joined together as tspans.
         """
-        data_text = _sanitize_svg_data_text(self.text)
+        data_text = self.text
         group = new_element("g", **attributes)
         _ = transform_element(group, (1, 0, 0, -1, 0, 0))
 
