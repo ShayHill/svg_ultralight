@@ -42,10 +42,11 @@ This provides four guarantees:
   by the one-path-per-character format. Default False.
 
 - reuse paths by moving duplicate path data strings into a defs section and replacing
-  the elements with use elements. Will do this for any path in the file (text or no)
-  used more than once. This will allow long text strings in a relatively small svg
-  file. The defs section will form an alphabet of glyphs, and each glyph will only
-  need a short `use` element. Default False. Default True when called from write_svg.
+  the elements with use elements. Will do this for any 1-character path created by
+  TextInfor and and path in the file (text or no) used more than once. This will
+  allow long text strings in a relatively small svg file. The defs section will form
+  an alphabet of glyphs, and each glyph will only need a short `use` element. Default
+  True.
 
 :author: Shay Hill
 :created: 2025-06-07
@@ -60,6 +61,7 @@ from typing import TYPE_CHECKING
 from svg_path_data import get_cpts_from_svgd, get_svgd_from_cpts
 
 from svg_ultralight.constructors import new_element, update_element
+from svg_ultralight.nsmap import new_qname
 from svg_ultralight.transformations import get_transform_matrix, mat_apply, mat_dot
 
 if TYPE_CHECKING:
@@ -87,6 +89,9 @@ _TEXT_TRANS = str.maketrans(
         **dict.fromkeys(_PROBLEMATIC, "?"),
     }
 )
+
+DEFAULT_DO_DEATOMIZE = False
+DEFAULT_DO_REUSE_PATHS = True
 
 
 def sanitize_data_text_value(text: str) -> str:
@@ -342,6 +347,19 @@ def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
     defs = next((x for x in root if x.tag == "defs"), None)
     svgd2id: dict[str, str] = {}
     get_next_unique_id = _new_id_getter()
+
+    text = set(root.xpath("//*[@data-text]"))
+    has_deatomized_text = any(len(x.attrib["data-text"]) > 1 for x in text)
+    if has_deatomized_text:
+
+        def _is_char(elem: EtreeElement) -> bool:
+            del elem
+            return False
+    else:
+
+        def _is_char(elem: EtreeElement) -> bool:
+            return elem in text
+
     for path in _iter_paths(root, defs):
         svgd = path.attrib.get("d")
         if svgd is None or not svgd:
@@ -349,7 +367,7 @@ def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
         current_id = svgd2id.get(svgd)
         if current_id not in (_SEEN_ONCE, None):  # already assigned
             continue
-        if path.attrib.get("data-text") is not None or current_id == _SEEN_ONCE:
+        if _is_char(path) or current_id == _SEEN_ONCE:
             svgd2id[svgd] = get_next_unique_id(path.attrib.get("data-text", "path"))
             continue
         svgd2id[svgd] = _SEEN_ONCE
@@ -387,7 +405,10 @@ def _reuse_paths(root: EtreeElement) -> None:
 
 
 def sanitize_text(
-    root: EtreeElement, *, deatomize: bool = False, reuse_paths: bool = False
+    root: EtreeElement,
+    *,
+    do_deatomize: bool | None = None,
+    do_reuse_paths: bool | None = None,
 ) -> None:
     """Sanitize text paths in an SVG.
 
@@ -396,13 +417,37 @@ def sanitize_text(
     :param reuse_paths: if True, move duplicate path data strings into a defs section
         and replace the elements with use elements
     """
+    do_deatomize = DEFAULT_DO_DEATOMIZE if do_deatomize is None else do_deatomize
+    do_reuse_paths = (
+        DEFAULT_DO_REUSE_PATHS if do_reuse_paths is None else do_reuse_paths
+    )
+
     defs = next((x for x in root if x.tag == "defs"), None)
-    for path in _iter_paths(root, defs):
-        if "data-text" in path.attrib:
-            path.attrib["data-text"] = sanitize_data_text_value(
-                path.attrib["data-text"]
+    for elem in _iter_paths(root, defs):
+        if "data-text" in elem.attrib:
+            elem.attrib["data-text"] = sanitize_data_text_value(
+                elem.attrib["data-text"]
             )
-    if deatomize:
+    if do_deatomize:
         _join_char_paths(root)
-    if reuse_paths:
+    if do_reuse_paths:
         _reuse_paths(root)
+
+    # order attributes for readability
+    for elem in root.iter():
+        head = [
+            ("id", elem.attrib.pop("id", None)),
+            ("data-text", elem.attrib.pop("data-text", None)),
+            ("href", elem.attrib.pop("href", None)),  # use element
+        ]
+        qhref = new_qname("xlink", "href").text
+        tail = [
+            ("d", elem.attrib.pop("d", None)),
+            (qhref, elem.attrib.pop(qhref, None)),  # raster image
+        ]
+        head = [x for x in head if x[1] is not None]
+        tail = [x for x in tail if x[1] is not None]
+        if head or tail:
+            body = list(elem.attrib.items())
+            elem.attrib.clear()
+            elem.attrib.update({**dict(head), **dict(body), **dict(tail)})

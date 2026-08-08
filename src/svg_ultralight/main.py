@@ -131,8 +131,9 @@ def write_svg(
     stylesheet: str | os.PathLike[str] | None = None,
     *,
     do_link_css: bool = False,
-    do_deatomize_text: bool = True,
-    do_reuse_paths: bool = True,
+    # sanitize_text kwargs
+    do_deatomize: bool | None = None,
+    do_reuse_paths: bool | None = None,
     # lxml.etree.tostring kwargs
     encoding: str | Sentinal | None = SENTINAL,
     method: Literal["html", "text", "xml"] = "xml",
@@ -198,7 +199,7 @@ def write_svg(
             root.insert(0, style)
 
     etree.cleanup_namespaces(root)
-    sanitize_text(root, deatomize=do_deatomize_text, reuse_paths=do_reuse_paths)
+    sanitize_text(root, do_deatomize=do_deatomize, do_reuse_paths=do_reuse_paths)
 
     svg_contents = svg_tostring(
         root,

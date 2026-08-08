@@ -152,7 +152,7 @@ class TestGroup:
         root.append(g)
         g.append(new_element("path", data_text="a", d="M0 0 L10 10"))
         g.append(new_element("path", data_text="b", d="M0 0 L10 10"))
-        sanitize_text(root, deatomize=True)
+        sanitize_text(root, do_deatomize=True)
         assert len(root) == 1
         path = root[0]
         assert path.attrib["data-text"] == "ab"

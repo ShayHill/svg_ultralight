@@ -663,8 +663,7 @@ class FTTextInfo:
 
         for i, (svgd, dx) in enumerate(self.font.get_text_svgds(self.text)):
             if not svgd:
-                if i in (0, len(self.text) - 1):
-                    add_char(svgd, " ", dx)
+                # whitespace
                 continue
             add_char(svgd, data_text[i], dx)
         return group
