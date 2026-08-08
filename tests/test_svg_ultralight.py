@@ -219,7 +219,7 @@ class TestReusePaths:
         g.append(p1)
         g.append(p2)
         root.append(g)
-        sanitize_text(root)
+        sanitize_text(root, reuse_paths=True)
         defs = next((c for c in root if _local_tag(c) == "defs"), None)
         assert defs is not None
         path_defs = [c for c in defs if _local_tag(c) == "path"]
@@ -240,7 +240,7 @@ class TestReusePaths:
         g.append(new_element("path", d=same_d))
         g.append(new_element("path", d=same_d))
         root.append(g)
-        sanitize_text(root)
+        sanitize_text(root, reuse_paths=True)
         defs = next((c for c in root if _local_tag(c) == "defs"), None)
         assert defs is not None
         path_defs = [c for c in defs if _local_tag(c) == "path"]
@@ -277,8 +277,8 @@ class TestReusePaths:
         defs = new_element("defs")
         root.append(defs)
         g = new_element("g")
-        p = new_element("path", d="M0 0 L10 10")
-        g.append(p)
+        for _ in range(2):
+            g.append(new_element("path", d="M0 0 L10 10"))
         defs.append(g)
-        sanitize_text(root)
+        sanitize_text(root, reuse_paths=True)
         assert len(defs) == 2

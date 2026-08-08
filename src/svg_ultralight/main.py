@@ -131,6 +131,8 @@ def write_svg(
     stylesheet: str | os.PathLike[str] | None = None,
     *,
     do_link_css: bool = False,
+    do_deatomize_text: bool = False,
+    do_reuse_paths: bool = True,
     # lxml.etree.tostring kwargs
     encoding: str | Sentinal | None = SENTINAL,
     method: Literal["html", "text", "xml"] = "xml",
@@ -147,6 +149,8 @@ def write_svg(
     :param stylesheet: optional path to css stylesheet
     :param do_link_css: link to stylesheet, else (default) write contents of stylesheet
         into svg (ignored if stylesheet is None)
+    :param do_deatomize_text: if True, join atomized character strings.
+    :param do_reuse_paths: if True, reuse paths with identical geometry.
     :param tostring_kwargs: keyword arguments to etree.tostring. xml_header=True for
         sensible default values. See below.
     :return: svg filename
@@ -194,7 +198,7 @@ def write_svg(
             root.insert(0, style)
 
     etree.cleanup_namespaces(root)
-    sanitize_text(root)
+    sanitize_text(root, deatomize=do_deatomize_text, reuse_paths=do_reuse_paths)
 
     svg_contents = svg_tostring(
         root,

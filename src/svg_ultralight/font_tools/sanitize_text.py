@@ -39,14 +39,13 @@ This provides four guarantees:
 - deatomize text by merging consecutive character paths. This will take a bit of
   processing load off whatever is reading the svg and will sometimes make the file
   smaller. Mostly, it's a preference if you do not like the vertical space taken up
-  by the one-path-per-character format. Off by default.
+  by the one-path-per-character format. Default False.
 
 - reuse paths by moving duplicate path data strings into a defs section and replacing
-  the elements with use elements. Will do this for all single-character paths (have a
-  1-character `data-text` attribute) and for any other path in the file (text or no)
+  the elements with use elements. Will do this for any path in the file (text or no)
   used more than once. This will allow long text strings in a relatively small svg
   file. The defs section will form an alphabet of glyphs, and each glyph will only
-  need a short use element. On by default.
+  need a short `use` element. Default False. Default True when called from write_svg.
 
 :author: Shay Hill
 :created: 2025-06-07
@@ -55,12 +54,16 @@ This provides four guarantees:
 from __future__ import annotations
 
 import unicodedata
+import uuid
 from typing import TYPE_CHECKING
 
-from svg_ultralight.constructors import new_element
+from svg_path_data import get_cpts_from_svgd, get_svgd_from_cpts
+
+from svg_ultralight.constructors import new_element, update_element
+from svg_ultralight.transformations import get_transform_matrix, mat_apply
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from lxml.etree import (
         _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
@@ -118,12 +121,12 @@ def sanitize_data_text_value(text: str) -> str:
     return "".join(result)
 
 
-_ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
 # ===================================================================================
 #   Generate unique IDs for path elements in defs
 # ===================================================================================
+
+
+_ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def _unique_id_generator(id_: str, seen: set[str]) -> Iterator[str]:
@@ -161,12 +164,99 @@ def _generate_alphanumeric(length: int) -> Iterator[str]:
 
 
 # ===================================================================================
+#   Join consecutive character paths into a single path.
+# ===================================================================================
+
+
+def _is_next_consecutive(path_a: EtreeElement, path_b: EtreeElement) -> bool:
+    """Check if two path elements are consecutive siblings in the tree.
+
+    :param path_a: the first path element
+    :param path_b: the second path element
+    :return: True if the two paths are consecutive siblings, False otherwise
+    """
+    parent_a = path_a.getparent()
+    parent_b = path_b.getparent()
+    if parent_a is None or parent_b is None or parent_a != parent_b:
+        return False
+    index_a = parent_a.index(path_a)
+    index_b = parent_b.index(path_b)
+    return index_b - index_a == 1
+
+
+def _in_next_and_joinable(path_a: EtreeElement, path_b: EtreeElement) -> bool:
+    """Check if two path elements are joinable and consecutive.
+
+    :param path_a: the first path element
+    :param path_b: the second path element
+    :return: True if the two paths are joinable and consecutive, False otherwise
+    """
+    if not _is_next_consecutive(path_a, path_b):
+        return False
+    attrib_a = {**path_a.attrib}
+    attrib_b = {**path_b.attrib}
+    if attrib_a.get("data-text") is None or attrib_b.get("data-text") is None:
+        return False
+    skip = {"id", "data-text", "transform", "d"}
+    for key in (x for x in set(attrib_a) | set(attrib_b) if x not in skip):
+        if attrib_a.get(key) != attrib_b.get(key):
+            return False
+    return True
+
+
+_IDENTITY = (1, 0, 0, 1, 0, 0)  # identity matrix for SVG transforms
+
+
+def _transform_svgd(elem: EtreeElement) -> None:
+    """Apply the transform attribute to the path data and remove the transform."""
+    transform = get_transform_matrix(elem)
+    if transform == _IDENTITY:
+        _ = elem.attrib.pop("transform", None)
+        return
+    cpts = get_cpts_from_svgd(elem.attrib.get("d", ""))
+    if not cpts:
+        return
+    cpts = [[mat_apply(transform, x) for x in path] for path in cpts]
+    _ = update_element(elem, d=get_svgd_from_cpts(cpts))
+    _ = elem.attrib.pop("transform", None)
+
+
+def _join_char_paths(root: EtreeElement) -> None:
+    """Join consecutive path elements that have the same attributes."""
+    # transform all path elements if they are text
+    defs = next((x for x in root if x.tag == "defs"), None)
+    paths = [x for x in _iter_paths(root, defs) if x.attrib.get("data-text")]
+    for path in paths:
+        _transform_svgd(path)
+    i = 1
+    while i < len(paths) and i > 0:
+        path_a = paths[i - 1]
+        path_b = paths[i]
+        if _in_next_and_joinable(path_a, path_b):
+            svgd = path_a.attrib.get("d", "") + path_b.attrib.get("d", "")
+            data_text = path_a.attrib.get("data-text", "") + path_b.attrib.get(
+                "data-text", ""
+            )
+            _ = update_element(path_a, data_text=data_text, d=svgd)
+            parent = path_b.getparent()
+            if parent is None:
+                msg = "Path element has no parent, cannot remove."
+                raise RuntimeError(msg)
+            parent.remove(path_b)
+            _ = paths.pop(i)
+        else:
+            i += 1
+
+
+# ===================================================================================
 #   Reuse paths by moving duplicate path data strings into a defs section and
 #   replacing with use elements.
 # ===================================================================================
 
 
-def _iter_paths(root: EtreeElement, defs: EtreeElement) -> Iterator[EtreeElement]:
+def _iter_paths(
+    root: EtreeElement, defs: EtreeElement | None
+) -> Iterator[EtreeElement]:
     """Iterate over the path elements that are not the top defs section.
 
     :param root: the root element of an svg
@@ -179,7 +269,11 @@ def _iter_paths(root: EtreeElement, defs: EtreeElement) -> Iterator[EtreeElement
         return
     # if within defs, don't strip data strings from path elements, but do descend into
     # `g` elements which may contain paths.
-    children = [x for x in root if x.tag != "path"] if root is defs else root
+    children = (
+        [x for x in root if x.tag != "path"]
+        if defs is not None and root is defs
+        else root
+    )
     for child in children:
         yield from _iter_paths(child, defs)
 
@@ -198,47 +292,81 @@ def _find_or_create_defs(root: EtreeElement) -> EtreeElement:
         return defs
 
 
+def _new_id_getter(seen: set[str] | None = None) -> Callable[[str], str]:
+    """Return a function that takes a base_id and returns a unique ID.
+
+    :param seen: set of IDs that are already in use (updated as IDs are yielded).
+        This is optional, for if you'd prefer some unique id sequences start with
+        "{base_id}_0" instead of "{base_id}".
+    """
+    seen = seen or set()
+    base_id2id_gen: dict[str, Iterator[str]] = {}
+
+    def get_next_unique_id(base_id: str) -> str:
+        """Select a generator for the base_id and return the next unique ID."""
+        gen = base_id2id_gen.setdefault(base_id, _unique_id_generator(base_id, seen))
+        return next(gen)
+
+    return get_next_unique_id
+
+
+# A placeholder value to indicate that a value has only been seen once. For
+# _map_paths_to_ids, where IDs are only generated for values that have been seen at
+# least twice.
+_SEEN_ONCE = str(uuid.uuid4())
+
+
+def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
+    """Map any data strings used multiple times to unique IDs."""
+    defs = next((x for x in root if x.tag == "defs"), None)
+    svgd2id: dict[str, str] = {}
+    get_next_unique_id = _new_id_getter()
+    for path in _iter_paths(root, defs):
+        svgd = path.attrib.get("d")
+        if svgd is None or not svgd:
+            continue
+        current_id = svgd2id.get(svgd)
+        if current_id not in (_SEEN_ONCE, None):  # already assigned
+            continue
+        if path.attrib.get("data-text") is not None or current_id == _SEEN_ONCE:
+            svgd2id[svgd] = get_next_unique_id(path.attrib.get("data-text", "path"))
+            continue
+        svgd2id[svgd] = _SEEN_ONCE
+    return {k: v for k, v in svgd2id.items() if v != _SEEN_ONCE}
+
+
 def _reuse_paths(root: EtreeElement) -> None:
     """Define paths in the defs section of the SVG.
 
     :param root: the root element of an svg
     """
-    d2id: dict[str, str] = {}
-    base_id2ids: dict[str, Iterator[str]] = {}
-    seen: set[str] = set()
+    svgd2id = _map_paths_to_ids(root)
+    if not svgd2id:
+        return
     defs = _find_or_create_defs(root)
+    for svgd, id_ in reversed(svgd2id.items()):
+        path = new_element("path", id_=id_, d=svgd)
+        defs.insert(0, path)
     for path in _iter_paths(root, defs):
-        svgd = path.attrib["d"]
-        if svgd == "":
+        svgd = path.attrib.get("d", "")
+        id_ = svgd2id.get(svgd, "")
+        if not id_:
             continue
-        if svgd in d2id:
-            id_ = d2id[svgd]
-        else:
-            base_id = path.attrib.get("data-text", "path")
-            if base_id not in base_id2ids:
-                if isinstance(path.tag, str) and path.tag.endswith(base_id):
-                    seen.add(base_id)
-                base_id2ids[base_id] = _unique_id_generator(base_id, seen)
-            id_ = next(base_id2ids[base_id])
-            d2id[svgd] = id_
         parent = path.getparent()
         if parent is None:
             msg = "Path element has no parent, cannot replace."
             raise RuntimeError(msg)
-        pass_attrib = {k: v for k, v in path.attrib.items() if k != "d"}
-        replacement = new_element("use", href=f"#{d2id[svgd]}", **pass_attrib)
+        pass_attrib = {
+            k: v for k, v in path.attrib.items() if k not in {"d", "data-text"}
+        }
+        replacement = new_element("use", href=f"#{id_}", **pass_attrib)
         ix = parent.index(path)
         parent.insert(ix, replacement)
         parent.remove(path)
-    for svgd, id_ in reversed(d2id.items()):
-        path = new_element("path", id_=id_, d=svgd)
-        defs.insert(0, path)
-    if len(defs) == 0:
-        root.remove(defs)
 
 
 def sanitize_text(
-    root: EtreeElement, *, deatomize: bool = False, reuse_paths: bool = True
+    root: EtreeElement, *, deatomize: bool = False, reuse_paths: bool = False
 ) -> None:
     """Sanitize text paths in an SVG.
 
@@ -247,13 +375,13 @@ def sanitize_text(
     :param reuse_paths: if True, move duplicate path data strings into a defs section
         and replace the elements with use elements
     """
-    del deatomize
-
-    for path in _iter_paths(root, _find_or_create_defs(root)):
+    defs = next((x for x in root if x.tag == "defs"), None)
+    for path in _iter_paths(root, defs):
         if "data-text" in path.attrib:
             path.attrib["data-text"] = sanitize_data_text_value(
                 path.attrib["data-text"]
             )
-
+    if deatomize:
+        _join_char_paths(root)
     if reuse_paths:
         _reuse_paths(root)
