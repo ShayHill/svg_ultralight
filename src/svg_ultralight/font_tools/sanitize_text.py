@@ -60,7 +60,7 @@ from typing import TYPE_CHECKING
 from svg_path_data import get_cpts_from_svgd, get_svgd_from_cpts
 
 from svg_ultralight.constructors import new_element, update_element
-from svg_ultralight.transformations import get_transform_matrix, mat_apply
+from svg_ultralight.transformations import get_transform_matrix, mat_apply, mat_dot
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -221,7 +221,7 @@ def _transform_svgd(elem: EtreeElement) -> None:
     _ = elem.attrib.pop("transform", None)
 
 
-def _join_char_paths(root: EtreeElement) -> None:
+def _join_char_paths(root: EtreeElement) -> None:  # noqa: C901
     """Join consecutive path elements that have the same attributes."""
     # transform all path elements if they are text
     defs = next((x for x in root if x.tag == "defs"), None)
@@ -246,6 +246,27 @@ def _join_char_paths(root: EtreeElement) -> None:
             _ = paths.pop(i)
         else:
             i += 1
+
+    # flatten singleton groups
+    for group in tuple(root.xpath("//g")):
+        if len(group) != 1:
+            continue
+        if group[0].tag != "path":
+            continue
+        if group[0].attrib.get("data-text") is None:
+            continue
+        if group.attrib.get("id") and group[0].attrib.get("id"):
+            continue
+        if group not in group.getparent():
+            continue
+        gtrans = get_transform_matrix(group)
+        ptrans = get_transform_matrix(group[0])
+        trans = mat_dot(gtrans, ptrans)
+        group[0].attrib.update(group.attrib)
+        _ = update_element(group[0], transform=trans)
+        g_idx = group.getparent().index(group)
+        group.getparent().insert(g_idx, group[0])
+        group.getparent().remove(group)
 
 
 # ===================================================================================

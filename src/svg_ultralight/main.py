@@ -131,7 +131,7 @@ def write_svg(
     stylesheet: str | os.PathLike[str] | None = None,
     *,
     do_link_css: bool = False,
-    do_deatomize_text: bool = False,
+    do_deatomize_text: bool = True,
     do_reuse_paths: bool = True,
     # lxml.etree.tostring kwargs
     encoding: str | Sentinal | None = SENTINAL,

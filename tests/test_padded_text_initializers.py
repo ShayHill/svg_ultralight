@@ -18,6 +18,8 @@ from svg_ultralight.bounding_boxes.padded_text_initializers import (
 )
 from svg_ultralight.constructors import new_element
 from svg_ultralight.font_tools.align_text import join_tspans, wrap_text
+from svg_ultralight.font_tools.sanitize_text import sanitize_text
+from svg_ultralight.main import new_svg_root
 
 
 class TestPadTextInkscape:
@@ -142,6 +144,19 @@ class TestGroup:
         padded = pad_text(font, text)
         assert padded.elem.attrib["transform"] == "scale(1 -1)"
         assert padded.elem[0].attrib.get("transform") is None
+
+    def test_deatomize(self) -> None:
+        """Deatomize a group of paths in defs."""
+        root = new_svg_root(0, 0, 100, 100)
+        g = new_element("g")
+        root.append(g)
+        g.append(new_element("path", data_text="a", d="M0 0 L10 10"))
+        g.append(new_element("path", data_text="b", d="M0 0 L10 10"))
+        sanitize_text(root, deatomize=True)
+        assert len(root) == 1
+        path = root[0]
+        assert path.attrib["data-text"] == "ab"
+        assert path.attrib["d"] == "M0 0 L10 10M0 0 L10 10"
 
 
 class TestWrapText:
