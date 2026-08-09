@@ -44,6 +44,8 @@ from svg_ultralight.font_tools.align_text import (
 )
 from svg_ultralight.font_tools.font_info import FTFontInfo
 from svg_ultralight.inkscape import (
+    write_eps,
+    write_eps_from_svg,
     write_pdf,
     write_pdf_from_svg,
     write_png,
@@ -113,6 +115,8 @@ __all__ = [
     "update_element",
     "wrap",
     "wrap_text",
+    "write_eps",
+    "write_eps_from_svg",
     "write_pdf",
     "write_pdf_from_svg",
     "write_png",

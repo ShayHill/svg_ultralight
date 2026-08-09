@@ -35,6 +35,77 @@ if TYPE_CHECKING:
     )
 
 
+def _convert_to(
+    inkscape: str | os.PathLike[str],
+    svg: str | os.PathLike[str],
+    output: str | os.PathLike[str],
+) -> str:
+    """Convert an svg file to a png.
+
+    :param inkscape: path to inkscape executable
+    :param svg: path to svg file
+    :param png: path to output file or one of "png", "pdf", "eps"
+    :return: output path
+    :effects: creates a new file from svg filename
+    :raises ValueError: if unable to write output file. This could result from an
+        error with Inkscape.
+
+    If no output png path is given, the output path will be inferred from the ``svg``
+    filename.
+    """
+    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
+    if output in {"png", "pdf", "eps"}:
+        output_type = output
+        output_path = str(Path(svg).with_suffix(f".{output_type}"))
+    else:
+        output_type = Path(output).suffix[1:]
+        output_path = str(output)
+
+    # inkscape versions >= 1.0
+    options = [
+        f'"{svg}"',
+        f"--export-type={output_type}",
+        f'--export-filename="{output_path}"',
+    ]
+    return_code = subprocess.call(f'"{inkscape}" ' + " ".join(options))
+    if return_code == 0:
+        return output_path
+
+    # inkscape versions < 1.0
+    return_code = subprocess.call(f'"{inkscape}" -f "{svg}" -e "{output_path}"')
+    if return_code == 0:
+        return output_path
+
+    msg = f"failed to write {output_path} with inkscape {inkscape}"
+    raise ValueError(msg)
+
+
+def _write_as(
+    inkscape: str | os.PathLike[str],
+    output: str | os.PathLike[str],
+    root: EtreeElement,
+    stylesheet: str | os.PathLike[str] | None = None,
+) -> str:
+    """Create a png file without writing an intermediate svg file.
+
+    :param inkscape: path to inkscape executable
+    :param output: path to output file or one of "png", "pdf", "eps"
+    :param root: root node of your svg geometry
+    :param stylesheet: optional path to css stylesheet
+    :return: png filename (the same you input as ``png``)
+    :effects: creates a new png file
+
+    This just creates a tempfile, writes the svg to the tempfile, then calls
+    ``write_png_from_svg`` with the tempfile. This isn't faster (it might be slightly
+    slower), but it keeps the filesystem clean when you only want the output format.
+    """
+    with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
+        svg = main.write_svg(svg_file, root, stylesheet)
+    output_path = write_png_from_svg(inkscape, svg, output)
+    os.unlink(svg)
+    return str(output_path)
+
+
 def write_png_from_svg(
     inkscape: str | os.PathLike[str],
     svg: str | os.PathLike[str],
@@ -53,22 +124,7 @@ def write_png_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
-    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
-    png = str(Path(svg).with_suffix(".png")) if png is None else str(png)
-
-    # inkscape versions >= 1.0
-    options = [f'"{svg}"', "--export-type=png", f'--export-filename="{png}"']
-    return_code = subprocess.call(f'"{inkscape}" ' + " ".join(options))
-    if return_code == 0:
-        return png
-
-    # inkscape versions < 1.0
-    return_code = subprocess.call(f'"{inkscape}" -f "{svg}" -e "{png}"')
-    if return_code == 0:
-        return png
-
-    msg = f"failed to write {png} with inkscape {inkscape}"
-    raise ValueError(msg)
+    return _convert_to(inkscape, svg, png or "png")
 
 
 def write_png(
@@ -90,11 +146,7 @@ def write_png(
     ``write_png_from_svg`` with the tempfile. This isn't faster (it might be slightly
     slower), but it keeps the filesystem clean when you only want the png.
     """
-    with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
-        svg = main.write_svg(svg_file, root, stylesheet)
-    _ = write_png_from_svg(inkscape, svg, png)
-    os.unlink(svg)
-    return str(png)
+    return _write_as(inkscape, png, root, stylesheet)
 
 
 def write_pdf_from_svg(
@@ -115,22 +167,7 @@ def write_pdf_from_svg(
     If no output png path is given, the output path will be inferred from the ``svg``
     filename.
     """
-    inkscape = Path(inkscape).with_suffix("")  # remove .exe if present
-    pdf = str(Path(svg).with_suffix(".pdf")) if pdf is None else str(pdf)
-
-    # inkscape versions >= 1.0
-    options = [f'"{svg}"', "--export-type=pdf", f'--export-filename="{pdf}"']
-    return_code = subprocess.call(f'"{inkscape}" ' + " ".join(options))
-    if return_code == 0:
-        return pdf
-
-    # inkscape versions < 1.0
-    return_code = subprocess.call(f'"{inkscape}" -f "{svg}" -e "{pdf}"')
-    if return_code == 0:
-        return pdf
-
-    msg = f"failed to write {pdf} from {svg}"
-    raise ValueError(msg)
+    return _convert_to(inkscape, svg, pdf or "pdf")
 
 
 def write_pdf(
@@ -152,11 +189,50 @@ def write_pdf(
     ``write_pdf_from_svg`` with the tempfile. This isn't faster (it might be slightly
     slower), but it keeps the filesystem clean when you only want the pdf.
     """
-    with NamedTemporaryFile(mode="wb", delete=False) as svg_file:
-        svg = main.write_svg(svg_file, root, stylesheet)
-    _ = write_pdf_from_svg(inkscape, svg, pdf)
-    os.unlink(svg)
-    return str(pdf)
+    return _write_as(inkscape, pdf, root, stylesheet)
+
+
+def write_eps_from_svg(
+    inkscape: str | os.PathLike[str],
+    svg: str | os.PathLike[str],
+    eps: str | os.PathLike[str] | None = None,
+) -> str:
+    """Convert an svg file to a eps.
+
+    :param inkscape: path to inkscape executable
+    :param svg: path to svg file
+    :param eps: optional path to png output file
+    :return: eps filename
+    :effects: creates a new pfd from svg filename
+    :raises ValueError: if unable to write eps. This could result from an error with
+        Inkscape.
+
+    If no output png path is given, the output path will be inferred from the ``svg``
+    filename.
+    """
+    return _convert_to(inkscape, svg, eps or "eps")
+
+
+def write_eps(
+    inkscape: str | os.PathLike[str],
+    eps: str | os.PathLike[str],
+    root: EtreeElement,
+    stylesheet: str | os.PathLike[str] | None = None,
+) -> str:
+    """Create a eps file without writing an intermediate svg file.
+
+    :param inkscape: path to inkscape executable
+    :param eps: path to output eps file
+    :param root: root node of your svg geometry
+    :param stylesheet: optional path to css stylesheet
+    :return: eps filename (the same you input as ``eps``)
+    :effects: creates a new eps file
+
+    This just creates a tempfile, writes the svg to the tempfile, then calls
+    ``write_eps_from_svg`` with the tempfile. This isn't faster (it might be slightly
+    slower), but it keeps the filesystem clean when you only want the eps.
+    """
+    return _write_as(inkscape, eps, root, stylesheet)
 
 
 def export_text_to_path(
