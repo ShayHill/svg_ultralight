@@ -80,7 +80,9 @@ if TYPE_CHECKING:
 _QUOTES = '"\u201c\u201d\u2018\u2019\u201e\u201a\u00ab\u00bb'
 _DASHES = "\u2014\u2013"
 _SLASHES = "\\/"
-_PROBLEMATIC = "&<>"
+# The last two problematic characters will render fine in an SVG, but they will not
+# appear when Inkscape rasterized that SVG to a PNG.
+_PROBLEMATIC = "&<>#%"
 _TEXT_TRANS = str.maketrans(
     {
         **dict.fromkeys(_QUOTES, "'"),
