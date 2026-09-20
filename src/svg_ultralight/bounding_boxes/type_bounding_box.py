@@ -11,7 +11,7 @@ import math
 
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.strings import svg_matrix
-from svg_ultralight.transformations import mat_apply, mat_dot, new_transformation_matrix
+from svg_ultralight.transformations import mat_apply, mat_dot, new_transform_matrix
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
 
 _Matrix = tuple[float, float, float, float, float, float]
@@ -105,7 +105,7 @@ class HasBoundingBox(SupportsBounds):
         to pass "by hand". The transformation matrix is the sensible argument to pass
         when applying a transformation from another bounding box instance.
         """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
         self.bbox.transformation = mat_dot(tmat, self.bbox.transformation)
 
     @property

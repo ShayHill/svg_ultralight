@@ -93,7 +93,7 @@ def get_transform_matrix(elem: EtreeElement) -> _Matrix:
     return transform_to_matrix(transform)
 
 
-def new_transformation_matrix(
+def new_transform_matrix(
     transformation: _Matrix | None = None,
     *,
     scale: tuple[float, float] | float | None = None,

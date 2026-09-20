@@ -15,9 +15,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
+
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
-from svg_ultralight.constructors.new_element import transform_element
-from svg_ultralight.transformations import new_transformation_matrix
+from svg_ultralight.strings.svg_strings import set_transform_matrix
+from svg_ultralight.transformations import (
+    get_transform_matrix,
+    mat_dot,
+    new_transform_matrix,
+)
 
 if TYPE_CHECKING:
     from lxml.etree import (
@@ -35,6 +41,11 @@ class BoundElement(HasBoundingBox):
     Updates the element when x, y, x2, y2, width, or height are set.
 
     Can access these BoundingBox attributes (plus scale) as attributes of this object.
+
+    Update the element transform after each call to transform(), but additionally
+    keep a cumulative transform in self.tmat. This is because transformation matrices
+    in elements are stored as low-precision strings, and repeated transformations can
+    accumulate rounding errors.
     """
 
     def __init__(self, element: EtreeElement, bounding_box: BoundingBox) -> None:
@@ -43,6 +54,7 @@ class BoundElement(HasBoundingBox):
         :param element: the element to be bound
         :param bounding_box: the bounding box around the element
         """
+        self.tmat = get_transform_matrix(element)
         self.elem = element
         self.bbox = bounding_box
 
@@ -61,6 +73,7 @@ class BoundElement(HasBoundingBox):
         :param dx: the x translation
         :param dy: the y translation
         """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        self.tmat = mat_dot(tmat, self.tmat)
         self.bbox.transform(tmat)
-        _ = transform_element(self.elem, tmat)
+        set_transform_matrix(self.elem, self.tmat)

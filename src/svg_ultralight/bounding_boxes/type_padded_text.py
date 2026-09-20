@@ -50,7 +50,7 @@ from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union, transform_element
 from svg_ultralight.font_tools.font_metrics import FontMetrics
-from svg_ultralight.transformations import new_transformation_matrix
+from svg_ultralight.transformations import new_transform_matrix
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -164,7 +164,7 @@ class PaddedText(BoundElement):
         :param dx: the x translation
         :param dy: the y translation
         """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
         self.tbox.transform(tmat)
         _ = transform_element(self.elem, tmat)
         if self._metrics:
@@ -616,7 +616,7 @@ class PaddedText(BoundElement):
         created. (They will all have x=0 and baseline=0.) Do not lose x alignment
         when the sidebearings are preserved.
         """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
         x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
         self.transform(tmat)
         x = self.x

@@ -13,7 +13,7 @@ from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivate
 from svg_ultralight.bounding_boxes.bound_helpers import new_bbox_union, new_bound_union
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
 from svg_ultralight.constructors.new_element import transform_element
-from svg_ultralight.transformations import new_transformation_matrix
+from svg_ultralight.transformations import new_transform_matrix
 
 if TYPE_CHECKING:
     from svg_ultralight.attrib_hints import ElemAttrib
@@ -96,7 +96,7 @@ class BoundList(HasBoundingBox):
         keep track of the scale property and a temporary bbox to isolate each
         transformation.
         """
-        tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
         for blem in self.blems:
             if isinstance(blem, EtreeElement):
                 _ = transform_element(blem, tmat)
