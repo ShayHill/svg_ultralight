@@ -138,8 +138,10 @@ class PaddedList(PaddedText):
             corresponding edge or center of the bounding box of all the padded
             text elements.
         """
+        if len(self.plems) < 2:
+            return
         if value is None:
-            value = getattr(self._mock_union, attr)
+            value = getattr(self.plems[0], attr)
         for plem in self.plems:
             setattr(plem, attr, value)
         self.__mock_union = None
