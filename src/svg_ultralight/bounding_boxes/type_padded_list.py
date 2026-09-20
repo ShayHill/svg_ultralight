@@ -21,18 +21,37 @@ from __future__ import annotations
 import itertools as it
 from typing import TYPE_CHECKING, overload
 
+from lxml import etree
+
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
     new_empty_padded_union,
     new_padded_union,
 )
+from svg_ultralight.transformations import mat_dot, mat_invert, new_transform_matrix
 
 if TYPE_CHECKING:
+    from lxml.etree import (
+        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
+    )
+
     from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
     from svg_ultralight.font_tools.font_metrics import FontMetrics
 
 _Matrix = tuple[float, float, float, float, float, float]
+
+
+def _copy_elem(elem: EtreeElement) -> EtreeElement:
+    # Create a new element with the same tag and attributes
+    new_element = etree.Element(elem.tag, elem.attrib)
+    # Copy text and tail
+    new_element.text = elem.text
+    new_element.tail = elem.tail
+    # Recursively copy children
+    for child in elem:
+        new_element.append(_copy_elem(child))
+    return new_element
 
 
 class PaddedList(PaddedText):
@@ -41,6 +60,7 @@ class PaddedList(PaddedText):
     def __init__(self, *plems: PaddedText) -> None:
         """Initialize with a list of padded text elements."""
         self.plems = list(plems)
+        self.tmat = (1, 0, 0, 1, 0, 0)
         self.__mock_union: PaddedText | None = None
 
     @overload
@@ -72,7 +92,13 @@ class PaddedList(PaddedText):
 
     def union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a single bound element containing all the padded text elements."""
-        return new_padded_union(*self.plems, **attribs)
+        copies = [x.copy() for x in self.plems]
+        imat = mat_invert(self.tmat)
+        for plem in copies:
+            plem.transform(imat)
+        union = new_padded_union(*self.plems, **attribs)
+        union.transform(self.tmat)
+        return union
 
     @property
     def metrics(self) -> FontMetrics:
@@ -113,8 +139,10 @@ class PaddedList(PaddedText):
         dy: float | None = None,
     ) -> None:
         """Apply a transformation to all the padded text elements."""
+        tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        self.tmat = mat_dot(tmat, self.tmat)
         for p in self.plems:
-            p.transform(transformation, scale=scale, dx=dx, dy=dy)
+            p.transform(tmat)
         self.__mock_union = None
 
     def transform_preserve_sidebearings(

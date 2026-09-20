@@ -71,6 +71,16 @@ if TYPE_CHECKING:
 
 _Matrix = tuple[float, float, float, float, float, float]
 
+def _copy_elem(elem: EtreeElement) -> EtreeElement:
+    # Create a new element with the same tag and attributes
+    new_element = etree.Element(elem.tag, elem.attrib)
+    # Copy text and tail
+    new_element.text = elem.text
+    new_element.tail = elem.tail
+    # Recursively copy children
+    for child in elem:
+        new_element.append(_copy_elem(child))
+    return new_element
 
 class PaddedText(BoundElement):
     """A line of text with a bounding box and padding."""
@@ -110,7 +120,24 @@ class PaddedText(BoundElement):
         self._text = text
         self._metrics = metrics
         self._font = font
+        # initialize tag for hyphenation algorithms.
         self.tag = ""
+
+
+    def copy(self) -> PaddedText:
+        """Create a copy of this PaddedText instance."""
+        return PaddedText(
+            _copy_elem(self.elem),
+            self.unpadded_bbox.join(),
+            self._tpad,
+            self._rpad,
+            self._bpad,
+            self._lpad,
+            self._text,
+            self._metrics,
+            self._font,
+        )
+
 
     @property
     def metrics(self) -> FontMetrics:
