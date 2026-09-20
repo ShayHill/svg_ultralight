@@ -156,7 +156,6 @@ class PaddedText(BoundElement):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-        reverse: bool = False,
     ) -> None:
         """Transform the element and bounding box.
 
@@ -164,12 +163,10 @@ class PaddedText(BoundElement):
         :param scale: a scaling factor
         :param dx: the x translation
         :param dy: the y translation
-        :param reverse: Transform the element as if it were in a <g> element
-            transformed by tmat.
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
-        self.tbox.transform(tmat, reverse=reverse)
-        _ = transform_element(self.elem, tmat, reverse=reverse)
+        self.tbox.transform(tmat)
+        _ = transform_element(self.elem, tmat)
         if self._metrics:
             y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
             self._metrics.scale(y_norm)
@@ -607,7 +604,6 @@ class PaddedText(BoundElement):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-        reverse: bool = False,
     ) -> None:
         """Transform the element and bounding box preserving sidebearings.
 
@@ -615,8 +611,6 @@ class PaddedText(BoundElement):
         :param scale: a scaling factor
         :param dx: the x translation
         :param dy: the y translation
-        :param reverse: Transform the element as if it were in a <g> element
-            transformed by tmat.
 
         Preserve x for the common use case when multiple PaddedText instances are
         created. (They will all have x=0 and baseline=0.) Do not lose x alignment
@@ -624,7 +618,7 @@ class PaddedText(BoundElement):
         """
         tmat = new_transformation_matrix(transformation, scale=scale, dx=dx, dy=dy)
         x_norm = pow(tmat[0] ** 2 + tmat[1] ** 2, 1 / 2)
-        self.transform(tmat, reverse=reverse)
+        self.transform(tmat)
         x = self.x
         self._lpad /= x_norm
         self._rpad /= x_norm

@@ -111,12 +111,10 @@ class PaddedList(PaddedText):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-        reverse: bool = False,
     ) -> None:
         """Apply a transformation to all the padded text elements."""
-        self.ptmat = (transformation, scale, dx, dy, reverse)
         for p in self.plems:
-            p.transform(transformation, scale=scale, dx=dx, dy=dy, reverse=reverse)
+            p.transform(transformation, scale=scale, dx=dx, dy=dy)
         self.__mock_union = None
 
     def transform_preserve_sidebearings(
@@ -126,13 +124,10 @@ class PaddedList(PaddedText):
         scale: tuple[float, float] | float | None = None,
         dx: float | None = None,
         dy: float | None = None,
-        reverse: bool = False,
     ) -> None:
         """Apply a transformation to all the padded text elements."""
         for p in self.plems:
-            p.transform_preserve_sidebearings(
-                transformation, scale=scale, dx=dx, dy=dy, reverse=reverse
-            )
+            p.transform_preserve_sidebearings(transformation, scale=scale, dx=dx, dy=dy)
         self.__mock_union = None
 
     def align(self, attr: str, value: float | None = None) -> None:
