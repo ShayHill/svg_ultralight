@@ -103,16 +103,12 @@ from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 from paragraphs import par
-from svg_path_data import format_svgd_shortest, get_cpts_from_svgd
+from svg_path_data import get_cpts_from_svgd, get_svgd_from_cpts
 from typing_extensions import Self
 
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.bounding_boxes.type_padded_text import PaddedText
-from svg_ultralight.constructors.new_element import (
-    new_element,
-    new_sub_element,
-    transform_element,
-)
+from svg_ultralight.constructors.new_element import new_element, new_sub_element
 from svg_ultralight.font_tools.font_metrics import FontMetrics
 from svg_ultralight.strings import svg_matrix
 
@@ -505,7 +501,9 @@ class FTFontInfo:
         glyph_name = self.get_glyph_name(char)
         path_pen = PathPen(self._glyph_set)
         _ = self._glyph_set[glyph_name].draw(path_pen)
-        return format_svgd_shortest(path_pen.svgd)
+        cpts = get_cpts_from_svgd(path_pen.svgd)
+        cpts = [[(x, -y) for x, y in curve] for curve in cpts]
+        return get_svgd_from_cpts(cpts)
 
     @functools.lru_cache
     def get_char_bounds(self, char: str) -> tuple[int, int, int, int]:
@@ -653,7 +651,6 @@ class FTTextInfo:
         """
         data_text = self.text
         group = new_element("g", **attributes)
-        _ = transform_element(group, (1, 0, 0, -1, 0, 0))
 
         def add_char(svgd: str, data_text: str, dx: float) -> None:
             """Add a character path to the group."""
