@@ -19,9 +19,6 @@ from svg_ultralight.transformations import transform_to_matrix
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
 
 _Matrix: TypeAlias = tuple[float, float, float, float, float, float]
 _T = TypeVar("_T")
@@ -165,14 +162,6 @@ def svg_matrix(floats: Iterable[float]) -> str:
         msg = "svg_matrix() needs exactly 6 floats."
         raise ValueError(msg) from e
     return svg_transform("matrix", (a, b, c, d, e, f))
-
-
-def set_transform_matrix(elem: EtreeElement, matrix: _Matrix) -> None:
-    """Set the transformation matrix on an svg element, removing existing transform.
-
-    :param element: svg element
-    """
-    elem.set("transform", svg_matrix(matrix))
 
 
 def _get_nos(transform: str) -> list[float]:

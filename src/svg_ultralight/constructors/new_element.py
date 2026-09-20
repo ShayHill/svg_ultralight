@@ -125,6 +125,14 @@ def update_element(elem: EtreeElement, **attributes: ElemAttrib) -> EtreeElement
     return elem
 
 
+def set_transform_matrix(elem: EtreeElement, matrix: _Matrix) -> None:
+    """Set the transformation matrix on an svg element, removing existing transform.
+
+    :param element: svg element
+    """
+    _ = update_element(elem, transform=shortest_transform_string(matrix))
+
+
 def deepcopy_element(elem: EtreeElement, **attributes: ElemAttrib) -> EtreeElement:
     """Create a deepcopy of an element. Optionally pass additional params.
 

@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 from svg_ultralight.bounding_boxes.type_bounding_box import HasBoundingBox
-from svg_ultralight.strings.svg_strings import set_transform_matrix
+from svg_ultralight.constructors.new_element import set_transform_matrix
 from svg_ultralight.transformations import (
     get_transform_matrix,
     mat_dot,
