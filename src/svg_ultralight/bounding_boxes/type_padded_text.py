@@ -46,11 +46,16 @@ from typing import TYPE_CHECKING
 from lxml import etree
 
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
-from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
+from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
 from svg_ultralight.constructors import new_element, update_element
 from svg_ultralight.constructors.new_element import new_element_union, transform_element
 from svg_ultralight.font_tools.font_metrics import FontMetrics
-from svg_ultralight.transformations import new_transform_matrix
+from svg_ultralight.strings.svg_strings import set_transform_matrix
+from svg_ultralight.transformations import (
+    get_transform_matrix,
+    mat_dot,
+    new_transform_matrix,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -92,6 +97,7 @@ class PaddedText(BoundElement):
         :param font: Optional path to the font file from which this instance was
             created.
         """
+        self.tmat = get_transform_matrix(elem)
         self.elem = elem
         self.unpadded_bbox = bbox
         self._tpad = tpad
@@ -165,8 +171,9 @@ class PaddedText(BoundElement):
         :param dy: the y translation
         """
         tmat = new_transform_matrix(transformation, scale=scale, dx=dx, dy=dy)
+        self.tmat = mat_dot(tmat, self.tmat)
         self.tbox.transform(tmat)
-        _ = transform_element(self.elem, tmat)
+        set_transform_matrix(self.elem, self.tmat)
         if self._metrics:
             y_norm = pow(tmat[2] ** 2 + tmat[3] ** 2, 1 / 2)
             self._metrics.scale(y_norm)
