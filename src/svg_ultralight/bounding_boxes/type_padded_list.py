@@ -96,7 +96,7 @@ class PaddedList(PaddedText):
         imat = mat_invert(self.tmat)
         for plem in copies:
             plem.transform(imat)
-        union = new_padded_union(*copies, **attribs)
+        union = new_padded_union(*self.plems, **attribs)
         union.transform(self.tmat)
         return union
 
