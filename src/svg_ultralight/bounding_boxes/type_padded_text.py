@@ -489,7 +489,7 @@ class PaddedText(BoundElement):
 
         :return: The line gap plus the height of this line of text.
         """
-        return self.height + self.line_gap
+        return self.font_size + self.line_gap
 
     @property
     def text(self) -> str:
@@ -708,7 +708,10 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     """Use the new_padded_union mechanic to create an empty PaddedText instance.
 
     This is useful for mocking the bounding boxes and attributes of a PaddedText
-    union without moving the elements into that union.
+    union without moving the elements into that union. Inherits the font size of the
+    first PaddedText instance in the union to cover the most commont case:
+    padded_union is a paragraph which might be stacked below another paragraph (using
+    the leading value of the first line).
     """
     if not plems:
         # fmt: off
@@ -723,7 +726,6 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     rpad = bbox.x2 - tbox.x2
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
-    min_font_size = min(t.font_size for t in plems)
     max_y_extent = max(t.y2 for t in plems)
     min_y_extent = min(t.y for t in plems)
     min_caps_extent = min(t.capline for t in plems)
@@ -731,7 +733,7 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     min_line_gap = min(t.metrics.line_gap for t in plems)
     baseline = max(t.baseline for t in plems)
     metrics = FontMetrics(
-        min_font_size,
+        plems[0].font_size,
         baseline - min_y_extent,
         baseline - max_y_extent,
         baseline - min_caps_extent,
