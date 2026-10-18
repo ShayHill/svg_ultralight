@@ -192,8 +192,8 @@ class TestSvgTransform:
         assert svg_transform("scale", [1, 1]) == ""
 
     def test_x_scale(self) -> None:
-        """If x scale, return only x value."""
-        assert svg_transform("scale", [10, 1]) == "scale(10)"
+        """If x scale, retain y value."""
+        assert svg_transform("scale", [10, 1]) == "scale(10 1)"
 
     def test_emtpy_rotate(self) -> None:
         """If no rotate, return empty string."""

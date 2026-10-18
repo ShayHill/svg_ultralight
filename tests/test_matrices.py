@@ -138,3 +138,8 @@ class TestShortestTransformString:
         expect = "translate(10)"
         result = shortest_transform_string((1, 0, 0, 1, 10, 0))
         assert result == expect
+
+    def test_x_flip(self) -> None:
+        expect = "scale(-1 1)"
+        result = shortest_transform_string((-1, 0, 0, 1, 0, 0))
+        assert result == expect

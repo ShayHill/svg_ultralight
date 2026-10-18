@@ -109,7 +109,8 @@ def svg_transform(command: str, floats: Iterable[float] | Iterable[str]) -> str:
     elif command == "scale":
         if nos[1:] and nos[1:][0] == nos[0]:
             nos = nos[:1]
-        _rstrip_list(nos, "1")
+        if all (x == "1" for x in nos):
+            nos = []
 
     if not nos:
         # command may have been valid, but it's meaningless.
@@ -129,6 +130,7 @@ def svg_transform(command: str, floats: Iterable[float] | Iterable[str]) -> str:
     if command == "matrix" and nnos != 6:
         msg = f"matrix() needs 6 arguments, not {nnos}."
         raise ValueError(msg)
+
     return f"{command}({' '.join(nos)})"
 
 
