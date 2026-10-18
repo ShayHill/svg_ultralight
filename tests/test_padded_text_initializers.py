@@ -55,6 +55,13 @@ class TestPadText:
         with pytest.raises(FileNotFoundError, match=r"exist.ttf'"):
             _ = pad_text("does/not/exist.ttf", "test")
 
+    def test_futura_with_numbers(self) -> None:
+        font = Path("C:/Windows/Fonts/FuturaLT-Bold.ttf")
+        if not font.exists():
+            msg = "Test font file does not exist on system."
+            pytest.skip(msg)
+        _ = pad_text(font, "40")
+
     def test_empty_string(self) -> None:
         """Test pad_text with an empty string."""
         font = Path("C:/Windows/Fonts/bahnschrift.ttf")

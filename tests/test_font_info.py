@@ -8,7 +8,20 @@ from pathlib import Path
 
 import pytest
 
-from svg_ultralight.font_tools.font_info import FTFontInfo
+from svg_ultralight.font_tools.font_info import FTFontInfo, PathPen
+
+
+class TestPathPen:
+    def test_q_curve_with_only_off_curve_points_starts_at_implied_point(self) -> None:
+        pen = PathPen(None)
+
+        pen.qCurveTo((0, 0), (0, 100), (100, 100), (100, 0), None)
+        pen.closePath()
+
+        assert pen.svgd == (
+            "M 50.0 0.0 Q 0 0 0.0 50.0 Q 0 100 50.0 100.0 "
+            "Q 100 100 100.0 50.0 Q 100 0 50.0 0.0 Z"
+        )
 
 
 class TestFTFontInfoSuperscript:
