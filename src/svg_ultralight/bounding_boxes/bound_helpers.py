@@ -24,7 +24,7 @@ from paragraphs import par
 from svg_ultralight.bounding_boxes.supports_bounds import SupportsBounds
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox, HasBoundingBox
-from svg_ultralight.constructors import new_element, update_element
+from svg_ultralight.constructors import new_element
 from svg_ultralight.constructors.new_element import new_element_union
 from svg_ultralight.layout import PadArg, expand_pad_arg
 from svg_ultralight.unit_conversion import MeasurementArg, to_user_units
@@ -238,7 +238,7 @@ def _combine_use_and_def(
     if not use_attrib:
         return new_element("path", **def_attrib)
     new_elem = new_element("g", **use_attrib)
-    new_elem.append(update_element(def_elem, **def_attrib))
+    new_elem.append(new_element("path", **def_attrib))
     return new_elem
 
 

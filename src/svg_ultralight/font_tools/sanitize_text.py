@@ -327,7 +327,7 @@ def _new_id_getter(seen: set[str] | None = None) -> Callable[[str], str]:
         This is optional, for if you'd prefer some unique id sequences start with
         "{base_id}_0" instead of "{base_id}".
     """
-    seen = seen or set()
+    seen = set() if seen is None else seen
     base_id2id_gen: dict[str, Iterator[str]] = {}
 
     def get_next_unique_id(base_id: str) -> str:
@@ -348,7 +348,8 @@ def _map_paths_to_ids(root: EtreeElement) -> dict[str, str]:
     """Map any data strings used multiple times to unique IDs."""
     defs = next((x for x in root if x.tag == "defs"), None)
     svgd2id: dict[str, str] = {}
-    get_next_unique_id = _new_id_getter()
+    existing_ids = {id_ for elem in root.iter() if (id_ := elem.get("id"))}
+    get_next_unique_id = _new_id_getter(existing_ids)
 
     text = set(root.xpath("//*[@data-text]"))
     has_deatomized_text = any(len(x.attrib["data-text"]) > 1 for x in text)

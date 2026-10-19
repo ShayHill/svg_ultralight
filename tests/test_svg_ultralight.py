@@ -250,6 +250,26 @@ class TestReusePaths:
         assert len(uses) == 2
         assert all(u.attrib.get("href") == f"#{ref_id}" for u in uses)
 
+    def test_reused_path_ids_do_not_collide_with_existing_ids(self) -> None:
+        """Allocate a new definition ID when its preferred ID already exists."""
+        root = new_svg_root(0, 0, 100, 100)
+        defs = new_element("defs")
+        defs.append(new_element("path", id_="E", d="M0 0 L1 1"))
+        root.append(defs)
+        group = new_element("g")
+        group.append(new_element("path", data_text="E", d="M0 0 L5 5"))
+        group.append(new_element("path", data_text="E", d="M0 0 L5 5"))
+        root.append(group)
+
+        sanitize_text(root, do_reuse_paths=True)
+
+        ids = root.xpath(".//*[@id]/@id")
+        uses = [child for child in group if _local_tag(child) == "use"]
+        assert len(ids) == len(set(ids))
+        assert len(uses) == 2
+        assert uses[0].attrib["href"] != "#E"
+        assert uses[0].attrib["href"] == uses[1].attrib["href"]
+
     def test_empty_path_skipped(self) -> None:
         """Path with empty d is skipped and defs remains empty or removed."""
         root = new_svg_root(0, 0, 100, 100)
