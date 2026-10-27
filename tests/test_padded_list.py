@@ -8,6 +8,7 @@ import copy
 import itertools as it
 import math
 from pathlib import Path
+from string import ascii_letters
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
 from svg_ultralight.bounding_boxes.type_padded_list import PaddedList
@@ -56,14 +57,24 @@ class TestPaddedList:
     def test_stack_defaults(self) -> None:
         plist = copy.deepcopy(test_instance)
         plist.stack()
+        offset = plist[0].leading
         for above, below in it.pairwise(plist.plems):
-            offset = below.leading
             assert below.baseline == above.baseline + offset
+
+    def test_stack_paragaraphs(self) -> None:
+        """Baseline math takes into account paragraph spacing."""
+        short_par = PaddedList(*pad_text(font, list("abc")))
+        long_par = PaddedList(*pad_text(font, list(ascii_letters)))
+        short_par.stack()
+        long_par.stack()
+        pars = PaddedList(short_par.union(), long_par.union())
+        pars.stack()
+        assert pars[1].y > pars[0].y2
 
     def test_stack_gap(self) -> None:
         plist = copy.deepcopy(test_instance)
         gap = 5
-        plist.stack(gap, "capline")
+        plist.stack(gap=gap)
         for above, below in it.pairwise(plist.plems):
             below.capline = above.baseline + gap
 

@@ -391,7 +391,7 @@ class PaddedText(BoundElement):
 
         :return: The capline y value of this line of text.
         """
-        return self.baseline - self.metrics.cap_height
+        return self.y + self.headroom
 
     @capline.setter
     def capline(self, value: float) -> None:
@@ -408,7 +408,7 @@ class PaddedText(BoundElement):
 
         :return: The xline y value of this line of text.
         """
-        return self.baseline - self.metrics.x_height
+        return self.capline + (self.metrics.cap_height - self.metrics.x_height)
 
     @xline.setter
     def xline(self, value: float) -> None:
@@ -726,19 +726,18 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
     rpad = bbox.x2 - tbox.x2
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
-    max_y_extent = max(t.y2 for t in plems)
-    min_y_extent = min(t.y for t in plems)
-    min_caps_extent = min(t.capline for t in plems)
-    min_x_extent = min(t.xline for t in plems)
-    min_line_gap = min(t.metrics.line_gap for t in plems)
-    baseline = max(t.baseline for t in plems)
     metrics = FontMetrics(
         plems[0].font_size,
-        baseline - min_y_extent,
-        baseline - max_y_extent,
-        baseline - min_caps_extent,
-        baseline - min_x_extent,
-        min_line_gap,
+        plems[-1].ascent,
+        plems[0].descent,
+        plems[-1].cap_height,
+        plems[-1].x_height,
+        plems[0].line_gap,
+        # baseline - min_y_extent,
+        # baseline - max_y_extent,
+        # baseline - min_caps_extent,
+        # baseline - min_x_extent,
+        # min_line_gap,
     )
     combined_text = "".join(t.text for t in plems)
     union_font = _get_majority_font(plems)

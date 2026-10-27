@@ -19,7 +19,7 @@ padded_list[::2].transform(dx=10)
 from __future__ import annotations
 
 import itertools as it
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
@@ -54,6 +54,10 @@ class PaddedList(PaddedText):
         if isinstance(idx, int):
             return self.plems[idx]
         return PaddedList(*self.plems[idx])
+
+    def __len__(self) -> int:
+        """Return the number of padded text elements."""
+        return len(self.plems)
 
     def append(self, ptext: PaddedText) -> None:
         """Append a padded text element to the list."""
@@ -148,38 +152,40 @@ class PaddedList(PaddedText):
 
     def stack(
         self,
-        offset: float | None = None,
-        bottom_handle: str = "baseline",
+        leading: float | None = None,
         *,
-        scale: float | None = None,
+        gap: float | Literal["auto"] | None = None,
+        scale: float = 1,
     ) -> None:
         """Stack the padded text elements vertically.
 
-        :param offset: The distance between baselines. Default is the leading
-            attribute with some adjustment for potentially differing font sizes.
-        :param bottom_handle: The handle on the lower text element to align to the
-            offset above the upper text element's baseline. Default is 'baseline'.
-        :param scale: The scale factor to apply to the offset. Default is None, which
-            means to use the offset given in the function call (default p.leading), even
-            if the font size changes between elements. A scale of 1 will attempt to
-            alter the offset in an intuitive way as the font size changes. An offset !=
-            None and != 1 will scale the offset *and* alter it for font size.
-
-        If `bottom_handle` is set to 'capline', then the offset will be the fixed
-        distance between the baseline of one element and the capline of the element
-        below. This will usually be a better choice than a fixed baseline-to- baseline
-        distance when stacking text elements of different font sizes. For the most
-        intuitive result, do not use a scale argument when specifying a `bottom_handle`.
+        :param leading: The distance between baselines. The default is the leading
+            attribute of the first line. This argument is first, because it will be
+            the most intuitive to set for lines of the same font size. E.g., a
+            paragraph of text, which I anticipate will be the most frequent use case.
+            However, `leading` will be ignored if `gap` is given.
+        :param gap: A hard-coded distance between the baseline of the line above and
+            the capline of the line below. This will be a more appropriate argument
+            than `leading` when stacking text elements of different font sizes. Pass
+            "auto" to use the natural font gap (leading - height) of the first line
+            between all lines. This overrides the `leading` argument without
+            requiring any knowledge of the font metrics.
+        :param scale: If gap is given, scale gap. Else scale leading. This is meant
+            to be intuitive for stacking between paragraphs. `stack(scale=2)` would
+            be a double space between paragraphs. `stack(scale=1.35)` would give the
+            typical 1.35x leading used in Microsoft Word.
         """
-        offset = offset if offset is not None else self.plems[0].leading
-        if scale is None:
-            for above, below in it.pairwise(self.plems):
-                dy = getattr(below, bottom_handle) - (above.baseline + offset)
-                below.transform(dy=-dy)
+        if len(self) < 2:
             return
-        offset *= scale
+        if leading is None or gap is not None:
+            leading = self[0].leading
+        if gap == "auto":
+            gap = leading - self[0].cap_height
+            gap *= scale
+        elif gap is None:
+            leading *= scale
+            gap = leading - self[0].cap_height
+        else:
+            gap *= scale
         for above, below in it.pairwise(self.plems):
-            offset_ = offset * above.leading / self.plems[0].leading
-            offset_ = offset - above.ascent + below.ascent
-            dy = getattr(below, bottom_handle) - (above.baseline + offset_)
-            below.transform(dy=-dy)
+            below.capline = above.baseline + gap
