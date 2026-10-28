@@ -76,7 +76,7 @@ class PaddedList(PaddedText):
 
     def union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a single bound element containing all the padded text elements."""
-        return new_padded_union(*self.plems, **attribs)
+        return new_padded_union(*self.plems, lead=None, **attribs)
 
     @property
     def metrics(self) -> FontMetrics:

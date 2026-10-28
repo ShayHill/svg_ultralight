@@ -109,7 +109,7 @@ def svg_transform(command: str, floats: Iterable[float] | Iterable[str]) -> str:
     elif command == "scale":
         if nos[1:] and nos[1:][0] == nos[0]:
             nos = nos[:1]
-        if all (x == "1" for x in nos):
+        if all(x == "1" for x in nos):
             nos = []
 
     if not nos:

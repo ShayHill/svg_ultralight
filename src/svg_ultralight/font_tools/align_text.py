@@ -370,12 +370,12 @@ def join_tspans(
 
     if not non_empty:
         if tspans:
-            return new_padded_union(*tspans[:1], **attributes)
+            return new_padded_union(*tspans[:1], lead=None, **attributes)
         msg = "Cannot join empty tspans."
         raise ValueError(msg)
 
     align_tspans(font, *non_empty)
-    return new_padded_union(*non_empty, **attributes)
+    return new_padded_union(*non_empty, lead=None, **attributes)
 
 
 def justify_text(

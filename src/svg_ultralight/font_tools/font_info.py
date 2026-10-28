@@ -257,11 +257,11 @@ class PathPen(BasePen):
 
     def qCurveTo(self, *pts: tuple[float, float] | None) -> None:
         """Add a series of quadratic bezier segments to the path."""
-        explicit_pts = pts[:-1]
-        if any(x is None for x in explicit_pts):
+        maybe_explicit_pts = pts[:-1]
+        if any(x is None for x in maybe_explicit_pts):
             msg = "AFAIK, only the last point can be None"
             raise NotImplementedError(msg)
-        explicit_pts = [x for x in explicit_pts if x is not None]
+        explicit_pts = [x for x in maybe_explicit_pts if x is not None]
         possibly_implied = pts[-1]
         if possibly_implied is None:
             xs, ys = zip(explicit_pts[-1], explicit_pts[0], strict=True)
@@ -270,7 +270,7 @@ class PathPen(BasePen):
             pts = (*explicit_pts, midpnt)
         else:
             pts = (*explicit_pts, possibly_implied)
-        for q_pts in _split_into_quadratic(*explicit_pts, pts[-1]):
+        for q_pts in _split_into_quadratic(*pts):
             self._cmds.extend(("Q", *map(str, it.chain(*q_pts))))
 
     def closePath(self) -> None:

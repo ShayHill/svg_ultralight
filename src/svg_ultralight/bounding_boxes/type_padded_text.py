@@ -40,11 +40,12 @@ PaddedText instances.
 from __future__ import annotations
 
 import math
-from contextlib import suppress
-from typing import TYPE_CHECKING
+from operator import itemgetter
+from typing import TYPE_CHECKING, TypeVar
 
 from lxml import etree
 
+from svg_ultralight.bounding_boxes.bound_helpers import cut_bbox
 from svg_ultralight.bounding_boxes.type_bound_element import BoundElement
 from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 from svg_ultralight.constructors.new_element import (
@@ -192,7 +193,9 @@ class PaddedText(BoundElement):
         when, for instance, stacking text elements vertically with non-text elements,
         where few or no descenders will make the text look misaligned.
         """
-        return BoundingBox(self.x, self.capline, self.width, self.metrics.cap_height)
+        y = self.y + self.headroom
+        y2 = self.baseline
+        return BoundingBox(self.x, y, self.width, y2 - y)
 
     @property
     def caps_blem(self) -> BoundElement:
@@ -683,28 +686,22 @@ class PaddedText(BoundElement):
         return new_plem
 
 
-def _get_majority_font(plems: tuple[PaddedText, ...]) -> Path | None:
-    """Get the font attribute from members based on majority rule.
-
-    :param plems: The PaddedText instances to check.
-    :return: The font path if a majority exists, or the first tied value, or None.
-
-    Returns the font attribute if:
-    - A majority of members with font != None have the same font attribute
-    - If there is a tie for majority, use the first tied value that appears first
-    """
-    fonts_with_paths: list[Path] = []
-    for p in plems:
-        with suppress(AttributeError):
-            fonts_with_paths.append(p.font)
-
-    if not fonts_with_paths:
-        return None
-
-    return max(set(fonts_with_paths), key=fonts_with_paths.count)
+_T = TypeVar("_T", bound=object)
 
 
-def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
+def _elect(*vals: _T | None) -> _T:
+    seen: dict[_T, int] = {}
+    for v in (x for x in vals if x is not None):
+        seen[v] = seen.get(v, 0) + 1
+    if not seen:
+        msg = "No non-None values provided to _elect."
+        raise ValueError(msg)
+    return max(seen.items(), key=itemgetter(1))[0]
+
+
+def new_empty_padded_union(
+    *plems: PaddedText, lead: PaddedText | None = None
+) -> PaddedText:
     """Use the new_padded_union mechanic to create an empty PaddedText instance.
 
     This is useful for mocking the bounding boxes and attributes of a PaddedText
@@ -720,27 +717,46 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
             0, 0, 0, 0, "", FontMetrics(0, 0, 0, 0, 0, 0), None,
         )
         # fmt: on
+
     bbox = BoundingBox.union(*(t.bbox for t in plems))
     tbox = BoundingBox.union(*(t.tbox for t in plems))
+
+    maj_font = _elect(*(getattr(t, "font", None) for t in plems))
+    has_maj_font = [x for x in plems if x.font == maj_font]
+
+    top = min(plems, key=lambda t: t.baseline)
+    on_top = [t for t in has_maj_font if t.baseline == top.baseline]
+    on_top = on_top or [top]
+
+    bot = max(plems, key=lambda t: t.baseline)
+    on_bot = [t for t in has_maj_font if t.baseline == bot.baseline]
+    on_bot = on_bot or [bot]
+
+    if lead is None:
+        font_size = _elect(*(x.font_size for x in has_maj_font))
+        ascent = _elect(*(x.ascent for x in on_top))
+        descent = _elect(*(x.descent for x in on_bot))
+        cap_height = _elect(*(x.cap_height for x in on_top))
+        x_height = _elect(*(x.x_height for x in on_top))
+        line_gap = _elect(*(x.line_gap for x in has_maj_font))
+        bbox = cut_bbox(bbox, y2=on_bot[0].baseline - descent)
+        bbox = cut_bbox(bbox, y=on_top[0].baseline - ascent)
+    else:
+        font_size = lead.font_size
+        ascent = lead.ascent
+        descent = lead.descent
+        cap_height = lead.cap_height
+        x_height = lead.x_height
+        line_gap = lead.line_gap
+        bbox = cut_bbox(bbox, y=lead.y, y2=lead.y2)
+
     tpad = tbox.y - bbox.y
     rpad = bbox.x2 - tbox.x2
     bpad = bbox.y2 - tbox.y2
     lpad = tbox.x - bbox.x
-    metrics = FontMetrics(
-        plems[0].font_size,
-        plems[-1].ascent,
-        plems[0].descent,
-        plems[-1].cap_height,
-        plems[-1].x_height,
-        plems[0].line_gap,
-        # baseline - min_y_extent,
-        # baseline - max_y_extent,
-        # baseline - min_caps_extent,
-        # baseline - min_x_extent,
-        # min_line_gap,
-    )
+
+    metrics = FontMetrics(font_size, ascent, descent, cap_height, x_height, line_gap)
     combined_text = "".join(t.text for t in plems)
-    union_font = _get_majority_font(plems)
     return PaddedText(
         etree.Element("g"),
         tbox,
@@ -750,14 +766,17 @@ def new_empty_padded_union(*plems: PaddedText) -> PaddedText:
         lpad,
         combined_text,
         metrics,
-        union_font,
+        maj_font,
     )
 
 
-def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText:
+def new_padded_union(
+    *plems: PaddedText, lead: PaddedText | None = None, **attributes: ElemAttrib
+) -> PaddedText:
     """Create a new PaddedText instance that is the union of multiple PaddedText.
 
     :param plems: The PaddedText instances to union.
+    :param lead: An optional PaddedText instance to use for font size and metrics.
     :return: A new PaddedText instance that is the union of the input instances.
 
     `.metrics` should be straghtforward. Ascent is the highest ascent any member,
@@ -766,6 +785,6 @@ def new_padded_union(*plems: PaddedText, **attributes: ElemAttrib) -> PaddedText
     the lowest y value.) The metric values and handles will be appropriate for
     treating a stack (or bundle) of text elements as a single line of text.
     """
-    union = new_empty_padded_union(*plems)
+    union = new_empty_padded_union(*plems, lead=lead)
     union.elem = new_element_union(*(t.elem for t in plems), **attributes)
     return union
