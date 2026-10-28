@@ -26,9 +26,7 @@ from svg_ultralight.transformations import (
 )
 
 if TYPE_CHECKING:
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
     from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
 

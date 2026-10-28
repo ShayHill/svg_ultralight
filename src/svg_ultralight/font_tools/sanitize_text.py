@@ -67,9 +67,7 @@ from svg_ultralight.transformations import get_transform_matrix, mat_apply, mat_
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-    from lxml.etree import (
-        _Element as EtreeElement,  # pyright: ignore[reportPrivateUsage]
-    )
+    from lxml.etree import _Element as EtreeElement  # pyright: ignore[reportPrivateUsage]
 
 
 # ===================================================================================
