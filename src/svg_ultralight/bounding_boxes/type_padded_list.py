@@ -100,12 +100,12 @@ class PaddedList(PaddedText):
         called.
         """
         if self.__mock_union is None:
-            self.__mock_union = new_empty_padded_union(*self.plems, font=self.font)
+            self.__mock_union = new_empty_padded_union(self.font, *self.plems)
         return self.__mock_union
 
     def union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a single bound element containing all the padded text elements."""
-        return new_padded_union(*self.plems, font=self.font, **attribs)
+        return new_padded_union(self.font, *self.plems, **attribs)
 
     @property
     def metrics(self) -> FontMetrics:

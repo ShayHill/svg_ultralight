@@ -723,7 +723,7 @@ def _get_plain_text(plem: PaddedText, lead: PaddedText) -> PaddedText:
 
 
 def new_empty_padded_union(
-    *plems: PaddedText, font: str | os.PathLike[str]
+    font: str | os.PathLike[str], *plems: PaddedText
 ) -> PaddedText:
     """Use the new_padded_union mechanic to create an empty PaddedText instance.
 
@@ -771,7 +771,7 @@ def new_empty_padded_union(
 
 
 def new_padded_union(
-    *plems: PaddedText, font: str | os.PathLike[str], **attributes: ElemAttrib
+    font: str | os.PathLike[str], *plems: PaddedText, **attributes: ElemAttrib
 ) -> PaddedText:
     """Create a new PaddedText instance that is the union of multiple PaddedText.
 
@@ -788,6 +788,6 @@ def new_padded_union(
     Where possible, don't use a padded union for multiple lines of text. Keep these
     as a PaddedList.
     """
-    union = new_empty_padded_union(*plems, font=font)
+    union = new_empty_padded_union(font, *plems)
     union.elem = new_element_union(*(t.elem for t in plems), **attributes)
     return union
