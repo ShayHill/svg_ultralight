@@ -61,6 +61,12 @@ class TestPaddedList:
         for above, below in it.pairwise(plist.plems):
             assert below.baseline == above.baseline + offset
 
+    def test_stack_updates_cached_bbox(self) -> None:
+        plist = copy.deepcopy(test_instance)
+        old_bbox = plist.bbox
+        plist.stack()
+        assert plist.bbox.y2 > old_bbox.y2
+
     def test_stack_paragaraphs(self) -> None:
         """Baseline math takes into account paragraph spacing."""
         short_par = PaddedList(*pad_text(font, list("abc")))

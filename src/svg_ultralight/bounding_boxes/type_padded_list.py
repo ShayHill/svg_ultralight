@@ -189,3 +189,4 @@ class PaddedList(PaddedText):
             gap *= scale
         for above, below in it.pairwise(self.plems):
             below.capline = above.baseline + gap
+        self.__mock_union = None
