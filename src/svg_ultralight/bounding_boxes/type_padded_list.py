@@ -19,7 +19,9 @@ padded_list[::2].transform(dx=10)
 from __future__ import annotations
 
 import itertools as it
-from typing import TYPE_CHECKING, Literal, overload
+from operator import itemgetter
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal, TypeVar, overload
 
 from svg_ultralight.bounding_boxes.type_padded_text import (
     PaddedText,
@@ -28,19 +30,36 @@ from svg_ultralight.bounding_boxes.type_padded_text import (
 )
 
 if TYPE_CHECKING:
+    import os
+
     from svg_ultralight.attrib_hints import ElemAttrib
     from svg_ultralight.bounding_boxes.type_bounding_box import BoundingBox
     from svg_ultralight.font_tools.font_metrics import FontMetrics
 
 _Matrix = tuple[float, float, float, float, float, float]
 
+_T = TypeVar("_T", bound=object)
+
+
+def _elect(*vals: _T | None) -> _T:
+    seen: dict[_T, int] = {}
+    for v in (x for x in vals if x is not None):
+        seen[v] = seen.get(v, 0) + 1
+    if not seen:
+        msg = "No non-None values provided to _elect."
+        raise ValueError(msg)
+    return max(seen.items(), key=itemgetter(1))[0]
+
 
 class PaddedList(PaddedText):
     """A list of padded text elements that transform as one."""
 
-    def __init__(self, *plems: PaddedText) -> None:
+    def __init__(
+        self, *plems: PaddedText, font: str | os.PathLike[str] | None = None
+    ) -> None:
         """Initialize with a list of padded text elements."""
         self.plems = list(plems)
+        self._font = font
         self.__mock_union: PaddedText | None = None
 
     @overload
@@ -53,7 +72,7 @@ class PaddedList(PaddedText):
         """Get one or more padded text elements."""
         if isinstance(idx, int):
             return self.plems[idx]
-        return PaddedList(*self.plems[idx])
+        return PaddedList(*self.plems[idx], font=self._font)
 
     def __len__(self) -> int:
         """Return the number of padded text elements."""
@@ -64,6 +83,16 @@ class PaddedList(PaddedText):
         self.plems.append(ptext)
 
     @property
+    def font(self) -> Path:
+        """Return the font of the padded text elements."""
+        if self._font is not None:
+            return Path(self._font)
+        if not self.plems:
+            msg = "No padded text elements to infer font from."
+            raise ValueError(msg)
+        return _elect(*(p.font for p in self.plems))
+
+    @property
     def _mock_union(self) -> PaddedText:
         """Return a mock union of plems for attribute calculations.
 
@@ -71,12 +100,12 @@ class PaddedList(PaddedText):
         called.
         """
         if self.__mock_union is None:
-            self.__mock_union = new_empty_padded_union(*self.plems)
+            self.__mock_union = new_empty_padded_union(*self.plems, font=self.font)
         return self.__mock_union
 
     def union(self, **attribs: ElemAttrib) -> PaddedText:
         """Return a single bound element containing all the padded text elements."""
-        return new_padded_union(*self.plems, lead=None, **attribs)
+        return new_padded_union(*self.plems, font=self.font, **attribs)
 
     @property
     def metrics(self) -> FontMetrics:
