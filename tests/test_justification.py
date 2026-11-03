@@ -9,7 +9,14 @@ from pathlib import Path
 from paragraphs import par
 
 from svg_ultralight.bounding_boxes.padded_text_initializers import pad_text
-from svg_ultralight.font_tools.align_text import hyphenate_text, justify, justify_text
+from svg_ultralight.font_tools.align_text import (
+    _find_best_line_breaks,
+    hyphenate_text,
+    justify,
+    justify_text,
+    wrap,
+    wrap_text,
+)
 
 PARAGRAPH = par(
     """When the wind was in the east, a smell came across the harbour from the shark
@@ -24,6 +31,44 @@ PLEMS = hyphenate_text(FONT, PARAGRAPH)
 
 
 class TestJustification:
+    def test_include_last_line_cost(self) -> None:
+        """Optionally include the final line in the break cost."""
+        words = hyphenate_text(FONT, "one two three four five six seven eight nine ten")
+
+        assert _find_best_line_breaks(FONT, words, 10000) == (0, 2, 4, 6, 8, 10, 11)
+        assert _find_best_line_breaks(
+            FONT, words, 10000, include_last_line_cost=True
+        ) == (0, 2, 3, 5, 7, 9, 11)
+
+    def test_public_include_last_line_cost(self) -> None:
+        """Public text layout APIs forward the final-line cost option."""
+        text = "one two three four five six seven eight nine ten"
+        justified = [
+            ["one", "two"],
+            ["three"],
+            ["four", "five"],
+            ["six", "sev-"],
+            ["en", "eight"],
+            ["nine", "ten"],
+        ]
+        wrapped = ["one two", "three four", "five six", "seven", "eight", "nine ten"]
+
+        assert justify_text(FONT, text, 10000, include_last_line_cost=True) == justified
+        assert wrap_text(FONT, text, 10000, include_last_line_cost=True) == wrapped
+        assert wrap_text(FONT, [text], 10000, include_last_line_cost=True) == [wrapped]
+        assert [
+            [word.text for word in line]
+            for line in justify(
+                FONT, hyphenate_text(FONT, text), 10000, include_last_line_cost=True
+            )
+        ] == justified
+        assert [
+            [word.text for word in line]
+            for line in wrap(
+                FONT, hyphenate_text(FONT, text), 10000, include_last_line_cost=True
+            )
+        ] == justified
+
     def test_justify_text_with_font_size(self) -> None:
         """Test justify_text with font_size scaling."""
         expect = [

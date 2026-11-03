@@ -245,6 +245,8 @@ def _find_best_line_breaks(
     words: list[PaddedText],
     width: float | Iterable[float],
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> tuple[int, ...]:
     """Find the optimal line-break path for a sequence of words.
 
@@ -256,6 +258,8 @@ def _find_best_line_breaks(
         use 0, 1, 2, 2, 2, ... for the widths of each line.
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word
+    :param include_last_line_cost: if True, include the final line's cost when
+        selecting line breaks
     :return: tuple of indices describing optimal line breaks. Each index indicates where
         a new line should start
     """
@@ -270,7 +274,7 @@ def _find_best_line_breaks(
             cost = _get_line_cost(font, width_, *words[beg:end], hyp_pen=hyp_pen)
             if cost == _INF:
                 break
-            if end == len(words):
+            if end == len(words) and not include_last_line_cost:
                 cost = 0
             cost += heads[beg].cost
             candidate = _LineBreaks((*heads[beg].path, end), cost)
@@ -384,6 +388,8 @@ def justify_text(
     width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[list[str]]:
     """Justify text and return lines as lists of words.
 
@@ -395,6 +401,8 @@ def justify_text(
         None, uses the font's native size.
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word. If None, no additional penalty is applied.
+    :param include_last_line_cost: if True, include the final line's cost when
+        selecting line breaks
     :return: list of lists of strings, where each inner list represents a line
         with words as separate strings
     """
@@ -402,7 +410,9 @@ def justify_text(
     width = [width] if isinstance(width, (int, float)) else list(width)
     width = [x / scale for x in width]
     words = hyphenate_text(font, text)
-    path = _find_best_line_breaks(font, words, width, hyp_pen)
+    path = _find_best_line_breaks(
+        font, words, width, hyp_pen, include_last_line_cost=include_last_line_cost
+    )
     plemss = _iter_joined_hyphenations(words, path)
     return [[word.text for word in line] for line in plemss]
 
@@ -414,6 +424,8 @@ def wrap_text(
     width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[str]: ...
 
 
@@ -424,6 +436,8 @@ def wrap_text(
     width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[list[str]]: ...
 
 
@@ -433,6 +447,8 @@ def wrap_text(
     width: float | Iterable[float],
     font_size: float | None = None,
     hyp_pen: float | None = _INF,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[str] | list[list[str]]:
     """Wrap text to fit within the specified width.
 
@@ -447,6 +463,8 @@ def wrap_text(
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word. If None, defaults to _INF to prevent
         hyphenation unless a single word exceeds the line width.
+    :param include_last_line_cost: if True, include the final line's cost when
+        selecting line breaks
     :return: If text is a string, returns a list of strings (wrapped lines).
         If text is a list of strings, returns a list of lists of strings
         (wrapped lines for each input string).
@@ -454,10 +472,27 @@ def wrap_text(
     if hyp_pen is None:
         hyp_pen = _INF
     if isinstance(text, str):
-        lines = justify_text(font, text, width, font_size, hyp_pen)
+        lines = justify_text(
+            font,
+            text,
+            width,
+            font_size,
+            hyp_pen,
+            include_last_line_cost=include_last_line_cost,
+        )
         return [" ".join(line) for line in lines]
     return [
-        [" ".join(line) for line in justify_text(font, t, width, font_size, hyp_pen)]
+        [
+            " ".join(line)
+            for line in justify_text(
+                font,
+                t,
+                width,
+                font_size,
+                hyp_pen,
+                include_last_line_cost=include_last_line_cost,
+            )
+        ]
         for t in text
     ]
 
@@ -467,6 +502,8 @@ def justify(
     words: list[PaddedText],
     width: float | Iterable[float],
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[list[PaddedText]]:
     """Justify text and write to SVG file.
 
@@ -476,10 +513,14 @@ def justify(
         use 0, 1, 2, 2, 2, ... for the widths of each line.
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word. If None, no additional penalty is applied
+    :param include_last_line_cost: if True, include the final line's cost when
+        selecting line breaks
     :return: list of strings, one per justified line. Also writes the justified text
         to "temp.svg" as a side effect
     """
-    path = _find_best_line_breaks(font, words, width, hyp_pen)
+    path = _find_best_line_breaks(
+        font, words, width, hyp_pen, include_last_line_cost=include_last_line_cost
+    )
     return _construct_hyphenated_text_lines(font, words, width, path, justify=True)
 
 
@@ -488,6 +529,8 @@ def wrap(
     words: list[PaddedText],
     width: float | Iterable[float],
     hyp_pen: float | None = None,
+    *,
+    include_last_line_cost: bool = False,
 ) -> list[list[PaddedText]]:
     """Wrap text into lines without justification.
 
@@ -496,7 +539,11 @@ def wrap(
     :param width: the target line width
     :param hyp_pen: optional penalty scalar for lines ending with a
         hyphenated word. If None, no additional penalty is applied
+    :param include_last_line_cost: if True, include the final line's cost when
+        selecting line breaks
     :return: list of lists of PaddedText instances, one list per wrapped line
     """
-    path = _find_best_line_breaks(font, words, width, hyp_pen)
+    path = _find_best_line_breaks(
+        font, words, width, hyp_pen, include_last_line_cost=include_last_line_cost
+    )
     return _construct_hyphenated_text_lines(font, words, width, path, justify=False)
